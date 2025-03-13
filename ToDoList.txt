@@ -1,3 +1,9 @@
 TO DO LIST
+------------------------------------------------------
+Task					done	author	
+------------------------------------------------------
+Implement Color class
 
-Io creo un conflitto per il piacere di crearlo
+Implement HdrImage class
+Io creo un conflitto per il piacere di crearlo (done)(Gala) 
+
