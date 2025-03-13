@@ -1,3 +1,7 @@
 TO DO LIST
+------------------------------------------------------
+Task					done	author	
+------------------------------------------------------
+Implement Color class
 
-
+Implement HdrImage class
