@@ -1,6 +1,10 @@
 name = "jujutracer"
 uuid = "6725bcfb-d8cf-49c6-9670-0c78602db570"
-authors = ["Giovanni Galafassi <giovanni.galafassi@studenti.unimi.ti>"]
+authors =[
+    "Michele Boldini <michele.boldini@studenti.unimi.it>",
+    "Giovanni Galafassi <giovanni.galafassi@studenti.unimi.it>",
+    "Lonardoni Stefano <stefano.lonardoni1@studenti.unimi.it>"
+]
 version = "0.1.0"
 
 [deps]
@@ -11,4 +15,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 ColorTypes = "0.12.0"
 Colors = "0.13.0"
-Test = "1.11.0"
+Test = "1.9.2"
