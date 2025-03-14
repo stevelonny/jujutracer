@@ -1,6 +1,6 @@
 name = "jujutracer"
 uuid = "6725bcfb-d8cf-49c6-9670-0c78602db570"
-authors = ["Giovanni Galafassi <giovanni.galafassi@studenti.unimi.ti>"]
+authors = ["Giovanni Galafassi <giovanni.galafassi@studenti.unimi.it>"]
 version = "0.1.0"
 
 [deps]
