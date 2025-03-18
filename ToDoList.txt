@@ -2,8 +2,12 @@ TO DO LIST
 ------------------------------------------------------
 Task					done	author	
 ------------------------------------------------------
-Implement Color class
+Implement Color class			(done)
 
-Implement HdrImage class
-Io creo un conflitto per il piacere di crearlo (done)(Gala) 
+Implement HdrImage class		(done)
+
+Io creo un conflitto per il piacere di crearlo (done)(Gala)
+
+aggiornare test su Color e HdrImage	(done)
+ 
 

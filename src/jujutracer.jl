@@ -16,6 +16,9 @@ greet() = println("Hello World!")
 
 # includes
 include("color.jl")
-# include("hdrimg.jl")
+
+
+include("hdrimg.jl")
+export hdrimg, valid_coordinates
 
 end # module jujutracer
