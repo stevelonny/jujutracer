@@ -4,12 +4,14 @@ module jujutracer
 import Base:
     +, -, *, ≈, /
 import ColorTypes: ColorTypes, RGB
-import Colors: RGB
+import Colors
 ##
+
+#export
+export RGB
 
 greet() = println("Hello World!")
 
-#export
 
 
 # includes
