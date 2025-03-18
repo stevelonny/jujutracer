@@ -1,27 +1,27 @@
 struct hdrimg
-    w::Int64                #width
-    h::Int64                #heigth
-    img::zeros(RGB,h*w)     #array
-end
+    w::Int64
+    h::Int64
+    img::Matrix{RGB}
 
-function valid_coordinates(img::hdrimg, x, y)
-    if x < img.w && x >= 0 && y < img.h && y >= 0 
-        return true
-    else
-        return false
+    function hdrimg(w::Int, h::Int)
+        img = Matrix{RGB}(undef, h, w)
+        new(w, h, img)
     end
 end
 
-function pixel_offset(img::hdrimg, x, y)
-    y * img.w + x
+function valid_coordinates(img::hdrimg, x, y)
+    return x >= 0 && x < img.w && y >= 0 && y < img.h
 end
 
-function get_pixel(img::hdrimg, x, y)
-    @assert valid_coordinates(img, x, y)
-    return img.img[pixel_offset(img, x, y)]
-end
+###### VERIFICARE CHE ESISTANO DEI CONTROLLI GIÀ IMPLEMENTATI PER MATRIX #######
 
-function set_pixel(pix::RGB, x, y)
-    @assert valid_coordinates(img, x, y)
-    img.img[pixel_offset(img, x, y)] = pix
-end
+# function get_pixel(self, x, y)
+#     @assert self.valid_coordinates( x, y)
+#     return self.img[x, y]
+# end
+
+# function set_pixel(self, pix::RGB, x, y)
+#     @assert self.valid_coordinates( x, y)
+#     self.img[x, y] = pix
+# end
+
