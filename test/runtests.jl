@@ -41,6 +41,12 @@ end
 
 
 @testset "Reading_PFM" begin
+    # Tests for _read_float
+    io = IOBuffer([0xDB, 0x0F, 0x49, 0x40]) # 3.14159 in little endian
+    @test _read_float(io, true) ≈ 3.14159
+    io = IOBuffer([0x40, 0x49, 0x0F, 0xDB]) # 3.14159 in big endian
+    @test _read_float(io, false) ≈ 3.14159
+
     # Tests for _parse_endianness
     @test _parse_endianness("1.0") == false
     @test _parse_endianness("-1.0") == true

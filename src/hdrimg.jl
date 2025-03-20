@@ -24,16 +24,23 @@ end
 
 # Read a 32-bit floating-point number from 4 bytes, considering endianness
 function _read_float(io::IO, is_little_endian::Bool)
-    if is_little_endian
-        bytes = read(io, UInt32; endian=:little)
-    else
-        bytes = read(io, UInt32; endian=:big)
+    """4 bytes -> Float32, REQUIRES io from IO, is_little_endian Bool"""
+    bytes = try
+        read(io, UInt32)
+    catch e
+        throw(InvalidPfmFileFormat("Impossible to read bytes from the file"))
     end
+
+    if !is_little_endian 
+        bytes = bswap(bytes)
+    end
+
     return reinterpret(Float32, bytes)
 end
 
 # Decoding the type of endianness from a string
 function _parse_endianness(endian::String)
+    """Read endianness from a string, REQUIRES endian String, RETURN true if Little-endian, false if Big-endian"""
     # Try to convert the string to a float
     value = try 
         parse(Float64, endian)  # strip(endian) removes leading and trailing whitespaces
@@ -53,6 +60,7 @@ end
 
 # Reading the image dimensions from a string 
 function _parse_image_size(line::String)
+    """Read image size from a string, REQUIRES line String, RETURN tuple of width and height"""
     dims = split(line)
     if length(dims) != 2
         throw(InvalidPfmFileFormat("Invalid image size specification"))
