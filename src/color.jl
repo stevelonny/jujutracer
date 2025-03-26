@@ -32,11 +32,11 @@ end
 
 """INPUT: 
     RGB color  
-    type luminosity calculation:
-        -  LF: Luminosity function (default),
-        -  M: Mean luminosity,
-        -  W: Weighted luminosity,
-        -  D: Euclidean distance luminosity 
+    +type luminosity calculation:
+        'LF' : Luminosity function (default),
+        'M' : Mean luminosity,
+        'W' : Weighted luminosity,
+        'D' : Euclidean distance luminosity 
     RETURN luminosity value"""
 function _RGBluminosity(color, type = "LF")
     if type == "M"

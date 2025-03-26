@@ -26,7 +26,7 @@ struct InvalidPfmFileFormat <: Exception
     error_message::String
 end
 
-""" 4 bytes -> Float32, REQUIRES io from IO, is_little_endian Bool """
+"""4 bytes -> Float32, INPUT io from IO, is_little_endian Bool """
 function _read_float(io::IO, is_little_endian)
 
     bytes = try
@@ -43,14 +43,14 @@ function _read_float(io::IO, is_little_endian)
 end
 
 
-"""Read a line from the file, REQUIRES io from IO"""
+"""Read a line from the file, INPUT stream"""
 function _read_line(io)
     line::String = readline(io)
     return line
 end
 
 
-"""Read endianness from a string, REQUIRES endian String, RETURN true if Little-endian, false if Big-endian"""
+"""Read endianness from a string, INPUT endian String, RETURN true if Little-endian, false if Big-endian"""
 function _parse_endianness(endian::String)
     value = try 
         Int(parse(Float64, endian)) 
@@ -69,7 +69,7 @@ function _parse_endianness(endian::String)
 end
 
 
-"""Read image size from a string, REQUIRES line String, RETURN tuple of width and height"""
+"""Read image size from a string, INPUT line String, RETURN tuple of width and height"""
 function _parse_image_size(line::String)
     dims = split(line)
     if length(dims) != 2
@@ -114,7 +114,51 @@ function read_pfm_image(io)
     return img
 end
 
+#-------------------------------------------------------------
+# Luminosity 
+#-------------------------------------------------------------
+""" INPUT: 
+    hdrimg
+    +type luminosity calculation:
+        'LF' : Luminosity function (default),
+        'M' : Mean luminosity,
+        'W' : Weighted luminosity,
+        'D' : Euclidean distance luminosity 
+    +Delta (default 0.0001): useful to avoid log(0) for black pixels
+    RETURN luminosity mean value"""
+function average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
+    d = try
+        delta >= 0 ? delta : throw(ArgumentError("Expected a positive delta value"))
+    catch
+        throw(ArgumentError("Invalid delta value"))
+    end
 
+    sum = 0.0
+    for i in 1:img.h
+        for j in 1:img.w
+            sum += log10(_RGBluminosity(img.img[i, j], type) + d) #delta is useful to avoid log(0)
+        end
+    end
+    return 10^(sum / (img.h * img.w))
+end
+
+
+function normalize_img(img::hdrimg; a=0.18 , lum = nothing)
+    lum = something(lum, average_luminosity(img)) # If luminosity is not provided, calculate it
+    if !(lum isa Number)
+        throw(ArgumentError("Luminosity must be a number"))
+    end
+
+    a= a>0 ? a : throw(ArgumentError("Expected a positive value for a"))
+
+    for i in 1:img.h
+        for j in 1:img.w
+            img.img[i, j] = img.img[i, j] * (a / lum)
+        end
+    end
+
+    return img
+end
 
 
 
