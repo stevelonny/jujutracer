@@ -14,7 +14,7 @@ struct hdrimg
 end
 
 function valid_coordinates(img::hdrimg, x, y)
-    return x >= 0 && x < img.w && y >= 0 && y < img.h
+    return x > 0 && x <= img.w && y > 0 && y <= img.h
 end
 
 #-------------------------------------------------------------
@@ -26,8 +26,9 @@ struct InvalidPfmFileFormat <: Exception
     error_message::String
 end
 
-"""4 bytes -> Float32, REQUIRES io from IO, is_little_endian Bool"""
-function _read_float(io::IO, is_little_endian::Bool)
+""" 4 bytes -> Float32, REQUIRES io from IO, is_little_endian Bool """
+function _read_float(io::IO, is_little_endian)
+
     bytes = try
         read(io, UInt32)
     catch e
@@ -43,7 +44,7 @@ end
 
 
 """Read a line from the file, REQUIRES io from IO"""
-function _read_line(io::IO)
+function _read_line(io)
     line::String = readline(io)
     return line
 end
@@ -83,30 +84,30 @@ function _parse_image_size(line::String)
     return w, h
 end
 
-function read_pfm_image(io::IO)
-    line = _read_line(io)
-    endianness = _parse_endianness(line)
 
-    # Read the second line
+function read_pfm_image(io)
+    # Read the first line, should be "PF"
+    line = _read_line(io)
+    if line != "PF"
+        throw(InvalidPfmFileFormat("Non-specified PF type"))
+    end
+
+    # Read the second line, should be "width height"
     line = _read_line(io)
     w, h = _parse_image_size(line)
 
-    # Read the third line
+    # Read the third line, should be "±1.0"
     line = _read_line(io)
-    scale = try
-        parse(Float32, line)
-    catch e
-        throw(InvalidPfmFileFormat("Invalid scale"))
-    end
+    endianness = _parse_endianness(line)
 
-    # Read the image
+    # Read the PFM image, from the bottom to the top, from left to right
     img = hdrimg(w, h)
-    for y in 1:h
-        for x in 1:w
+    for i in h:-1:1
+        for j in 1:w
             r = _read_float(io, endianness)
             g = _read_float(io, endianness)
             b = _read_float(io, endianness)
-            img.img[y, x] = RGB(r, g, b)
+            img.img[i, j] = RGB(r, g, b)
         end
     end
 
