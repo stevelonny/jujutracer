@@ -26,14 +26,14 @@ struct InvalidPfmFileFormat <: Exception
     error_message::String
 end
 
-""" 4 bytes -> Float32, REQUIRES io from IO, is_little_endian Bool """
+"""4 bytes -> Float32, REQUIRES io from IO, is_little_endian Bool"""
 function _read_float(io::IO, is_little_endian::Bool)
     bytes = try
         read(io, UInt32)
     catch e
         throw(InvalidPfmFileFormat("Impossible to read bytes from the file"))
     end
-    #Check universality (little_endian = ENDIAN_BOM == 0x04030201)
+
     if !is_little_endian 
         bytes = bswap(bytes)
     end
@@ -84,7 +84,6 @@ function _parse_image_size(line::String)
 end
 
 function read_pfm_image(io::IO)
-    
     line = _read_line(io)
     endianness = _parse_endianness(line)
 

@@ -26,7 +26,15 @@ end
     catch e
         @test true  
     end
-    
+
+    try
+        img.img[10, 10] = RGB(0.0, 0.0, 0.0)
+        @test true 
+    catch e
+        @test false  
+    end
+
+
     # Test for non RGB value
     i::Int = 10
     try
@@ -62,6 +70,23 @@ end
     io = IOBuffer(b"Hello\nWorld\n")
     @test _read_line(io) == "Hello"
     @test _read_line(io) == "World"
+end
+
+@testset "Luminosity" begin
+
+    #Tests for single RGB luminosity functions
+    color = RGB(10.0, 30.0, 50.0)
+    @test _lumi_mean(color) ≈ 30.0
+    @test _RGBluminosity(color, "M") ≈ 30.0
+    @test _lumi_weighted(color) ≈ 26.3
+    @test _RGBluminosity(color, "W") ≈ 26.3
+    @test _lumi_D(color) ≈ 59.16079783099616
+    @test _RGBluminosity(color, "D") ≈ 59.16079783099616
+    color = RGB(10.0, 15.0, 30.0)
+    @test _lumi_Func(color) ≈ 20.0
+    @test _RGBluminosity(color, "LF") ≈ 20.0
+
+    @test_throws ArgumentError _RGBluminosity(color, "X")
 end
 
 
