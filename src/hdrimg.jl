@@ -1,3 +1,7 @@
+#-------------------------------------------------------------
+# hdrimg
+#-------------------------------------------------------------
+"""hdrimg contains a width, height and a matrix of RGB values"""
 struct hdrimg
     w::Int64
     h::Int64
@@ -15,22 +19,21 @@ end
 
 #-------------------------------------------------------------
 # PFM file
-#-------------------------------------------------------------#
+#-------------------------------------------------------------
 
 # Exception for invalid PFM file format
 struct InvalidPfmFileFormat <: Exception
     error_message::String
 end
 
-# Read a 32-bit floating-point number from 4 bytes, considering endianness
+""" 4 bytes -> Float32, REQUIRES io from IO, is_little_endian Bool """
 function _read_float(io::IO, is_little_endian::Bool)
-    """4 bytes -> Float32, REQUIRES io from IO, is_little_endian Bool"""
     bytes = try
         read(io, UInt32)
     catch e
         throw(InvalidPfmFileFormat("Impossible to read bytes from the file"))
     end
-
+    #Check universality (little_endian = ENDIAN_BOM == 0x04030201)
     if !is_little_endian 
         bytes = bswap(bytes)
     end
@@ -38,12 +41,18 @@ function _read_float(io::IO, is_little_endian::Bool)
     return reinterpret(Float32, bytes)
 end
 
-# Decoding the type of endianness from a string
+
+"""Read a line from the file, REQUIRES io from IO"""
+function _read_line(io::IO)
+    line::String = readline(io)
+    return line
+end
+
+
+"""Read endianness from a string, REQUIRES endian String, RETURN true if Little-endian, false if Big-endian"""
 function _parse_endianness(endian::String)
-    """Read endianness from a string, REQUIRES endian String, RETURN true if Little-endian, false if Big-endian"""
-    # Try to convert the string to a float
     value = try 
-        parse(Float64, endian)  # strip(endian) removes leading and trailing whitespaces
+        Int(parse(Float64, endian)) 
     catch e
         throw(InvalidPfmFileFormat("Invalid or missing endianness specification"))
     end
@@ -58,9 +67,9 @@ function _parse_endianness(endian::String)
     end
 end
 
-# Reading the image dimensions from a string 
+
+"""Read image size from a string, REQUIRES line String, RETURN tuple of width and height"""
 function _parse_image_size(line::String)
-    """Read image size from a string, REQUIRES line String, RETURN tuple of width and height"""
     dims = split(line)
     if length(dims) != 2
         throw(InvalidPfmFileFormat("Invalid image size specification"))
@@ -73,6 +82,39 @@ function _parse_image_size(line::String)
     end
     return w, h
 end
+
+function read_pfm_image(io::IO)
+    
+    line = _read_line(io)
+    endianness = _parse_endianness(line)
+
+    # Read the second line
+    line = _read_line(io)
+    w, h = _parse_image_size(line)
+
+    # Read the third line
+    line = _read_line(io)
+    scale = try
+        parse(Float32, line)
+    catch e
+        throw(InvalidPfmFileFormat("Invalid scale"))
+    end
+
+    # Read the image
+    img = hdrimg(w, h)
+    for y in 1:h
+        for x in 1:w
+            r = _read_float(io, endianness)
+            g = _read_float(io, endianness)
+            b = _read_float(io, endianness)
+            img.img[y, x] = RGB(r, g, b)
+        end
+    end
+
+    return img
+end
+
+
 
 
 

@@ -15,7 +15,7 @@ greet() = println("Hello World!")
 include("color.jl")
 
 include("hdrimg.jl")
-export hdrimg, valid_coordinates, InvalidPfmFileFormat, _read_float, _parse_endianness, _parse_image_size
+export hdrimg, valid_coordinates, InvalidPfmFileFormat, _read_float, _parse_endianness, _parse_image_size, _read_line
 
 
 end # module jujutracer

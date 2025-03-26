@@ -36,7 +36,6 @@ end
     catch e
         @test true  
     end
-
 end
 
 
@@ -58,6 +57,11 @@ end
     @test_throws InvalidPfmFileFormat _parse_image_size("10 8 5") #Test if it throws an InvalidPfmFileFormat exception when invalid input
     @test_throws InvalidPfmFileFormat _parse_image_size("10")
     @test_throws InvalidPfmFileFormat _parse_image_size("a b")
+
+    # Tests for _read_line
+    io = IOBuffer(b"Hello\nWorld\n")
+    @test _read_line(io) == "Hello"
+    @test _read_line(io) == "World"
 end
 
 
