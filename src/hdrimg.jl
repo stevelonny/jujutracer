@@ -161,5 +161,10 @@ function normalize_img(img::hdrimg; a=0.18 , lum = nothing)
 end
 
 
+function _clamp_img(hdr::hdrimg)
+    hdr.img .= map(x -> RGB(x.r/(1+x.r), x.g/(1+x.g), x.b/(1+x.b)), hdr.img)
+    return hdr
+end
+
 
 

@@ -150,3 +150,10 @@ end
     @test normalize_img(img, a=2 , lum =10 ).img[1,1] ≈ RGB(2.0, 4.0, 6.0) 
 
 end
+
+@testset "clamp img" begin
+    img = hdrimg(1, 1)
+    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+    @test _clamp_img(img).img[1, 1] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
+
+end
