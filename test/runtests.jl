@@ -157,3 +157,16 @@ end
     @test _clamp_img(img).img[1, 1] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
 
 end
+
+@testset "gamma _γ_correction" begin
+    img = hdrimg(1, 1)
+    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+    @test _γ_correction(img; γ = 2.2).img[1, 1] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
+    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+    @test _γ_correction(img; γ = 1.0).img[1, 1] ≈ RGB(10.0, 20.0, 30.0)
+
+    @test_throws ArgumentError _γ_correction(img; γ = -1.0)
+    @test_throws ArgumentError _γ_correction(img; γ = 0.0)
+    @test_throws ArgumentError _γ_correction(img; γ = "prova")
+
+end

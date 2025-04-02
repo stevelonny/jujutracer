@@ -115,7 +115,7 @@ function read_pfm_image(io)
 end
 
 #-------------------------------------------------------------
-# Luminosity 
+# Tone mapping 
 #-------------------------------------------------------------
 """ INPUT: 
     hdrimg
@@ -142,6 +142,7 @@ function average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
     return 10^(sum / (img.h * img.w))
 end
 
+# we developed tone mapping functions which modify the input hdrimg, so a return img is not really necessary. how do we want to handle this?
 
 function normalize_img(img::hdrimg; a=0.18 , lum = nothing)
     lum = something(lum, average_luminosity(img)) # If luminosity is not provided, calculate it
@@ -167,4 +168,11 @@ function _clamp_img(hdr::hdrimg)
 end
 
 
+function _γ_correction(hdr::hdrimg; γ = 1.0)
+    if !(γ isa Number) || γ <= 0
+        throw(ArgumentError("Gamma must be a positive number"))
+    end
+    hdr.img .= map(x -> RGB(x.r^(1.0/γ), x.g^(1.0/γ), x.b^(1.0/γ)), hdr.img)
+    return hdr
+end
 
