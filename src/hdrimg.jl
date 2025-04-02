@@ -117,16 +117,25 @@ end
 #-------------------------------------------------------------
 # Tone mapping 
 #-------------------------------------------------------------
-""" INPUT: 
-    hdrimg
-    +type luminosity calculation:
-        'LF' : Luminosity function (default),
-        'M' : Mean luminosity,
-        'W' : Weighted luminosity,
-        'D' : Euclidean distance luminosity 
-    +Delta (default 0.0001): useful to avoid log(0) for black pixels
-    RETURN luminosity mean value"""
-function average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
+""" 
+    average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
+
+Return the average luminosity of an HDR image, given the type of luminosity calculation to be used and delta to avoid.
+
+# Arguments
+- `img::hdrimg`: The HDR image for which to calculate the average luminosity.
+- `type::String`: The type of luminosity calculation to be used. Options are:
+    - `LF`: Luminosity function (default)
+    - `M`: Mean luminosity
+    - `W`: Weighted luminosity
+    - `D`: Euclidean distance luminosity
+- `delta::Float64`: A small value to avoid log(0) for black pixels (default is 0.0001).
+
+# Returns
+- `Float64`: The average luminosity of the HDR image.
+
+"""
+function _average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
     d = try
         delta >= 0 ? delta : throw(ArgumentError("Expected a positive delta value"))
     catch
@@ -143,9 +152,25 @@ function average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
 end
 
 # we developed tone mapping functions which modify the input hdrimg, so a return img is not really necessary. how do we want to handle this?
+"""
+    _normalize_img(img::hdrimg: a::T, std::T) where {T<:Real, N}
 
-function normalize_img(img::hdrimg; a=0.18 , lum = nothing)
-    lum = something(lum, average_luminosity(img)) # If luminosity is not provided, calculate it
+Normalize an image by using ``R_i → R_i × \\frac{R_i}{⟨l⟩}``.
+
+# Arguments
+- `img::hdrimg`: The HDR image to be normalized.
+- `a::T`: A positive value to be used in the normalization formula.
+- `lum::T`: The average luminosity of the image. If not provided, it will be calculated using `_average_luminosity`.
+
+# Returns
+- `hdrimg`: The normalized HDR image.
+
+# Raises
+- `ArgumentError`: If `a` is not a positive number or if `lum` is not a number.
+
+"""
+function _normalize_img(img::hdrimg; a=0.18 , lum = nothing)
+    lum = something(lum, _average_luminosity(img)) # If luminosity is not provided, calculate it
     if !(lum isa Number)
         throw(ArgumentError("Luminosity must be a number"))
     end
@@ -161,12 +186,40 @@ function normalize_img(img::hdrimg; a=0.18 , lum = nothing)
     return img
 end
 
+"""
 
+    _clamp_img(hdr::hdrimg)
+
+Clamp the HDR image values to the range [0, 1] using the formula: R_i → R_i/(1+R_i).
+
+# Arguments
+- `hdr::hdrimg`: The HDR image to be clamped.
+
+# Returns
+- `hdrimg`: The clamped HDR image.
+
+"""
 function _clamp_img(hdr::hdrimg)
     hdr.img .= map(x -> RGB(x.r/(1+x.r), x.g/(1+x.g), x.b/(1+x.b)), hdr.img)
     return hdr
 end
 
+"""
+    _γ_correction(hdr::hdrimg; γ = 1.0)
+
+Apply gamma correction to the HDR image using the formula: R_i → R_i^(1/γ).
+
+# Arguments
+- `hdr::hdrimg`: The HDR image to be gamma corrected.
+- `γ::Float64`: The gamma value to be used for correction. Must be a positive number (default is 1.0).
+
+# Returns
+- `hdrimg`: The gamma-corrected HDR image.
+
+# Raises
+- `ArgumentError`: If `γ` is not a positive number.
+
+"""
 
 function _γ_correction(hdr::hdrimg; γ = 1.0)
     if !(γ isa Number) || γ <= 0
