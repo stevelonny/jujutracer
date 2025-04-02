@@ -18,7 +18,7 @@ function valid_coordinates(img::hdrimg, x, y)
 end
 
 #-------------------------------------------------------------
-# PFM file
+# PFM file - Read
 #-------------------------------------------------------------
 
 # Exception for invalid PFM file format
@@ -112,6 +112,40 @@ function read_pfm_image(io)
     end
 
     return img
+end
+
+#-------------------------------------------------------------
+# PFM file - Read
+#-------------------------------------------------------------
+"""
+    write_pfm_image(img::hdrimg, io, endianness::Bool=true)
+
+Write a PFM file encodiding the content of an `hdrimg`
+"""
+function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
+    endian_str = endianness ? "-1.0" : "1.0"
+    header = string("PF\n", img.w, " ", img.h, "\n", endian_str, "\n")
+
+    try
+        write(io, header)
+    catch e
+        throw(InvalidPfmFileFormat("Invalid output file"))
+    end
+
+    for i in img.h:-1:1
+        for j in 1:img.w
+            color = img.img[i, j]
+            _write_float(color.r, io, endianness)
+            _write_float(color.g, io, endianness)
+            _write_float(color.b, io, endianness)
+        end
+    end
+end
+
+function _write_float(f, io, endianness::Bool=true)
+    data = reinterpret(UInt32, Float32(f))  # Assicura che sia Float32
+    data = endianness ? data : ntoh(data)   # Converte se necessario
+    write(io, data)
 end
 
 #-------------------------------------------------------------
