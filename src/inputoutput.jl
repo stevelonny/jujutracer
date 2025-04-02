@@ -225,15 +225,15 @@ function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
     for i in img.h:-1:1
         for j in 1:img.w
             color = img.img[i, j]
-            _write_float(color.r, io, endianness)
-            _write_float(color.g, io, endianness)
-            _write_float(color.b, io, endianness)
+            _write_float!(color.r, io, endianness)
+            _write_float!(color.g, io, endianness)
+            _write_float!(color.b, io, endianness)
         end
     end
 end
 
 """
-    _write_float(f, io, endianness::Bool=true)
+    _write_float!(f, io, endianness::Bool=true)
 
 Write a Float32 value to the output stream with the correct endianness.
 # Arguments
@@ -241,7 +241,7 @@ Write a Float32 value to the output stream with the correct endianness.
 - `io`: The output stream to which the float will be written.
 - `endianness::Bool`: A boolean indicating whether to write the float in little-endian format (default is true).
 """
-function _write_float(f, io, endianness::Bool=true)
+function _write_float!(f, io, endianness::Bool=true)
     data = reinterpret(UInt32, Float32(f))  # Assicura che sia Float32
     data = endianness ? data : ntoh(data)   # Converte se necessario
     write(io, data)

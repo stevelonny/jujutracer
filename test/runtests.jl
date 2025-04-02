@@ -51,27 +51,27 @@ end
     @testset "Reading_PFM" begin
         # Tests for _read_float
         io = IOBuffer([0xDB, 0x0F, 0x49, 0x40]) # 3.14159 in little endian
-        @test _read_float(io, true) ≈ 3.14159
+        @test jujutracer._read_float(io, true) ≈ 3.14159
         io = IOBuffer([0x40, 0x49, 0x0F, 0xDB]) # 3.14159 in big endian
-        @test _read_float(io, false) ≈ 3.14159
+        @test jujutracer._read_float(io, false) ≈ 3.14159
 
         # Tests for _parse_endianness
-        @test _parse_endianness("1.0") == false
-        @test _parse_endianness("-1.0") == true
-        @test_throws InvalidPfmFileFormat _parse_endianness("0.0") #Test if it throws an InvalidPfmFileFormat exception when invalid input
-        @test_throws InvalidPfmFileFormat _parse_endianness("abc")
+        @test jujutracer._parse_endianness("1.0") == false
+        @test jujutracer._parse_endianness("-1.0") == true
+        @test_throws InvalidPfmFileFormat jujutracer._parse_endianness("0.0") #Test if it throws an InvalidPfmFileFormat exception when invalid input
+        @test_throws InvalidPfmFileFormat jujutracer._parse_endianness("abc")
 
         # Tests for _parse_image_size
-        @test _parse_image_size("10 8") == (10, 8)
-        @test_throws InvalidPfmFileFormat _parse_image_size("10 8 5") #Test if it throws an InvalidPfmFileFormat exception when invalid input
-        @test_throws InvalidPfmFileFormat _parse_image_size("10")
-        @test_throws InvalidPfmFileFormat _parse_image_size("a b")
-        @test_throws InvalidPfmFileFormat _parse_image_size("10.1 3.3")
+        @test jujutracer._parse_image_size("10 8") == (10, 8)
+        @test_throws InvalidPfmFileFormat jujutracer._parse_image_size("10 8 5") #Test if it throws an InvalidPfmFileFormat exception when invalid input
+        @test_throws InvalidPfmFileFormat jujutracer._parse_image_size("10")
+        @test_throws InvalidPfmFileFormat jujutracer._parse_image_size("a b")
+        @test_throws InvalidPfmFileFormat jujutracer._parse_image_size("10.1 3.3")
 
         # Tests for _read_line
         io = IOBuffer(b"Hello\nWorld\n")
-        @test _read_line(io) == "Hello"
-        @test _read_line(io) == "World"
+        @test jujutracer._read_line(io) == "Hello"
+        @test jujutracer._read_line(io) == "World"
 
         # Tests for read_pfm_image
         le = IOBuffer([
@@ -111,6 +111,19 @@ end
         @test_throws InvalidPfmFileFormat read_pfm_image(buf)
     end
     @testset "Writing_PFM" begin
+        #Tests for _write_float!
+        buf = IOBuffer()
+        jujutracer._write_float!(3.14159, buf, true)
+        seekstart(buf)
+        data1 = take!(buf)
+        # we'll compare to 3.140625, which is the closest float to 3.14159
+        @test data1 == [0xD0, 0x0F, 0x49, 0x40] # 3.140625 in little endian
+        buf = IOBuffer()
+        jujutracer._write_float!(3.14159, buf, false)
+        seekstart(buf)
+        @test take!(buf) == [0x40, 0x49, 0x0F, 0xD0] # 3.140625 in big endian
+        buf = IOBuffer()
+        # Tests for write_pfm_image
         img = hdrimg(3, 2)
         img.img[1, 1] = RGB(1.0e1, 2.0e1, 3.0e1)
         img.img[1, 2] = RGB(4.0e1, 5.0e1, 6.0e1)
