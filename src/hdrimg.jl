@@ -220,7 +220,6 @@ Apply gamma correction to the HDR image using the formula: R_i → R_i^(1/γ).
 - `ArgumentError`: If `γ` is not a positive number.
 
 """
-
 function _γ_correction(hdr::hdrimg; γ = 1.0)
     if !(γ isa Number) || γ <= 0
         throw(ArgumentError("Gamma must be a positive number"))
@@ -229,3 +228,30 @@ function _γ_correction(hdr::hdrimg; γ = 1.0)
     return hdr
 end
 
+"""
+    tone_mapping(img::hdrimg; a=0.18, lum = nothing, γ = 1.0)
+
+Apply tone mapping to the HDR image.
+
+# Arguments
+- `img::hdrimg`: The HDR image to be tone-mapped.
+- `a::Float64`: A positive value to be used in the normalization formula (default is 0.18).
+- `lum::Float64`: The average luminosity of the image. If not provided, it will be calculated using `_average_luminosity`.
+- `γ::Float64`: The gamma value to be used for correction. Must be a positive number (default is 1.0).
+
+# Returns
+- `hdrimg`: The tone-mapped HDR image.
+
+"""
+function tone_mapping(img::hdrimg; a=0.18, lum = nothing, γ = 1.0)
+    # Normalize the image
+    _normalize_img(img; a, lum)
+
+    # Clamp the image
+    _clamp_img(img)
+
+    # Apply gamma correction
+    _γ_correction(img; γ)
+
+    return img
+end
