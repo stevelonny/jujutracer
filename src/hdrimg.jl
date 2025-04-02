@@ -1,12 +1,20 @@
 #-------------------------------------------------------------
 # hdrimg
 #-------------------------------------------------------------
-"""hdrimg contains a width, height and a matrix of RGB values"""
 struct hdrimg
     w::Int64
     h::Int64
     img::Matrix{RGB}
 
+    """
+        hdrimg(w::Int, h::Int)
+    
+    Create a new HDR image with the specified width and height.
+    # Arguments
+    - `w::Int`, `h::Int`: Width and height of the HDR image.
+    # Returns
+    - `hdrimg`: A new HDR image with the specified dimensions.
+    """
     function hdrimg(w::Int, h::Int)
         img = Matrix{RGB}(undef, h, w)
         new(w, h, img)
@@ -65,12 +73,8 @@ Normalize an image by using ``R_i → R_i × \\frac{R_i}{⟨l⟩}``.
 - `a::T`: A positive value to be used in the normalization formula.
 - `lum::T`: The average luminosity of the image. If not provided, it will be calculated using `_average_luminosity`.
 
-# Returns
-- `hdrimg`: The normalized HDR image.
-
 # Raises
 - `ArgumentError`: If `a` is not a positive number or if `lum` is not a number.
-
 """
 function _normalize_img!(img::hdrimg; a=0.18 , lum = nothing)
     lum = something(lum, _average_luminosity(img)) # If luminosity is not provided, calculate it
@@ -91,10 +95,6 @@ Clamp the HDR image values to the range [0, 1] using the formula: R_i → R_i/(1
 
 # Arguments
 - `hdr::hdrimg`: The HDR image to be clamped.
-
-# Returns
-- `hdrimg`: The clamped HDR image.
-
 """
 function _clamp_img!(hdr::hdrimg)
     hdr.img .= map(x -> RGB(x.r/(1+x.r), x.g/(1+x.g), x.b/(1+x.b)), hdr.img)
@@ -109,12 +109,8 @@ Apply gamma correction to the HDR image using the formula: R_i → R_i^(1/γ).
 - `hdr::hdrimg`: The HDR image to be gamma corrected.
 - `γ::Float64`: The gamma value to be used for correction. Must be a positive number (default is 1.0).
 
-# Returns
-- `hdrimg`: The gamma-corrected HDR image.
-
 # Raises
 - `ArgumentError`: If `γ` is not a positive number.
-
 """
 function _γ_correction!(hdr::hdrimg; γ = 1.0)
     if !(γ isa Number) || γ <= 0

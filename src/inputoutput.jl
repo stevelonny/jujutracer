@@ -9,10 +9,33 @@
 # 3. extract the matrix from the hdrimg
 # 4. save the matrix to a file with fileio
 
+"""
+    get_matrix(img::hdrimg)
+
+Extract the matrix from an HDR image.
+
+# Arguments
+- `img::hdrimg`: The HDR image from which to extract the matrix.
+# Returns
+- `Matrix`: The matrix representation of the HDR image.
+"""
 function get_matrix(img::hdrimg)
     return img.img
 end
 
+"""
+    save_ldrimage(img_matrix::Matrix, filename::String)
+
+Save an LDR image to a file.
+
+# Arguments
+- `img_matrix::Matrix`: The matrix representation of the image to be saved.
+- `filename::String`: The name of the file to save the image to, including the file extension (".png" or ".jpg").
+# Returns
+- `String`: The path to the saved file.
+# Raises
+- `ArgumentError`: If the file extension is not valid or if the image values are not clamped.
+"""
 function save_ldrimage(img_matrix::Matrix, filename::String)
     # Check if the file extension is valid
     if !(endswith(filename, ".png") || endswith(filename, ".jpg"))
@@ -39,7 +62,19 @@ struct InvalidPfmFileFormat <: Exception
     error_message::String
 end
 
-"""4 bytes -> Float32, INPUT io from IO, is_little_endian Bool """
+"""
+    _read_float(io::IO, is_little_endian)
+
+Read a Float32 value by interpreting 4 bytes with the correct endianness from a buffer.
+
+# Arguments
+- `io::IO`: The input stream from which to read the float.
+- `is_little_endian::Bool`: A boolean indicating whether the float is in little-endian format.
+# Returns
+- `Float32`: The read float value.
+# Raises
+- `InvalidPfmFileFormat`: If there is an error reading the bytes from the file.
+"""
 function _read_float(io::IO, is_little_endian)
 
     bytes = try
@@ -56,14 +91,32 @@ function _read_float(io::IO, is_little_endian)
 end
 
 
-"""Read a line from the file, INPUT stream"""
+"""
+    _read_line(io::IO)
+
+Read a line from the input buffer.
+# Arguments
+- `io::IO`: The input stream from which to read the line.
+# Returns
+- `String`: The read line.
+"""
 function _read_line(io)
     line::String = readline(io)
     return line
 end
 
 
-"""Read endianness from a string, INPUT endian String, RETURN true if Little-endian, false if Big-endian"""
+"""
+    _parse_endianness(endian::String)
+
+Parse endianness of the PFM file from a string.
+# Arguments
+- `endian::String`: The string representation of the endianness, expected to be "±1.0".
+# Returns
+- `Bool`: Returns true if the endianness is little-endian, false if big-endian.
+# Raises
+- `InvalidPfmFileFormat`: If the endianness value is invalid or missing.
+"""
 function _parse_endianness(endian::String)
     value = try 
         Int(parse(Float64, endian)) 
@@ -82,7 +135,17 @@ function _parse_endianness(endian::String)
 end
 
 
-"""Read image size from a string, INPUT line String, RETURN tuple of width and height"""
+"""
+    _parse_image_size(line::String)
+
+Read image size from a string.
+# Arguments
+- `line::String`: The string representation of the image size, expected to be a couple of ints "width height".
+# Returns
+- `Tuple{Int, Int}`: A tuple containing the width and height of the image.
+# Raises
+- `InvalidPfmFileFormat`: If the image size specification is invalid or if the width/height values are not integers.
+"""
 function _parse_image_size(line::String)
     dims = split(line)
     if length(dims) != 2
@@ -97,7 +160,17 @@ function _parse_image_size(line::String)
     return w, h
 end
 
+"""
+    read_pfm_image(io::IO)
 
+Read a PFM image from an input stream.
+# Arguments
+- `io::IO`: The input stream from which to read the PFM image.
+# Returns
+- `hdrimg`: The HDR image read from the PFM file.
+# Raises
+- `InvalidPfmFileFormat`: If the PFM file format is invalid or if there are issues reading the file.
+"""
 function read_pfm_image(io)
     # Read the first line, should be "PF"
     line = _read_line(io)
@@ -128,12 +201,16 @@ function read_pfm_image(io)
 end
 
 #-------------------------------------------------------------
-# PFM file - Read
+# PFM file - Write
 #-------------------------------------------------------------
 """
     write_pfm_image(img::hdrimg, io, endianness::Bool=true)
 
 Write a PFM file encodiding the content of an `hdrimg`
+# Arguments
+- `img::hdrimg`: The HDR image to be written to the PFM file.
+- `io::IO`: The output stream to which the PFM image will be written.
+- `endianness::Bool`: A boolean indicating whether to write the float values in little-endian format (default is true).
 """
 function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
     endian_str = endianness ? "-1.0" : "1.0"
@@ -155,6 +232,15 @@ function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
     end
 end
 
+"""
+    _write_float(f, io, endianness::Bool=true)
+
+Write a Float32 value to the output stream with the correct endianness.
+# Arguments
+- `f`: The float value to be written.
+- `io`: The output stream to which the float will be written.
+- `endianness::Bool`: A boolean indicating whether to write the float in little-endian format (default is true).
+"""
 function _write_float(f, io, endianness::Bool=true)
     data = reinterpret(UInt32, Float32(f))  # Assicura che sia Float32
     data = endianness ? data : ntoh(data)   # Converte se necessario
