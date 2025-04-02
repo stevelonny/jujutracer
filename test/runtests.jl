@@ -110,8 +110,7 @@ end
     @test_throws InvalidPfmFileFormat read_pfm_image(buf)
 end
 
-@testset "Luminosity" begin
-
+@testset "Tone mapping" begin
     #Tests for single RGB luminosity functions
     color = RGB(10.0, 30.0, 50.0)
     @test _lumi_mean(color) ≈ 30.0
@@ -126,27 +125,42 @@ end
 
     @test_throws ArgumentError _RGBluminosity(color, "X")
 
-    #test for average_luminosity
+    #test for _average_luminosity
     img = hdrimg(2, 1)
     img.img[1, 1] = RGB(5.0, 10.0, 15.0)   #mean luminosity = 10
     img.img[1, 2] = RGB(50.0, 100.0, 150.0) #mean luminosity = 100
-    @test average_luminosity(img, delta=0.0) ≈ 10^1.5
+    @test jujutracer._average_luminosity(img, delta=0.0) ≈ 10^1.5
 
-    @test_throws ArgumentError average_luminosity(img, type="X", delta=0)
-    @test_throws ArgumentError average_luminosity(img, delta="prova")
-    @test_throws ArgumentError average_luminosity(img, delta=-1.0)
+    @test_throws ArgumentError jujutracer._average_luminosity(img, type="X", delta=0)
+    @test_throws ArgumentError jujutracer._average_luminosity(img, delta="prova")
+    @test_throws ArgumentError jujutracer._average_luminosity(img, delta=-1.0)
 
     img.img[1, 1] = RGB(0.0, 0.0, 0.0)   #activating delta
     img.img[1, 2] = RGB(5.0e3, 1.0e4, 1.5e4) #mean luminosity = 1e4
-    @test average_luminosity(img) ≈ 1
-end
+    @test jujutracer._average_luminosity(img) ≈ 1
 
-@testset "normalize_img" begin
+    #test for _normalize_img
     img = hdrimg(1, 1)
     img.img[1, 1] = RGB(10.0, 20.0, 30.0)   #luminosity = 20
-    @test_throws ArgumentError normalize_img(img, a=-1.0)
-    @test_throws ArgumentError normalize_img(img, lum="prova")
+    @test_throws ArgumentError jujutracer._normalize_img(img, a=-1.0)
+    @test_throws ArgumentError jujutracer._normalize_img(img, lum="prova")
 
-    @test normalize_img(img, a=2 , lum =10 ).img[1,1] ≈ RGB(2.0, 4.0, 6.0) 
+    @test jujutracer._normalize_img(img, a=2 , lum =10 ).img[1,1] ≈ RGB(2.0, 4.0, 6.0) 
+
+    # test for clamp_img
+    img = hdrimg(1, 1)
+    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+    @test jujutracer._clamp_img(img).img[1, 1] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
+
+    # test for gamma correction
+    img = hdrimg(1, 1)
+    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+    @test jujutracer._γ_correction(img; γ = 2.2).img[1, 1] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
+    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+    @test jujutracer._γ_correction(img; γ = 1.0).img[1, 1] ≈ RGB(10.0, 20.0, 30.0)
+
+    @test_throws ArgumentError jujutracer._γ_correction(img; γ = -1.0)
+    @test_throws ArgumentError jujutracer._γ_correction(img; γ = 0.0)
+    @test_throws ArgumentError jujutracer._γ_correction(img; γ = "prova")
 
 end

@@ -18,149 +18,27 @@ function valid_coordinates(img::hdrimg, x, y)
 end
 
 #-------------------------------------------------------------
-# PFM file - Read
+# Tone mapping 
 #-------------------------------------------------------------
+""" 
+    average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
 
-# Exception for invalid PFM file format
-struct InvalidPfmFileFormat <: Exception
-    error_message::String
-end
+Return the average luminosity of an HDR image, given the type of luminosity calculation to be used and delta to avoid.
 
-"""4 bytes -> Float32, INPUT io from IO, is_little_endian Bool """
-function _read_float(io::IO, is_little_endian)
+# Arguments
+- `img::hdrimg`: The HDR image for which to calculate the average luminosity.
+- `type::String`: The type of luminosity calculation to be used. Options are:
+    - `LF`: Luminosity function (default)
+    - `M`: Mean luminosity
+    - `W`: Weighted luminosity
+    - `D`: Euclidean distance luminosity
+- `delta::Float64`: A small value to avoid log(0) for black pixels (default is 0.0001).
 
-    bytes = try
-        read(io, UInt32)
-    catch e
-        throw(InvalidPfmFileFormat("Impossible to read bytes from the file"))
-    end
+# Returns
+- `Float64`: The average luminosity of the HDR image.
 
-    if !is_little_endian 
-        bytes = bswap(bytes)
-    end
-
-    return reinterpret(Float32, bytes)
-end
-
-
-"""Read a line from the file, INPUT stream"""
-function _read_line(io)
-    line::String = readline(io)
-    return line
-end
-
-
-"""Read endianness from a string, INPUT endian String, RETURN true if Little-endian, false if Big-endian"""
-function _parse_endianness(endian::String)
-    value = try 
-        Int(parse(Float64, endian)) 
-    catch e
-        throw(InvalidPfmFileFormat("Invalid or missing endianness specification"))
-    end
-
-    # return true if Little-endian, false if Big-endian
-    if value > 0
-        return false  # Big-endian
-    elseif value < 0
-        return true   # Little-endian
-    else
-        throw(InvalidPfmFileFormat("Endianness value cannot be 0. Expected a positive or negative value."))
-    end
-end
-
-
-"""Read image size from a string, INPUT line String, RETURN tuple of width and height"""
-function _parse_image_size(line::String)
-    dims = split(line)
-    if length(dims) != 2
-        throw(InvalidPfmFileFormat("Invalid image size specification"))
-    end
-
-    w , h = try
-        parse(Int, dims[1]), parse(Int, dims[2])
-    catch e
-        throw(InvalidPfmFileFormat("Invalid weight/hight"))
-    end
-    return w, h
-end
-
-
-function read_pfm_image(io)
-    # Read the first line, should be "PF"
-    line = _read_line(io)
-    if line != "PF"
-        throw(InvalidPfmFileFormat("Non-specified PF type"))
-    end
-
-    # Read the second line, should be "width height"
-    line = _read_line(io)
-    w, h = _parse_image_size(line)
-
-    # Read the third line, should be "±1.0"
-    line = _read_line(io)
-    endianness = _parse_endianness(line)
-
-    # Read the PFM image, from the bottom to the top, from left to right
-    img = hdrimg(w, h)
-    for i in h:-1:1
-        for j in 1:w
-            r = _read_float(io, endianness)
-            g = _read_float(io, endianness)
-            b = _read_float(io, endianness)
-            img.img[i, j] = RGB(r, g, b)
-        end
-    end
-
-    return img
-end
-
-#-------------------------------------------------------------
-# PFM file - Read
-#-------------------------------------------------------------
 """
-    write_pfm_image(img::hdrimg, io, endianness::Bool=true)
-
-Write a PFM file encodiding the content of an `hdrimg`
-"""
-function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
-    endian_str = endianness ? "-1.0" : "1.0"
-    header = string("PF\n", img.w, " ", img.h, "\n", endian_str, "\n")
-
-    try
-        write(io, header)
-    catch e
-        throw(InvalidPfmFileFormat("Invalid output file"))
-    end
-
-    for i in img.h:-1:1
-        for j in 1:img.w
-            color = img.img[i, j]
-            _write_float(color.r, io, endianness)
-            _write_float(color.g, io, endianness)
-            _write_float(color.b, io, endianness)
-        end
-    end
-end
-
-function _write_float(f, io, endianness::Bool=true)
-    data = reinterpret(UInt32, Float32(f))  # Assicura che sia Float32
-    data = endianness ? data : ntoh(data)   # Converte se necessario
-    write(io, data)
-end
-
-#-------------------------------------------------------------
-# Luminosity 
-#-------------------------------------------------------------
-""" INPUT: 
-    hdrimg
-    +type luminosity calculation:
-        'LF' : Luminosity function (default),
-        'M' : Mean luminosity,
-        'W' : Weighted luminosity,
-        'D' : Euclidean distance luminosity 
-    +Delta (default 0.0001): useful to avoid log(0) for black pixels
-    RETURN luminosity mean value"""
-function average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
+function _average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
     d = try
         delta >= 0 ? delta : throw(ArgumentError("Expected a positive delta value"))
     catch
@@ -176,9 +54,26 @@ function average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
     return 10^(sum / (img.h * img.w))
 end
 
+# we developed tone mapping functions which modify the input hdrimg, so a return img is not really necessary. how do we want to handle this?
+"""
+    _normalize_img(img::hdrimg: a::T, std::T) where {T<:Real, N}
 
-function normalize_img(img::hdrimg; a=0.18 , lum = nothing)
-    lum = something(lum, average_luminosity(img)) # If luminosity is not provided, calculate it
+Normalize an image by using ``R_i → R_i × \\frac{R_i}{⟨l⟩}``.
+
+# Arguments
+- `img::hdrimg`: The HDR image to be normalized.
+- `a::T`: A positive value to be used in the normalization formula.
+- `lum::T`: The average luminosity of the image. If not provided, it will be calculated using `_average_luminosity`.
+
+# Returns
+- `hdrimg`: The normalized HDR image.
+
+# Raises
+- `ArgumentError`: If `a` is not a positive number or if `lum` is not a number.
+
+"""
+function _normalize_img(img::hdrimg; a=0.18 , lum = nothing)
+    lum = something(lum, _average_luminosity(img)) # If luminosity is not provided, calculate it
     if !(lum isa Number)
         throw(ArgumentError("Luminosity must be a number"))
     end
@@ -194,6 +89,72 @@ function normalize_img(img::hdrimg; a=0.18 , lum = nothing)
     return img
 end
 
+"""
 
+    _clamp_img(hdr::hdrimg)
 
+Clamp the HDR image values to the range [0, 1] using the formula: R_i → R_i/(1+R_i).
 
+# Arguments
+- `hdr::hdrimg`: The HDR image to be clamped.
+
+# Returns
+- `hdrimg`: The clamped HDR image.
+
+"""
+function _clamp_img(hdr::hdrimg)
+    hdr.img .= map(x -> RGB(x.r/(1+x.r), x.g/(1+x.g), x.b/(1+x.b)), hdr.img)
+    return hdr
+end
+
+"""
+    _γ_correction(hdr::hdrimg; γ = 1.0)
+
+Apply gamma correction to the HDR image using the formula: R_i → R_i^(1/γ).
+
+# Arguments
+- `hdr::hdrimg`: The HDR image to be gamma corrected.
+- `γ::Float64`: The gamma value to be used for correction. Must be a positive number (default is 1.0).
+
+# Returns
+- `hdrimg`: The gamma-corrected HDR image.
+
+# Raises
+- `ArgumentError`: If `γ` is not a positive number.
+
+"""
+function _γ_correction(hdr::hdrimg; γ = 1.0)
+    if !(γ isa Number) || γ <= 0
+        throw(ArgumentError("Gamma must be a positive number"))
+    end
+    hdr.img .= map(x -> RGB(x.r^(1.0/γ), x.g^(1.0/γ), x.b^(1.0/γ)), hdr.img)
+    return hdr
+end
+
+"""
+    tone_mapping(img::hdrimg; a=0.18, lum = nothing, γ = 1.0)
+
+Apply tone mapping to the HDR image.
+
+# Arguments
+- `img::hdrimg`: The HDR image to be tone-mapped.
+- `a::Float64`: A positive value to be used in the normalization formula (default is 0.18).
+- `lum::Float64`: The average luminosity of the image. If not provided, it will be calculated using `_average_luminosity`.
+- `γ::Float64`: The gamma value to be used for correction. Must be a positive number (default is 1.0).
+
+# Returns
+- `hdrimg`: The tone-mapped HDR image.
+
+"""
+function tone_mapping(img::hdrimg; a=0.18, lum = nothing, γ = 1.0)
+    # Normalize the image
+    _normalize_img(img; a, lum)
+
+    # Clamp the image
+    _clamp_img(img)
+
+    # Apply gamma correction
+    _γ_correction(img; γ)
+
+    return img
+end
