@@ -24,10 +24,10 @@ function main()
     close(io)
 
     # Apply tone mapping
-    img = tone_mapping(img; a=a, γ=gamma)
+    toned_img = tone_mapping(img; a=a, γ=gamma)
 
     # Save the LDR image
-    save_ldrimage(get_matrix(img), output_file)
+    save_ldrimage(get_matrix(toned_img), output_file)
     println("Image saved to $output_file")
 end
 

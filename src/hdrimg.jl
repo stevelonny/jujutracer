@@ -56,7 +56,7 @@ end
 
 # we developed tone mapping functions which modify the input hdrimg, so a return img is not really necessary. how do we want to handle this?
 """
-    _normalize_img(img::hdrimg: a::T, std::T) where {T<:Real, N}
+    _normalize_img!(img::hdrimg: a::T, std::T) where {T<:Real, N}
 
 Normalize an image by using ``R_i → R_i × \\frac{R_i}{⟨l⟩}``.
 
@@ -72,7 +72,7 @@ Normalize an image by using ``R_i → R_i × \\frac{R_i}{⟨l⟩}``.
 - `ArgumentError`: If `a` is not a positive number or if `lum` is not a number.
 
 """
-function _normalize_img(img::hdrimg; a=0.18 , lum = nothing)
+function _normalize_img!(img::hdrimg; a=0.18 , lum = nothing)
     lum = something(lum, _average_luminosity(img)) # If luminosity is not provided, calculate it
     if !(lum isa Number)
         throw(ArgumentError("Luminosity must be a number"))
@@ -80,18 +80,12 @@ function _normalize_img(img::hdrimg; a=0.18 , lum = nothing)
 
     a= a>0 ? a : throw(ArgumentError("Expected a positive value for a"))
 
-    for i in 1:img.h
-        for j in 1:img.w
-            img.img[i, j] = img.img[i, j] * (a / lum)
-        end
-    end
-
-    return img
+    img.img .= map(x ->  x* (a / lum), img.img)
 end
 
 """
 
-    _clamp_img(hdr::hdrimg)
+    _clamp_img!(hdr::hdrimg)
 
 Clamp the HDR image values to the range [0, 1] using the formula: R_i → R_i/(1+R_i).
 
@@ -102,13 +96,12 @@ Clamp the HDR image values to the range [0, 1] using the formula: R_i → R_i/(1
 - `hdrimg`: The clamped HDR image.
 
 """
-function _clamp_img(hdr::hdrimg)
+function _clamp_img!(hdr::hdrimg)
     hdr.img .= map(x -> RGB(x.r/(1+x.r), x.g/(1+x.g), x.b/(1+x.b)), hdr.img)
-    return hdr
 end
 
 """
-    _γ_correction(hdr::hdrimg; γ = 1.0)
+    _γ_correction!(hdr::hdrimg; γ = 1.0)
 
 Apply gamma correction to the HDR image using the formula: R_i → R_i^(1/γ).
 
@@ -123,12 +116,11 @@ Apply gamma correction to the HDR image using the formula: R_i → R_i^(1/γ).
 - `ArgumentError`: If `γ` is not a positive number.
 
 """
-function _γ_correction(hdr::hdrimg; γ = 1.0)
+function _γ_correction!(hdr::hdrimg; γ = 1.0)
     if !(γ isa Number) || γ <= 0
         throw(ArgumentError("Gamma must be a positive number"))
     end
     hdr.img .= map(x -> RGB(x.r^(1.0/γ), x.g^(1.0/γ), x.b^(1.0/γ)), hdr.img)
-    return hdr
 end
 
 """
@@ -147,14 +139,16 @@ Apply tone mapping to the HDR image.
 
 """
 function tone_mapping(img::hdrimg; a=0.18, lum = nothing, γ = 1.0)
+    copy = img  
+
     # Normalize the image
-    _normalize_img(img; a, lum)
+    _normalize_img!(copy; a, lum)
 
     # Clamp the image
-    _clamp_img(img)
+    _clamp_img!(copy)
 
     # Apply gamma correction
-    _γ_correction(img; γ)
+    _γ_correction!(copy; γ)
 
-    return img
+    return copy
 end

@@ -142,25 +142,29 @@ end
     #test for _normalize_img
     img = hdrimg(1, 1)
     img.img[1, 1] = RGB(10.0, 20.0, 30.0)   #luminosity = 20
-    @test_throws ArgumentError jujutracer._normalize_img(img, a=-1.0)
-    @test_throws ArgumentError jujutracer._normalize_img(img, lum="prova")
+    @test_throws ArgumentError jujutracer._normalize_img!(img, a=-1.0)
+    @test_throws ArgumentError jujutracer._normalize_img!(img, lum="prova")
 
-    @test jujutracer._normalize_img(img, a=2 , lum =10 ).img[1,1] ≈ RGB(2.0, 4.0, 6.0) 
+    jujutracer._normalize_img!(img, a=2 , lum =10 )
+    @test img.img[1,1] ≈ RGB(2.0, 4.0, 6.0) 
 
     # test for clamp_img
     img = hdrimg(1, 1)
     img.img[1, 1] = RGB(10.0, 20.0, 30.0)
-    @test jujutracer._clamp_img(img).img[1, 1] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
+    jujutracer._clamp_img!(img)
+    @test img.img[1, 1] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
 
     # test for gamma correction
     img = hdrimg(1, 1)
     img.img[1, 1] = RGB(10.0, 20.0, 30.0)
-    @test jujutracer._γ_correction(img; γ = 2.2).img[1, 1] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
+    jujutracer._γ_correction!(img; γ = 2.2)
+    @test img.img[1, 1] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
     img.img[1, 1] = RGB(10.0, 20.0, 30.0)
-    @test jujutracer._γ_correction(img; γ = 1.0).img[1, 1] ≈ RGB(10.0, 20.0, 30.0)
+    jujutracer._γ_correction!(img; γ = 1.0)
+    @test img.img[1, 1] ≈ RGB(10.0, 20.0, 30.0)
 
-    @test_throws ArgumentError jujutracer._γ_correction(img; γ = -1.0)
-    @test_throws ArgumentError jujutracer._γ_correction(img; γ = 0.0)
-    @test_throws ArgumentError jujutracer._γ_correction(img; γ = "prova")
+    @test_throws ArgumentError jujutracer._γ_correction!(img; γ = -1.0)
+    @test_throws ArgumentError jujutracer._γ_correction!(img; γ = 0.0)
+    @test_throws ArgumentError jujutracer._γ_correction!(img; γ = "prova")
 
 end
