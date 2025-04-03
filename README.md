@@ -17,9 +17,9 @@ git clone https://github.com/stevelonny/jujutracer.git
 ```
 
 ## Usage
-At this stage, this software only convert a PFM image into a LDR format. 
+At this stage, this software only converts a PFM image into a LDR format. 
 A command line interface is provided through [`main.jl`](main.jl).
-The user must provide the input file in the correct PFM format, the _a_ value and _gamma_ correction value, and the output file, which must be of the `.png` or `.jpg` extension. 
+The user must provide the input file in the correct PFM format, the _a_ value and _gamma_ correction value, and the output file, which must be of the `.png` or `.jpg` extension.
 ```bash
 julia main.jl <pfm_file> <a> <gamma> <output_file>
 ```
