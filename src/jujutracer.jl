@@ -16,7 +16,6 @@ greet() = println("Hello World!")
 
 # includes
 include("color.jl")
-export _lumi_mean, _lumi_weighted, _lumi_D, _lumi_Func, _RGBluminosity
 
 include("hdrimg.jl")
 export hdrimg, valid_coordinates, average_luminosity, tone_mapping

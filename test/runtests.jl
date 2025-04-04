@@ -168,17 +168,17 @@ end
 @testset "Tone mapping" begin
     #Tests for single RGB luminosity functions
     color = RGB(10.0, 30.0, 50.0)
-    @test _lumi_mean(color) ≈ 30.0
-    @test _RGBluminosity(color, "M") ≈ 30.0
-    @test _lumi_weighted(color) ≈ 26.3
-    @test _RGBluminosity(color, "W") ≈ 26.3
-    @test _lumi_D(color) ≈ 59.16079783099616
-    @test _RGBluminosity(color, "D") ≈ 59.16079783099616
+    @test jujutracer._lumi_mean(color) ≈ 30.0
+    @test jujutracer._RGBluminosity(color, "M") ≈ 30.0
+    @test jujutracer._lumi_weighted(color) ≈ 26.3
+    @test jujutracer._RGBluminosity(color, "W") ≈ 26.3
+    @test jujutracer._lumi_D(color) ≈ 59.16079783099616
+    @test jujutracer._RGBluminosity(color, "D") ≈ 59.16079783099616
     color = RGB(10.0, 15.0, 30.0)
-    @test _lumi_Func(color) ≈ 20.0
-    @test _RGBluminosity(color, "LF") ≈ 20.0
+    @test jujutracer._lumi_Func(color) ≈ 20.0
+    @test jujutracer._RGBluminosity(color, "LF") ≈ 20.0
 
-    @test_throws ArgumentError _RGBluminosity(color, "X")
+    @test_throws ArgumentError jujutracer._RGBluminosity(color, "X")
 
     #test for _average_luminosity
     img = hdrimg(2, 1)
