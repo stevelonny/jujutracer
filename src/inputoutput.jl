@@ -58,6 +58,14 @@ end
 #-------------------------------------------------------------
 
 # Exception for invalid PFM file format
+"""
+    InvalidPfmFileFormat <: Exception
+
+Exception raised when the PFM file format is invalid or cannot be read.
+
+# Fields
+- `error_message::String`: The error message describing the issue.
+"""
 struct InvalidPfmFileFormat <: Exception
     error_message::String
 end

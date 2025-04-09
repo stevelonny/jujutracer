@@ -1,6 +1,16 @@
 #-------------------------------------------------------------
 # hdrimg
 #-------------------------------------------------------------
+"""
+    hdrimg(w::Int, h::Int)
+
+A struct representing a high dynamic range image (HDR image).
+
+# Fields
+- `img::Matrix{RGB}`: A matrix of RGB values representing the HDR image.
+- `w::Int64`: The width of the image in pixels.
+- `h::Int64`: The height of the image in pixels.
+"""
 struct hdrimg
     w::Int64
     h::Int64
@@ -29,7 +39,7 @@ end
 # Tone mapping 
 #-------------------------------------------------------------
 """ 
-    average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
+    _average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
 
 Return the average luminosity of an HDR image, given the type of luminosity calculation to be used and delta to avoid.
 
@@ -66,7 +76,10 @@ end
 """
     _normalize_img!(img::hdrimg: a::T, std::T) where {T<:Real, N}
 
-Normalize an image by using ``R_i → R_i × \\frac{R_i}{⟨l⟩}``.
+Normalize an image by using
+```math
+R_i → R_i × \\frac{R_i}{⟨l⟩}
+```
 
 # Arguments
 - `img::hdrimg`: The HDR image to be normalized.
@@ -91,7 +104,10 @@ end
 
     _clamp_img!(hdr::hdrimg)
 
-Clamp the HDR image values to the range [0, 1] using the formula: R_i → R_i/(1+R_i).
+Clamp the HDR image values to the range [0, 1] using the formula:
+```math
+R_i → \\frac{R_i}{1+R_i}
+```
 
 # Arguments
 - `hdr::hdrimg`: The HDR image to be clamped.
@@ -103,7 +119,10 @@ end
 """
     _γ_correction!(hdr::hdrimg; γ = 1.0)
 
-Apply gamma correction to the HDR image using the formula: R_i → R_i^(1/γ).
+Apply gamma correction to the HDR image using the formula: 
+```math
+R_i → {R_i}^{1/γ}
+```
 
 # Arguments
 - `hdr::hdrimg`: The HDR image to be gamma corrected.

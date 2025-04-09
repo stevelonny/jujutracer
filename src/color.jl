@@ -61,7 +61,7 @@ end
 """
     _lumi_Func(color)
 
-Luminosity function according to the formula: (max(r,g,b) + min(r,g,b)) / 2.
+Luminosity function according to the formula: ``\\frac{max(r,g,b) + min(r,g,b)}{2}``.
 
 # Arguments
 - The RGB color to be processed. Expected to be a struct of 3 values (r, g, b).
