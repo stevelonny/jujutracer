@@ -18,8 +18,6 @@ struct Vec
     z::Float64
 end
 
-
-
 #--------------------------------------------------------------------------
 # Point type implementation
 #--------------------------------------------------------------------------
@@ -68,10 +66,6 @@ function to_string(v::T) where {T<:Union{Point, Vec, Normal}}
     return "$(T)(x=$(v.x), y=$(v.y), z=$(v.z))"
 end
 
-Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y * scalar, v.z * scalar) 
-Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y / scalar, v.z / scalar)
-Base.:≈(v1::T, v2::T) where {T<:Union{Point, Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
-
 """
     squared_norm(v::Union{Vec, Normal})
 
@@ -112,28 +106,12 @@ end
 #--------------------------------------------------------------------------
 # Operations
 #--------------------------------------------------------------------------
-function Base.:+(a::T, b::Vec) where {T<:Union{Vec, Point}}
-    try
-        return T(a.x + b.x, a.y + b.y, a.z + b.z)
-    catch
-        throw(ArgumentError("Invalid geometric type"))
-    end
+Base.:+(a::T, b::Vec) where {T<:Union{Vec, Point}} = T(a.x + b.x, a.y + b.y, a.z + b.z)
+Base.:+(a::T, b::T) where {T<:Union{Vec, Normal}} = T(a.x + b.x, a.y + b.y, a.z + b.z)
+Base.:-(a::T, b::Vec) where {T<:Union{Vec, Point}} = T(a.x - b.x, a.y - b.y, a.z - b.z)
+Base.:-(a::T, b::T) where {T<:Union{Vec, Normal}} = T(a.x - b.x, a.y - b.y, a.z - b.z)
+Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal}) = a.x * b.x + a.y * b.y + a.z * b.z
+Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y * scalar, v.z * scalar) 
+Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y / scalar, v.z / scalar)
+Base.:≈(v1::T, v2::T) where {T<:Union{Point, Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 
-end
-
-function Base.:-(a::T, b::Vec) where {T<:Union{Vec, Point}}
-    try
-        return T(a.x - b.x, a.y - b.y, a.z - b.z)
-    catch
-        throw(ArgumentError("Invalid geometric type"))
-    end
-
-end
-
-function Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal})
-    try
-        return a.x * b.x + a.y * b.y + a.z * b.z
-    catch
-        throw(ArgumentError("Invalid geometric type"))
-    end
-end
