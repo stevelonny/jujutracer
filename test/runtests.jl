@@ -223,3 +223,7 @@ end
     @test_throws ArgumentError jujutracer._γ_correction!(img; γ = "prova")
 
 end
+
+@testset "Geometry" begin
+    
+end

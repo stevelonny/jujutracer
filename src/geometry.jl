@@ -1,7 +1,6 @@
 #--------------------------------------------------------------------------
 # Vec type implementation
 #--------------------------------------------------------------------------
-
 """
     Vec(x::Float64, y::Float64, z::Float64)
 
@@ -16,17 +15,37 @@ struct Vec
     x::Float64
     y::Float64
     z::Float64
+end
 
-    """
-        Vec(x::Float64, y::Float64, z::Float64)
-    
-    Create a new vector Vec with given dimensions.
-    # Arguments
-    - `x::Int`, `y::Int`, `z::Int`: vector dimensions.
-    # Returns
-    - `Vec`: A new vector.
-    """
-    function Vec(x::Float64, y::Float64, z::Float64)
-        new(x, y, z)
-    end
+#--------------------------------------------------------------------------
+# Point type implementation
+#--------------------------------------------------------------------------
+"""
+    Point(x::Float64, y::Float64, z::Float64)
+
+Struct representing a point in 3D space.
+# Fields
+- `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
+"""
+struct Point
+    x::Float64
+    y::Float64
+    z::Float64
+end
+
+
+#--------------------------------------------------------------------------
+# Normal type implementation
+#--------------------------------------------------------------------------
+"""
+    Normal(x::Float64, y::Float64, z::Float64)
+
+Struct representing a normal vector in 3D space.
+# Fields
+- `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
+"""
+struct Normal
+    x::Float64
+    y::Float64
+    z::Float64
 end
