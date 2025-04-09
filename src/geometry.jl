@@ -1,3 +1,4 @@
+import Base: *, +, -
 #--------------------------------------------------------------------------
 # Vec type implementation
 #--------------------------------------------------------------------------
@@ -52,7 +53,6 @@ struct Normal
     z::Float64
 end
 
-
 #--------------------------------------------------------------------------
 # Common methods
 #--------------------------------------------------------------------------
@@ -61,7 +61,7 @@ end
 
 Calculates the squared norm of a vector.
 # Arguments
-- `v::Vec`: The vector to be processed. Expected to be a struct of 3 values (x, y, z).
+- `v::Union{Vec, Normal}`: The vector to be processed. Expected to be a struct of 3 values (x, y, z).
 # Returns
 - The squared norm of the vector.
 """
@@ -74,7 +74,7 @@ end
     norm(v::Union{Vec, Normal})
 Calculates the norm of a vector.
 # Arguments
-- `v::Vec`: The vector to be processed. Expected to be a struct of 3 values (x, y, z).
+- `v::Union{Vec, Normal}`: The vector to be processed. Expected to be a struct of 3 values (x, y, z).
 # Returns
 - The norm of the vector.
 """
@@ -89,5 +89,35 @@ function normalize(v::Union{Vec, Normal})
         return v
     else
         return Vec(v.x / n, v.y / n, v.z / n)
+    end
+end
+
+
+#--------------------------------------------------------------------------
+# Operations
+#--------------------------------------------------------------------------
+function Base.:+(a::T, b::Vec) where {T<:Union{Vec, Point}}
+    try
+        return T(a.x + b.x, a.y + b.y, a.z + b.z)
+    catch
+        throw(ArgumentError("Invalid geometric type"))
+    end
+
+end
+
+function Base.:-(a::T, b::Vec) where {T<:Union{Vec, Point}}
+    try
+        return T(a.x - b.x, a.y - b.y, a.z - b.z)
+    catch
+        throw(ArgumentError("Invalid geometric type"))
+    end
+
+end
+
+function Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal})
+    try
+        return a.x * b.x + a.y * b.y + a.z * b.z
+    catch
+        throw(ArgumentError("Invalid geometric type"))
     end
 end
