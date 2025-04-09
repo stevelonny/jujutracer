@@ -1,3 +1,4 @@
+import Base: *, +, -
 #--------------------------------------------------------------------------
 # Vec type implementation
 #--------------------------------------------------------------------------
@@ -48,4 +49,31 @@ struct Normal
     x::Float64
     y::Float64
     z::Float64
+end
+
+function Base.:+(a::T, b::Vec) where {T<:Union{Vec, Point}}
+    try
+        return T(a.x + b.x, a.y + b.y, a.z + b.z)
+    catch
+        throw(ArgumentError("Invalid geometric type"))
+    end
+
+end
+
+function Base.:-(a::T, b::Vec) where {T<:Union{Vec, Point}}
+    try
+        return T(a.x - b.x, a.y - b.y, a.z - b.z)
+    catch
+        throw(ArgumentError("Invalid geometric type"))
+    end
+
+end
+
+function Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal})
+    try
+        return a.x * b.x + a.y * b.y + a.z * b.z
+    catch
+        throw(ArgumentError("Invalid geometric type"))
+    end
+
 end
