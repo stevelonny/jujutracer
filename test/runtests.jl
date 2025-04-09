@@ -225,5 +225,25 @@ end
 end
 
 @testset "Geometry" begin
+
+    #Test for Norm
+    v=Vec(1.0, 2.0, 3.0)
+    n=Normal(10.0, 20.0, 30.0)
+    p= Point(1.0, 2.0, 3.0)
+    @test squared_norm(v) ≈ 14
+    @test norm(v) ≈ sqrt(14)
+    @test squared_norm(n) ≈ 1400
+    @test norm(n) ≈ sqrt(1400)
+
+    @test_throws MethodError squared_norm(p)
+    @test_throws MethodError norm(p)
     
+    #Test for normalize
+
+    v=Vec(3.0, 4.0, 0.0)
+    normalize!(v)
+    @test v ≈ Vec(0.6, 0.8, 0.0)
+    v=Vec(0.0, 0.0, 0.0)
+    @test_throws ArgumentError normalize!(v)
+
 end
