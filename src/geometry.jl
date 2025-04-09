@@ -1,3 +1,4 @@
+import Base: *, +, -
 #--------------------------------------------------------------------------
 # Vec type implementation
 #--------------------------------------------------------------------------
@@ -16,6 +17,8 @@ struct Vec
     y::Float64
     z::Float64
 end
+
+
 
 #--------------------------------------------------------------------------
 # Point type implementation
@@ -49,6 +52,9 @@ struct Normal
     z::Float64
 end
 
+#--------------------------------------------------------------------------
+# Common methods
+#--------------------------------------------------------------------------
 """
     to_string(v::T) where {T<:Union{Point, Vec, Normal}}
 
@@ -66,3 +72,68 @@ Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y 
 Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y / scalar, v.z / scalar)
 Base.:≈(v1::T, v2::T) where {T<:Union{Point, Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 
+"""
+    squared_norm(v::Union{Vec, Normal})
+
+Calculates the squared norm of a vector.
+# Arguments
+- `v::Union{Vec, Normal}`: The vector to be processed. Expected to be a struct of 3 values (x, y, z).
+# Returns
+- The squared norm of the vector.
+"""
+function squared_norm(v::Union{Vec, Normal})
+    return v.x^2 + v.y^2 + v.z^2
+end
+
+
+"""
+    norm(v::Union{Vec, Normal})
+Calculates the norm of a vector.
+# Arguments
+- `v::Union{Vec, Normal}`: The vector to be processed. Expected to be a struct of 3 values (x, y, z).
+# Returns
+- The norm of the vector.
+"""
+function norm(v::Union{Vec, Normal})
+    return sqrt(squared_norm(v))
+end
+
+
+function normalize(v::Union{Vec, Normal})
+    n = norm(v)
+    if n == 0
+        return v
+    else
+        return Vec(v.x / n, v.y / n, v.z / n)
+    end
+end
+
+
+#--------------------------------------------------------------------------
+# Operations
+#--------------------------------------------------------------------------
+function Base.:+(a::T, b::Vec) where {T<:Union{Vec, Point}}
+    try
+        return T(a.x + b.x, a.y + b.y, a.z + b.z)
+    catch
+        throw(ArgumentError("Invalid geometric type"))
+    end
+
+end
+
+function Base.:-(a::T, b::Vec) where {T<:Union{Vec, Point}}
+    try
+        return T(a.x - b.x, a.y - b.y, a.z - b.z)
+    catch
+        throw(ArgumentError("Invalid geometric type"))
+    end
+
+end
+
+function Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal})
+    try
+        return a.x * b.x + a.y * b.y + a.z * b.z
+    catch
+        throw(ArgumentError("Invalid geometric type"))
+    end
+end
