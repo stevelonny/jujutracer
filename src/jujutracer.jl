@@ -23,4 +23,7 @@ export hdrimg, valid_coordinates, average_luminosity, tone_mapping
 include("inputoutput.jl")
 export save_ldrimage, get_matrix, write_pfm_image, InvalidPfmFileFormat, read_pfm_image
 
+include("geometry.jl")
+export Vec
+
 end # module jujutracer
