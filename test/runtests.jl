@@ -225,5 +225,25 @@ end
 end
 
 @testset "Geometry" begin
-    
+    @test jujutracer.to_string(Point(1.0, 2.0, 3.0)) == "Point(1.0, 2.0, 3.0)"
+    @test jujutracer.to_string(Vec(1.0, 2.0, 3.0)) == "Vec(1.0, 2.0, 3.0)"
+    @test jujutracer.to_string(Normal(1.0, 2.0, 3.0)) == "Normal(1.0, 2.0, 3.0)"
+    v1 = Vec(1.0, 2.0, 3.0)
+    v2 = Vec(1.0, 2.0, 3.0)
+    @test v1 ≈ v2
+    @test v1 * 2 ≈ Vec(2.0, 4.0, 6.0)
+    @test v1 / 2 ≈ Vec(0.5, 1.0, 1.5)
+    v2 = Point(1.0, 2.0, 3.0)
+    @test_throws MethodError v1 ≈ v2
+    v2 = Normal(1.0, 2.0, 3.0)
+    @test_throws MethodError v1 ≈ v2
+    @test v2 * 2 ≈ Normal(2.0, 4.0, 6.0)
+    @test v2 / 2 ≈ Normal(0.5, 1.0, 1.5)
+    v1 = Normal(1.0, 2.0, 3.0)
+    @test v1 ≈ v2
+    v1 = Point(1.0, 2.0, 3.0)
+    v2 = Point(1.0, 2.0, 3.0)
+    @test v1 ≈ v2
+    @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
+    @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
 end
