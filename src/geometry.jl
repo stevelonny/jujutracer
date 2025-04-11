@@ -8,9 +8,7 @@ import Base: *, +, -
 A struct representing a high dynamic range image (HDR image).
 
 # Fields
-- `x::Float64`: x coordinate
-- `y::Float64`: y coordinate
-- `z::Float64`: z coordinate
+- `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
 """
 struct Vec
     x::Float64
@@ -82,9 +80,10 @@ end
 
 """
     norm(v::Union{Vec, Normal})
+
 Calculates the norm of a vector.
 # Arguments
-- `v::Union{Vec, Normal}`: The vector to be processed. Expected to be a struct of 3 values (x, y, z).
+- `v::Union{Vec, Normal}`: The vector to be processed. Expected to be a `Vec` or `Normal`  of 3 values (x, y, z).
 # Returns
 - The norm of the vector.
 """
@@ -92,13 +91,17 @@ function norm(v::Union{Vec, Normal})
     return sqrt(squared_norm(v))
 end
 
+"""
+    normalize!(v::Union{Vec, Normal})
 
-function normalize(v::Union{Vec, Normal})
+Normalizes a vector in place.
+# Arguments
+- `v::Union{Vec, Normal}`: The vector or normal to be normalized.
+"""
+function normalize!(v::Union{Vec, Normal})
     n = norm(v)
-    if n == 0
-        return v
-    else
-        return Vec(v.x / n, v.y / n, v.z / n)
+    if n != 0
+        v /= n
     end
 end
 
@@ -107,9 +110,10 @@ end
 # Operations
 #--------------------------------------------------------------------------
 Base.:+(a::T, b::Vec) where {T<:Union{Vec, Point}} = T(a.x + b.x, a.y + b.y, a.z + b.z)
-Base.:+(a::T, b::T) where {T<:Union{Vec, Normal}} = T(a.x + b.x, a.y + b.y, a.z + b.z)
+Base.:+(a::Normal, b::Normal)= Normal(a.x + b.x, a.y + b.y, a.z + b.z)
 Base.:-(a::T, b::Vec) where {T<:Union{Vec, Point}} = T(a.x - b.x, a.y - b.y, a.z - b.z)
-Base.:-(a::T, b::T) where {T<:Union{Vec, Normal}} = T(a.x - b.x, a.y - b.y, a.z - b.z)
+Base.:-(a::Normal, b::Normal) = Normal(a.x - b.x, a.y - b.y, a.z - b.z)
+Base.:-(v::T) where {T<:Union{Vec, Normal}} = T(-v.x, -v.y, -v.z)
 Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal}) = a.x * b.x + a.y * b.y + a.z * b.z
 Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y * scalar, v.z * scalar) 
 Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y / scalar, v.z / scalar)

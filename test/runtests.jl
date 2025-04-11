@@ -230,31 +230,35 @@ end
     @test jujutracer.to_string(Normal(1.0, 2.0, 3.0)) == "Normal(x=1.0, y=2.0, z=3.0)"
     v1 = Vec(1.0, 2.0, 3.0)
     v2 = Vec(1.0, 2.0, 3.0)
+    v3 = Vec(2.0, 4.0, 6.0)
     @test v1 ≈ v2
+    @test !(v1 ≈ v3)
     @test v1 * 2 ≈ Vec(2.0, 4.0, 6.0)
     @test v1 / 2 ≈ Vec(0.5, 1.0, 1.5)
     @test v1 + v2 ≈ Vec(2.0, 4.0, 6.0)
-    v2 = Point(1.0, 2.0, 3.0)
-    @test_throws MethodError v1 ≈ v2
+    @test v1 - v2 ≈ Vec(0, 0, 0)
+    point = Point(1.0, 2.0, 3.0)
+    @test_throws MethodError v1 ≈ point
     @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
     @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
-    v2 = Normal(1.0, 2.0, 3.0)
-    @test_throws MethodError v1 ≈ v2
-    @test v2 * 2 ≈ Normal(2.0, 4.0, 6.0)
-    @test v2 / 2 ≈ Normal(0.5, 1.0, 1.5)
-    v1 = Normal(1.0, 2.0, 3.0)
-    @test v1 ≈ v2
-    v1 = Point(1.0, 2.0, 3.0)
-    v2 = Point(1.0, 2.0, 3.0)
-    @test v1 ≈ v2
-    @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
-    @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
+    normal = Normal(1.0, 2.0, 3.0)
+    @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
+    @test -normal ≈ Normal(-1.0, -2.0, -3.0)
+    @test_throws MethodError v1 ≈ normal
+    @test normal * 2 ≈ Normal(2.0, 4.0, 6.0)
+    @test normal / 2 ≈ Normal(0.5, 1.0, 1.5)
+    n2 = Normal(1.0, 2.0, 3.0)
+    @test normal ≈ n2
+    p1 = Point(1.0, 2.0, 3.0)
+    p2 = Point(1.0, 2.0, 3.0)
+    @test p1 ≈ p2
+    @test_throws MethodError p1 * 2 
+    @test_throws MethodError p1 / 2
 
-    #Test for Norm
-    
-    v=Vec(1.0, 2.0, 3.0)
-    n=Normal(10.0, 20.0, 30.0)
-    p= Point(1.0, 2.0, 3.0)
+    #Test for Norm 
+    v = Vec(1.0, 2.0, 3.0)
+    n = Normal(10.0, 20.0, 30.0)
+    p = Point(1.0, 2.0, 3.0)
     @test squared_norm(v) ≈ 14
     @test norm(v) ≈ sqrt(14)
     @test squared_norm(n) ≈ 1400
@@ -264,10 +268,15 @@ end
     @test_throws MethodError norm(p)
     
     #Test for normalize
-
-    v=Vec(3.0, 4.0, 0.0)
+    v = Vec(3.0, 4.0, 0.0)
+    n = Normal(3.0, 4.0, 0.0)
     normalize!(v)
+    normalize!(n)
     @test v ≈ Vec(0.6, 0.8, 0.0)
-    v=Vec(0.0, 0.0, 0.0)
-    @test_throws ArgumentError normalize!(v)
+    @test n ≈ Normal(0.6, 0.8, 0.0)
+    v = Vec(0.0, 0.0, 0.0)
+    n = Normal(0.0, 0.0, 0.0)
+    normalize!(v)
+    @test v ≈ Vec(0.0, 0.0, 0.0)
+    @test n ≈ Normal(0.0, 0.0, 0.0)
 end
