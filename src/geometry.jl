@@ -175,3 +175,119 @@ Return wedge product (`\\times`) between Vec or Normal as a Vec
 function ×(a::Union{Vec, Normal}, b::Union{Vec, Normal})
     return Vec(a.y * b.z - a.z * b.y, a.z*b.x - a.x * b.z, a.x * b.y - a.y * b.x)
 end
+
+#--------------------------------------------------------------------------
+# Transformations
+#--------------------------------------------------------------------------
+struct transformation()
+    M::Matrix
+    inv::Matrix
+    function tranformation()
+        M=[[1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        inv=[[1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        new(M,inv)
+    end
+    function tranformation(M::Matrix, inv::Matrix)
+        new(M, inv)
+    end
+end
+
+struct traslation(v::Vec)
+    M::Matrix
+    inv::Matrix
+    function traslation(v::Vec)
+        M=[[1.0, 0.0, 0.0, v.x],
+        [0.0, 1.0, 0.0, v.y],
+        [0.0, 0.0, 1.0, v.z],
+        [0.0, 0.0, 0.0, 1.0]]
+        inv = [[1.0, 0.0, 0.0, -v.x],
+        [0.0, 1.0, 0.0, -v.y],
+        [0.0, 0.0, 1.0, -v.z],
+        [0.0, 0.0, 0.0, 1.0]]
+        new(M,inv)
+    end
+end
+
+struct scaling(x, y, z)
+    M::Matrix
+    inv::Matrix
+    function tranformation()
+        M=[[x, 0.0, 0.0, 0.0],
+        [0.0, y, 0.0, 0.0],
+        [0.0, 0.0, z, 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        inv=[[1/x, 0.0, 0.0, 0.0],
+        [0.0, 1/y, 0.0, 0.0],
+        [0.0, 0.0, 1/z, 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        new(M,inv)
+    end
+end
+
+struct Rx(angle::Float64)
+    M::Matrix
+    inv::Matrix
+    function Rx()
+        M=[[1.0, 0.0, 0.0, 0.0],
+        [0.0, cos(angle), -sin(angle), 0.0],
+        [0.0, sin(angle), cos(angle), 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        inv=[[1.0, 0.0, 0.0, 0.0],
+        [0.0, cos(angle), sin(angle), 0.0],
+        [0.0, -sin(angle), cos(angle), 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        new(M,inv)
+    end
+end
+
+struct Ry(angle::Float64)
+    M::Matrix
+    inv::Matrix
+    function Ry()
+        M=[[cos(angle), 0.0, sin(angle), 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [-sin(angle), 0.0, cos(angle), 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        inv=[[cos(angle), 0.0, -sin(angle), 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [sin(angle), 0.0, cos(angle), 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        new(M,inv)
+    end
+end
+
+struct Rz(angle::Float64)
+    M::Matrix
+    inv::Matrix
+    function Rz()
+        M=[[cos(angle), -sin(angle), 0.0, 0.0],
+        [sin(angle), cos(angle), 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        inv=[[cos(angle), sin(angle), 0.0, 0.0],
+        [-sin(angle), cos(angle), 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]]
+        new(M,inv)
+    end
+end
+
+function ⊙(a ,b)
+    M::Matrix
+    inv::Matrix
+    for i in (1,4)
+        for j in (1,4)
+            for k in (1,4)
+                M[i,j] += a.M[i,k] * b.M[k,j]
+                inv[i,j] += b.inv[i,k] * a.inv[k,j]
+            end
+        end
+    end
+    return tranformation(M,inv)
+end
