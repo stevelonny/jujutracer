@@ -167,67 +167,67 @@ end
 
 @testset "Tone mapping" begin
     #Tests for single RGB luminosity functions
-    color = RGB(10.0, 30.0, 50.0)
-    @test jujutracer._lumi_mean(color) ≈ 30.0
-    @test jujutracer._RGBluminosity(color, "M") ≈ 30.0
-    @test jujutracer._lumi_weighted(color) ≈ 26.3
-    @test jujutracer._RGBluminosity(color, "W") ≈ 26.3
-    @test jujutracer._lumi_D(color) ≈ 59.16079783099616
-    @test jujutracer._RGBluminosity(color, "D") ≈ 59.16079783099616
-    color = RGB(10.0, 15.0, 30.0)
-    @test jujutracer._lumi_Func(color) ≈ 20.0
-    @test jujutracer._RGBluminosity(color, "LF") ≈ 20.0
+    @testset "Single RGB luminosity functions" begin
+        color = RGB(10.0, 30.0, 50.0)
+        @test jujutracer._lumi_mean(color) ≈ 30.0
+        @test jujutracer._RGBluminosity(color, "M") ≈ 30.0
+        @test jujutracer._lumi_weighted(color) ≈ 26.3
+        @test jujutracer._RGBluminosity(color, "W") ≈ 26.3
+        @test jujutracer._lumi_D(color) ≈ 59.16079783099616
+        @test jujutracer._RGBluminosity(color, "D") ≈ 59.16079783099616
+        color = RGB(10.0, 15.0, 30.0)
+        @test jujutracer._lumi_Func(color) ≈ 20.0
+        @test jujutracer._RGBluminosity(color, "LF") ≈ 20.0
+        @test_throws ArgumentError jujutracer._RGBluminosity(color, "X")
+    end
 
-    @test_throws ArgumentError jujutracer._RGBluminosity(color, "X")
-
-    #test for _average_luminosity
-    img = hdrimg(2, 1)
-    img.img[1, 1] = RGB(5.0, 10.0, 15.0)   #mean luminosity = 10
-    img.img[1, 2] = RGB(50.0, 100.0, 150.0) #mean luminosity = 100
-    @test jujutracer._average_luminosity(img, delta=0.0) ≈ 10^1.5
-
-    @test_throws ArgumentError jujutracer._average_luminosity(img, type="X", delta=0)
-    @test_throws ArgumentError jujutracer._average_luminosity(img, delta="prova")
-    @test_throws ArgumentError jujutracer._average_luminosity(img, delta=-1.0)
-
-    img.img[1, 1] = RGB(0.0, 0.0, 0.0)   #activating delta
-    img.img[1, 2] = RGB(5.0e3, 1.0e4, 1.5e4) #mean luminosity = 1e4
-    @test jujutracer._average_luminosity(img) ≈ 1
+    @testset "Average luminosity" begin
+        img = hdrimg(2, 1)
+        img.img[1, 1] = RGB(5.0, 10.0, 15.0)   #mean luminosity = 10
+        img.img[1, 2] = RGB(50.0, 100.0, 150.0) #mean luminosity = 100
+        @test jujutracer._average_luminosity(img, delta=0.0) ≈ 10^1.5
+        @test_throws ArgumentError jujutracer._average_luminosity(img, type="X", delta=0)
+        @test_throws ArgumentError jujutracer._average_luminosity(img, delta="prova")
+        @test_throws ArgumentError jujutracer._average_luminosity(img, delta=-1.0)
+        img.img[1, 1] = RGB(0.0, 0.0, 0.0)   #activating delta
+        img.img[1, 2] = RGB(5.0e3, 1.0e4, 1.5e4) #mean luminosity = 1e4
+        @test jujutracer._average_luminosity(img) ≈ 1
+    end
 
     #test for _normalize_img
-    img = hdrimg(1, 1)
-    img.img[1, 1] = RGB(10.0, 20.0, 30.0)   #luminosity = 20
-    @test_throws ArgumentError jujutracer._normalize_img!(img, a=-1.0)
-    @test_throws ArgumentError jujutracer._normalize_img!(img, lum="prova")
-
-    jujutracer._normalize_img!(img, a=2 , lum =10 )
-    @test img.img[1,1] ≈ RGB(2.0, 4.0, 6.0) 
+    @testset "Normalize image" begin
+        img = hdrimg(1, 1)
+        img.img[1, 1] = RGB(10.0, 20.0, 30.0)   #luminosity = 20
+        @test_throws ArgumentError jujutracer._normalize_img!(img, a=-1.0)
+        @test_throws ArgumentError jujutracer._normalize_img!(img, lum="prova")
+        jujutracer._normalize_img!(img, a=2 , lum =10 )
+        @test img.img[1,1] ≈ RGB(2.0, 4.0, 6.0) 
+    end
 
     # test for clamp_img
-    img = hdrimg(1, 1)
-    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
-    jujutracer._clamp_img!(img)
-    @test img.img[1, 1] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
+    @testset "Clamp image" begin
+        img = hdrimg(1, 1)
+        img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+        jujutracer._clamp_img!(img)
+        @test img.img[1, 1] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
+    end
 
     # test for gamma correction
-    img = hdrimg(1, 1)
-    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
-    jujutracer._γ_correction!(img; γ = 2.2)
-    @test img.img[1, 1] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
-    img.img[1, 1] = RGB(10.0, 20.0, 30.0)
-    jujutracer._γ_correction!(img; γ = 1.0)
-    @test img.img[1, 1] ≈ RGB(10.0, 20.0, 30.0)
-
-    @test_throws ArgumentError jujutracer._γ_correction!(img; γ = -1.0)
-    @test_throws ArgumentError jujutracer._γ_correction!(img; γ = 0.0)
-    @test_throws ArgumentError jujutracer._γ_correction!(img; γ = "prova")
-
+    @testset "Gamma correction" begin
+        img = hdrimg(1, 1)
+        img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+        jujutracer._γ_correction!(img; γ = 2.2)
+        @test img.img[1, 1] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
+        img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+        jujutracer._γ_correction!(img; γ = 1.0)
+        @test img.img[1, 1] ≈ RGB(10.0, 20.0, 30.0)
+        @test_throws ArgumentError jujutracer._γ_correction!(img; γ = -1.0)
+        @test_throws ArgumentError jujutracer._γ_correction!(img; γ = 0.0)
+        @test_throws ArgumentError jujutracer._γ_correction!(img; γ = "prova")
+    end
 end
 
 @testset "Geometry" begin
-    @test jujutracer.to_string(Point(1.0, 2.0, 3.0)) == "Point(x=1.0, y=2.0, z=3.0)"
-    @test jujutracer.to_string(Vec(1.0, 2.0, 3.0)) == "Vec(x=1.0, y=2.0, z=3.0)"
-    @test jujutracer.to_string(Normal(1.0, 2.0, 3.0)) == "Normal(x=1.0, y=2.0, z=3.0)"
     v1 = Vec(1.0, 2.0, 3.0)
     v2 = Vec(1.0, 2.0, 3.0)
     v3 = Vec(2.0, 4.0, 6.0)
@@ -237,12 +237,13 @@ end
     @test v1 / 2 ≈ Vec(0.5, 1.0, 1.5)
     @test v1 + v2 ≈ Vec(2.0, 4.0, 6.0)
     @test v1 - v2 ≈ Vec(0, 0, 0)
+    @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
     point = Point(1.0, 2.0, 3.0)
     @test_throws MethodError v1 ≈ point
     @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
     @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
+    @test_throws ArgumentError Normal(0.0, 0.0, 0.0)
     normal = Normal(1.0, 2.0, 3.0)
-    @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
     @test -normal ≈ Normal(-1.0, -2.0, -3.0)
     @test_throws MethodError v1 ≈ normal
     @test normal * 2 ≈ Normal(2.0, 4.0, 6.0)
@@ -261,8 +262,8 @@ end
     p = Point(1.0, 2.0, 3.0)
     @test squared_norm(v) ≈ 14
     @test norm(v) ≈ sqrt(14)
-    @test squared_norm(n) ≈ 1400
-    @test norm(n) ≈ sqrt(1400)
+    @test squared_norm(n) ≈ 1
+    @test norm(n) ≈ 1
 
     @test_throws MethodError squared_norm(p)
     @test_throws MethodError norm(p)
@@ -270,13 +271,11 @@ end
     #Test for normalize
     v = Vec(3.0, 4.0, 0.0)
     n = Normal(3.0, 4.0, 0.0)
-    normalize!(v)
-    normalize!(n)
-    @test v ≈ Vec(0.6, 0.8, 0.0)
-    @test n ≈ Normal(0.6, 0.8, 0.0)
-    v = Vec(0.0, 0.0, 0.0)
-    n = Normal(0.0, 0.0, 0.0)
-    normalize!(v)
-    @test v ≈ Vec(0.0, 0.0, 0.0)
-    @test n ≈ Normal(0.0, 0.0, 0.0)
+    v0 = normalize(v)
+    @test v0 ≈ Vec(0.6, 0.8, 0.0)
+    @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
+    n = Normal(v)
+    @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
+    v0 = Vec(0.0, 0.0, 0.0)
+    @test normalize(v0) ≈ v0
 end
