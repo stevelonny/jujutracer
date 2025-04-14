@@ -237,6 +237,14 @@ end
     @test v1 / 2 ≈ Vec(0.5, 1.0, 1.5)
     @test v1 + v2 ≈ Vec(2.0, 4.0, 6.0)
     @test v1 - v2 ≈ Vec(0, 0, 0)
+    @test v1 ⋅ v2 ≈ 14
+    a = Vec(1.0, 0.0, 0.0)
+    b = Vec(0.0, 1.0, 0.0)
+    c = Vec(0.0, 0.0, 1.0)
+    @test a × b ≈ c
+    @test b × c ≈ a
+    @test c × a ≈ b
+    @test c × b ≈ -a
     point = Point(1.0, 2.0, 3.0)
     @test_throws MethodError v1 ≈ point
     @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)

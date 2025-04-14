@@ -101,7 +101,7 @@ Normalizes a vector in place.
 function normalize!(v::Union{Vec, Normal})
     n = norm(v)
     if n != 0
-        v /= n
+        return v / n
     end
 end
 
@@ -121,10 +121,20 @@ Base.:*(scalar::Real, v::T) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y 
 Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y / scalar, v.z / scalar)
 Base.:≈(v1::T, v2::T) where {T<:Union{Point, Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 
+"""
+    a \\cdot b
+    
+Return scalara product (`\\cdot`) between Vec or Normal
+"""
 function ⋅(a::Union{Vec, Normal}, b::Union{Vec, Normal})
     return a.x * b.x + a.y * b.y + a.z * b.z
 end
 
+"""
+    a \\times b
+    
+Return wedge product (`\\times`) between Vec or Normal as a Vec
+"""
 function ×(a::Union{Vec, Normal}, b::Union{Vec, Normal})
     return Vec(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x)
 end
