@@ -5,10 +5,12 @@ import Base: *, +, -
 """
     Vec(x::Float64, y::Float64, z::Float64)
 
-A struct representing a high dynamic range image (HDR image).
-
+A struct representing a vector in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
+# Methods
+- `Vec(n::Normal)`: Create a Vec from a Normal.
+- `Vec(p::Point)`: Create a Vec from a Point.
 """
 struct Vec
     x::Float64
@@ -38,14 +40,41 @@ end
 """
     Normal(x::Float64, y::Float64, z::Float64)
 
-Struct representing a normal vector in 3D space.
+Struct representing a unit vector (normal) in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
+# Methods
+- `Normal(v::Vec)`: Create a Normal from a Vec.
+- `Normal(x::Float64, y::Float64, z::Float64)`: Create a Normal from x, y, z coordinates.
+# Throws
+- `ArgumentError`: If the vector is zero.
 """
 struct Normal
     x::Float64
     y::Float64
     z::Float64
+    function Normal(x, y, z)
+        if x == 0 && y == 0 && z == 0
+            throw(ArgumentError("Normal vector cannot be zero."))
+        end
+        m = sqrt(x^2 + y^2 + z^2)
+        new(x/m, y/m, z/m)
+    end
+    function Normal(v::Vec)
+        if v.x == 0 && v.y == 0 && v.z == 0
+            throw(ArgumentError("Normal vector cannot be zero."))
+        end
+        m = sqrt(v.x^2 + v.y^2 + v.z^2)
+        new(v.x/m, v.y/m, v.z/m)
+    end
+end
+
+# Outside constructors
+function Vec(n::Normal)
+    new(n.x, n.y, n.z)
+end
+function Vec(p::Point)
+    new(p.x, p.y, p.z)
 end
 
 #--------------------------------------------------------------------------
@@ -92,17 +121,21 @@ function norm(v::Union{Vec, Normal})
 end
 
 """
-    normalize!(v::Union{Vec, Normal})
+    normalize(v::Union{Vec, Normal})
 
 Normalizes a vector in place.
 # Arguments
-- `v::Union{Vec, Normal}`: The vector or normal to be normalized.
+- `v::Vec`: The vector to be normalized.
+# Returns
+- The normalized vector.
+# throws
+- `ArgumentError`: If the vector is zero.
 """
-function normalize!(v::Union{Vec, Normal})
-    n = norm(v)
-    if n != 0
-        return v / n
+function normalize(v::Union{Vec, Normal})
+    if v.x == 0 && v.y == 0 && v.z == 0
+        return v
     end
+    return v/norm(v)
 end
 
 

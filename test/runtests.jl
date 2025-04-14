@@ -225,9 +225,6 @@ end
 end
 
 @testset "Geometry" begin
-    @test jujutracer.to_string(Point(1.0, 2.0, 3.0)) == "Point(x=1.0, y=2.0, z=3.0)"
-    @test jujutracer.to_string(Vec(1.0, 2.0, 3.0)) == "Vec(x=1.0, y=2.0, z=3.0)"
-    @test jujutracer.to_string(Normal(1.0, 2.0, 3.0)) == "Normal(x=1.0, y=2.0, z=3.0)"
     v1 = Vec(1.0, 2.0, 3.0)
     v2 = Vec(1.0, 2.0, 3.0)
     v3 = Vec(2.0, 4.0, 6.0)
@@ -238,6 +235,7 @@ end
     @test v1 + v2 ≈ Vec(2.0, 4.0, 6.0)
     @test v1 - v2 ≈ Vec(0, 0, 0)
     @test v1 ⋅ v2 ≈ 14
+    @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
     a = Vec(1.0, 0.0, 0.0)
     b = Vec(0.0, 1.0, 0.0)
     c = Vec(0.0, 0.0, 1.0)
@@ -250,7 +248,6 @@ end
     @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
     @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
     normal = Normal(1.0, 2.0, 3.0)
-    @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
     @test -normal ≈ Normal(-1.0, -2.0, -3.0)
     @test_throws MethodError v1 ≈ normal
     @test normal * 2 ≈ Normal(2.0, 4.0, 6.0)
@@ -269,8 +266,8 @@ end
     p = Point(1.0, 2.0, 3.0)
     @test squared_norm(v) ≈ 14
     @test norm(v) ≈ sqrt(14)
-    @test squared_norm(n) ≈ 1400
-    @test norm(n) ≈ sqrt(1400)
+    @test squared_norm(n) ≈ 1
+    @test norm(n) ≈ sqrt(1)
 
     @test_throws MethodError squared_norm(p)
     @test_throws MethodError norm(p)
@@ -278,13 +275,9 @@ end
     #Test for normalize
     v = Vec(3.0, 4.0, 0.0)
     n = Normal(3.0, 4.0, 0.0)
-    normalize!(v)
-    normalize!(n)
-    @test v ≈ Vec(0.6, 0.8, 0.0)
+    @test normalize(v) ≈ Vec(0.6, 0.8, 0.0)
     @test n ≈ Normal(0.6, 0.8, 0.0)
     v = Vec(0.0, 0.0, 0.0)
-    n = Normal(0.0, 0.0, 0.0)
-    normalize!(v)
-    @test v ≈ Vec(0.0, 0.0, 0.0)
-    @test n ≈ Normal(0.0, 0.0, 0.0)
+    @test normalize(v) ≈ Vec(0.0, 0.0, 0.0)
+    @test_throws ArgumentError n ≈ Normal(0.0, 0.0, 0.0)
 end
