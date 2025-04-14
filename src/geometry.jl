@@ -17,6 +17,31 @@ struct Point
 end
 
 #--------------------------------------------------------------------------
+# Vec type implementation
+#--------------------------------------------------------------------------
+"""
+    Vec(x::Float64, y::Float64, z::Float64)
+
+A struct representing a vector in 3D space.
+# Fields
+- `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
+# Methods
+- `Vec(n::Normal)`: Create a Vec from a Normal.
+- `Vec(p::Point)`: Create a Vec from a Point.
+"""
+struct Vec
+    x::Float64
+    y::Float64
+    z::Float64
+    function Vec(x, y, z)
+        new(x, y, z)
+    end
+    function Vec(p::Point)
+        new(p.x, p.y, p.z)
+    end
+end
+
+#--------------------------------------------------------------------------
 # Normal type implementation
 #--------------------------------------------------------------------------
 """
@@ -42,37 +67,19 @@ struct Normal
         m = sqrt(x^2 + y^2 + z^2)
         new(x/m, y/m, z/m)
     end
-end
-
-#--------------------------------------------------------------------------
-# Vec type implementation
-#--------------------------------------------------------------------------
-"""
-    Vec(x::Float64, y::Float64, z::Float64)
-
-A struct representing a vector in 3D space.
-# Fields
-- `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
-# Methods
-- `Vec(n::Normal)`: Create a Vec from a Normal.
-- `Vec(p::Point)`: Create a Vec from a Point.
-"""
-struct Vec
-    x::Float64
-    y::Float64
-    z::Float64
-    function Vec(x, y, z)
-        new(x, y, z)
-    end
-    function Vec(n::Normal)
-        new(n.x, n.y, n.z)
-    end
-    function Vec(p::Point)
-        new(p.x, p.y, p.z)
+    function Normal(v::Vec)
+        if v.x == 0 && v.y == 0 && v.z == 0
+            throw(ArgumentError("Normal vector cannot be zero."))
+        end
+        m = sqrt(v.x^2 + v.y^2 + v.z^2)
+        new(v.x/m, v.y/m, v.z/m)
     end
 end
 
-Normal(v::Vec) = Normal(v.x, v.y, v.z)
+# Outside constructors
+function Vec(n::Normal)
+    new(n.x, n.y, n.z)
+end
 
 #--------------------------------------------------------------------------
 # Common methods
@@ -151,10 +158,20 @@ Base.:*(scalar::Real, v::T) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y 
 Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y / scalar, v.z / scalar)
 Base.:≈(v1::T, v2::T) where {T<:Union{Point, Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 
+"""
+    a \\cdot b
+    
+Return scalara product (`\\cdot`) between Vec or Normal
+"""
 function ⋅(a::Union{Vec, Normal}, b::Union{Vec, Normal})
     return a.x * b.x + a.y * b.y + a.z * b.z
 end
 
+"""
+    a \\times b
+    
+Return wedge product (`\\times`) between Vec or Normal as a Vec
+"""
 function ×(a::Union{Vec, Normal}, b::Union{Vec, Normal})
     return Vec(a.y * b.z - a.z * b.y, a.z*b.x - a.x * b.z, a.x * b.y - a.y * b.x)
 end
