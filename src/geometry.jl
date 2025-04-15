@@ -179,37 +179,46 @@ end
 #--------------------------------------------------------------------------
 # Transformations
 #--------------------------------------------------------------------------
-struct transformation
+abstract type AbstractTransformation end
+"""
+    Transformation
+Generic concrete type Transformation
+"""
+struct Transformation <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
-    function transformation()
+    function Transformation()
         # creating M and inv cloumn by column
         M=[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
         inv=[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
-    function transformation(M::Matrix, inv::Matrix)
+    function Transformation(M::Matrix, inv::Matrix)
         new(M, inv)
     end
 end
 
-struct traslation
+struct Translation <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function traslation(v::Vec)
-        # creating M and inv cloumn by column
-        M = [[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [v.x, v.y, v.z, 1.0]]
-        inv = [[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [-v.x, -v.y, -v.z, 1.0]]
-        new(M,inv)
+    function Translation(dx::Float64, dy::Float64, dz::Float64)
+        M = [1.0 0.0 0.0 dx; 0.0 1.0 0.0 dy; 0.0 0.0 1.0 dz; 0.0 0.0 0.0 1.0]
+        Inv = [1.0 0.0 0.0 -dx; 0.0 1.0 0.0 -dy; 0.0 0.0 1.0 -dz; 0.0 0.0 0.0 1.0]
+        new(M, Inv)
+    end
+    function Translation(v::Vec)
+        M = [1.0 0.0 0.0 v.x; 0.0 1.0 0.0 v.y; 0.0 0.0 1.0 v.z; 0.0 0.0 0.0 1.0]
+        Inv = [1.0 0.0 0.0 -v.x; 0.0 1.0 0.0 -v.y; 0.0 0.0 1.0 -v.z; 0.0 0.0 0.0 1.0]
+        new(M, Inv)
     end
 end
 
-struct scaling
+struct Scaling <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function scaling(x::T,y::T,z::T) where{T<:Float64}
+    function Scaling(x::T,y::T,z::T) where{T<:Float64}
         # creating M and inv cloumn by column
         M=[[x, 0.0, 0.0, 0.0] [0.0, y, 0.0, 0.0] [0.0, 0.0, z, 0.0] [0.0, 0.0, 0.0, 1.0]]
         inv=[[1/x, 0.0, 0.0, 0.0] [0.0, 1/y, 0.0, 0.0] [0.0, 0.0, 1/z, 0.0] [0.0, 0.0, 0.0, 1.0]]
@@ -217,38 +226,41 @@ struct scaling
     end
 end
 
-struct Rx
+struct Rx <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function Rx(angle::Float64)
+    function Rx(angle)
         # creating M and inv cloumn by column
-        M=[[1.0, 0.0, 0.0, 0.0] [0.0, cos(angle), sin(angle), 0.0] [0.0, -sin(angle), cos(angle), 0.0] [0.0, 0.0, 0.0, 1.0]]
-        inv=[[1.0, 0.0, 0.0, 0.0] [0.0, cos(angle), -sin(angle), 0.0] [0.0, sin(angle), cos(angle), 0.0] [0.0, 0.0, 0.0, 1.0]]
+        app = convert(Float64, angle)
+        M=[[1.0, 0.0, 0.0, 0.0] [0.0, cos(app), sin(app), 0.0] [0.0, -sin(app), cos(app), 0.0] [0.0, 0.0, 0.0, 1.0]]
+        inv=[[1.0, 0.0, 0.0, 0.0] [0.0, cos(app), -sin(app), 0.0] [0.0, sin(app), cos(app), 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
 
-struct Ry
+struct Ry <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function Ry(angle::Float64)
+    function Ry(angle)
         # creating M and inv cloumn by column
-        M=[[cos(angle), 0.0, -sin(angle), 0.0] [0.0, 1.0, 0.0, 0.0] [sin(angle), 0.0, cos(angle), 0.0] [0.0, 0.0, 0.0, 1.0]]
-        inv=[[cos(angle), 0.0, sin(angle), 0.0] [0.0, 1.0, 0.0, 0.0] [-sin(angle), 0.0, cos(angle), 0.0] [0.0, 0.0, 0.0, 1.0]]
+        app = convert(Float64, angle)
+        M=[[cos(app), 0.0, -sin(app), 0.0] [0.0, 1.0, 0.0, 0.0] [sin(app), 0.0, cos(app), 0.0] [0.0, 0.0, 0.0, 1.0]]
+        inv=[[cos(app), 0.0, sin(app), 0.0] [0.0, 1.0, 0.0, 0.0] [-sin(app), 0.0, cos(app), 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
 
-struct Rz
+struct Rz <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function Rz(angle::Float64)
+    function Rz(angle)
         # creating M and inv cloumn by column
-        M=[[cos(angle), sin(angle), 0.0, 0.0] [-sin(angle), cos(angle), 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
-        inv=[[cos(angle), -sin(angle), 0.0, 0.0] [sin(angle), cos(angle), 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
+        app = convert(Float64, angle)
+        M=[[cos(app), sin(app), 0.0, 0.0] [-sin(app), cos(app), 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
+        inv=[[cos(app), -sin(app), 0.0, 0.0] [sin(app), cos(app), 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
@@ -256,23 +268,52 @@ end
 #--------------------------------------------------------------------------
 # Common methods
 #--------------------------------------------------------------------------
-
-function ⊙(a ,b)
-    M = Matrix{Float64}(undef,4,4)
-    inv = Matrix{Float64}(undef,4,4)
-    for i in 1:4
-        for j in 1:4
-            for k in 1:4
-                M[i,j] += a.M[i,k] * b.M[k,j]
-                inv[i,j] += b.inv[i,k] * a.inv[k,j]
-            end
-        end
-    end
-    return transformation(M,inv)
+"""
+    \\odot(a, b)
+Composition of two transformations, where `b` is the first acting on the object and `a` the second
+"""
+function ⊙(a, b)
+    M::Matrix{Float64} = a.M * b.M
+    inv::Matrix{Float64} = b.inv * a.inv
+    return Transformation(M,inv)
 end
 
-function inv(a::T) where {T<:Union{transformation,traslation,scaling,Rx,Ry,Rz}}
-    return T(a.inv,a.M)
+"""
+    inv(a::T)
+Return the inverse transformation
+"""
+function inverse(a::AbstractTransformation)
+    return Transformation(a.inv,a.M)
 end
 
-Base.:≈(a::Union{transformation,traslation,scaling,Rx,Ry,Rz},b::Union{transformation,traslation,scaling,Rx,Ry,Rz}) = a.M ≈ b.M && a.inv ≈ b.inv
+"""
+    Transformation(v::Vec)
+Applying the transformation to a Vec
+"""
+function (t::AbstractTransformation)(v::Vec)
+    v4 = [v.x; v.y; v.z; 0]
+    v4t = t.M * v4
+    return Vec(v4t[1], v4t[2], v4t[3])
+end
+
+"""
+    Transformation(p::Point)
+Applying the transformation to a Point
+"""
+function (t::AbstractTransformation)(p::Point)
+    v4 = [p.x; p.y; p.z; 1]
+    v4t = t.M * v4
+    return Point(v4t[1], v4t[2], v4t[3])
+end
+
+"""
+    Transformation(n::Normal)
+Applying the transformation to a Normal
+"""
+function (t::AbstractTransformation)(n::Normal)
+    v4 = [n.x; n.y; n.z; 1]
+    v4t = transpose(t.inv) * v4
+    return Normal(v4t[1], v4t[2], v4t[3])
+end
+
+Base.:≈(a::Union{Transformation,Translation,Scaling,Rx,Ry,Rz},b::Union{Transformation,Translation,Scaling,Rx,Ry,Rz}) = a.M ≈ b.M && a.inv ≈ b.inv

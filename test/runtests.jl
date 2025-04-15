@@ -287,3 +287,27 @@ end
     v0 = Vec(0.0, 0.0, 0.0)
     @test normalize(v0) ≈ v0
 end
+
+@testset "Transformations" begin
+    a = Vec(1.,0.,0.)
+    b = Point(1.,2.,3.)
+    c = Normal(0.,1.,0.)
+    Id = Transformation()
+    t1 = Translation(a)
+    t2 = Translation(-a)
+    @test t1 ⊙ t2 ≈ Id
+    @test inverse(t1) ≈ t2
+    @test t1(a) ≈ a
+    @test t1(b) ≈ Point(2.,2.,3.)
+    @test t2(c) ≈ c
+
+    s1 = Scaling(2.,1.,1.)
+    s2 = inverse(s1)
+    @test s2 ≈ Scaling(0.5,1.,1.)
+    @test s2(a) ≈ Vec(0.5,0.,0.)
+    @test s2(b) ≈ Point(0.5,2.,3.)
+    @test s2(c) ≈ c
+
+    @test Rx(π) ≈ Scaling(1.,-1.,-1.)
+    @test Rx(π/2) ⊙ Rx(π/2) ⊙ inverse(Rx(π)) ≈ Id
+end
