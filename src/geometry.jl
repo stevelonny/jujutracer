@@ -132,7 +132,7 @@ Return a normalized vector.
 - `v::Vec`: The vector to be normalized.
 # Returns
 - The normalized vector.
-# throws
+# Throws
 - `ArgumentError`: If the vector is zero.
 """
 function normalize(v::Union{Vec, Normal})
@@ -159,18 +159,18 @@ Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y 
 Base.:≈(v1::T, v2::T) where {T<:Union{Point, Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 
 """
-    a \\cdot b
+    a ⋅ b
     
-Return scalara product (`\\cdot`) between Vec or Normal
+Return scalar product (``\\cdot``) between `Vec` or `Normal`.
 """
 function ⋅(a::Union{Vec, Normal}, b::Union{Vec, Normal})
     return a.x * b.x + a.y * b.y + a.z * b.z
 end
 
 """
-    a \\times b
+    a × b
     
-Return wedge product (`\\times`) between Vec or Normal as a Vec
+Return wedge product (``\\times``) between `Vec` or `Normal` as a `Vec`.
 """
 function ×(a::Union{Vec, Normal}, b::Union{Vec, Normal})
     return Vec(a.y * b.z - a.z * b.y, a.z*b.x - a.x * b.z, a.x * b.y - a.y * b.x)
@@ -179,10 +179,39 @@ end
 #--------------------------------------------------------------------------
 # Transformations
 #--------------------------------------------------------------------------
-abstract type AbstractTransformation end
+
 """
-    Transformation
-Generic concrete type Transformation
+    AbstractTransformation
+
+An abstract type that serves as a base for defining various geometric transformations.
+Made concrete by [`Transformation`](@ref), [`Translation`](@ref), [`Scaling`](@ref), [`Rx`](@ref), [`Ry`](@ref), and [`Rz`](@ref).
+"""
+abstract type AbstractTransformation end
+
+
+"""
+    struct Transformation <: AbstractTransformation
+
+Represents a transformation in 3D space with homogeneous coordinates.
+This structure is a subtype of [`AbstractTransformation`](@ref).
+
+# Fields
+- `M::Matrix{Float64}`: The 4x4 transformation matrix.
+- `inv::Matrix{Float64}`: The 4x4 inverse of the transformation matrix.
+
+# Constructors
+- `Transformation()`: Creates an identity transformation where `M` and `inv` are both 4x4 identity matrices.
+- `Transformation(M::Matrix{Float64}, inv::Matrix{Float64})`: Creates a transformation with the given `M` and `inv` matrices.
+Throws an `ArgumentError` if:
+  - `M` or `inv` are not 4x4 matrices.
+  - The last element of `M` or `inv` is not `1.0`.
+  - `M` and `inv` are not inverses of each other.
+
+# Notes
+The `M` and `inv` matrices must satisfy the following conditions:
+- Both must be 4x4 matrices.
+- The last element of both matrices must be `1.0`.
+- The product of `M` and `inv` must be _approximately_ equal to the 4x4 identity matrix.
 """
 struct Transformation <: AbstractTransformation
     M::Matrix{Float64}
@@ -193,11 +222,37 @@ struct Transformation <: AbstractTransformation
         inv=[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
-    function Transformation(M::Matrix, inv::Matrix)
+    function Transformation(M::Matrix{Float64}, inv::Matrix{Float64})
+        if size(M) != (4, 4) || size(inv) != (4, 4)
+            throw(ArgumentError("M and inv must be 4x4 matrices."))
+        end
+        if M[4, 4] != 1.0 || inv[4, 4] != 1.0
+            throw(ArgumentError("M and inv must be 4x4 matrices with the last element equal to 1."))
+        end
+        if !isapprox(M * inv, [[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]])
+            throw(ArgumentError("M and inv must be inverses of each other."))
+        end
         new(M, inv)
     end
 end
 
+"""
+    struct Translation <: AbstractTransformation
+
+Represents a translation in 3D space with homogeneous coordinates.
+This structure is a subtype of [`AbstractTransformation`](@ref).
+
+# Fields
+- `M::Matrix{Float64}`: The 4x4 transformation matrix.
+- `inv::Matrix{Float64}`: The 4x4 inverse transformation matrix.
+
+# Constructors
+- `Translation(dx::Float64, dy::Float64, dz::Float64)`: 
+  Creates a `Translation` object with translation offsets `dx`, `dy`, and `dz` along the x, y, and z axes, respectively.
+
+- `Translation(v::Vec)`:
+  Creates a `Translation` object using a `Vec` object.
+"""
 struct Translation <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
@@ -214,11 +269,30 @@ struct Translation <: AbstractTransformation
     end
 end
 
+"""
+    struct Scaling <: AbstractTransformation
+
+Represents a scaling transformation in 3D space.
+This structure is a subtype of [`AbstractTransformation`](@ref).
+
+# Fields
+- `M::Matrix{Float64}`: The 4x4 transformation matrix.
+- `inv::Matrix{Float64}`: The 4x4 inverse of the transformation matrix.
+
+# Constructor
+- `Scaling(x::Float64, y::Float64, z::Float64):
+    Creates a `Scaling` instance with scaling factors `x`, `y`, and `z` along the x, y, and z axes, respectively.
+    Throws an `ArgumentError` if any of the scaling factors are zero.
+"""
 struct Scaling <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function Scaling(x::T,y::T,z::T) where{T<:Float64}
+    function Scaling(x::Float64,y::Float64,z::Float64)
+        # Check if the scaling factors are zero
+        if x == 0.0 || y == 0.0 || z == 0.0
+            throw(ArgumentError("Scaling factors cannot be zero."))
+        end
         # creating M and inv cloumn by column
         M=[[x, 0.0, 0.0, 0.0] [0.0, y, 0.0, 0.0] [0.0, 0.0, z, 0.0] [0.0, 0.0, 0.0, 1.0]]
         inv=[[1/x, 0.0, 0.0, 0.0] [0.0, 1/y, 0.0, 0.0] [0.0, 0.0, 1/z, 0.0] [0.0, 0.0, 0.0, 1.0]]
@@ -226,39 +300,90 @@ struct Scaling <: AbstractTransformation
     end
 end
 
+"""
+    struct Rx <: AbstractTransformation
+
+Represents a rotation transformation around the x-axis in 3D space.
+This structure is a subtype of [`AbstractTransformation`](@ref).
+
+# Fields
+- `M::Matrix{Float64}`: The 4x4 transformation matrix.
+- `inv::Matrix{Float64}`: The 4x4 inverse of the transformation matrix.
+
+# Constructor
+- `Rx(θ)`: Creates an `Rx` instance for a given rotation `θ` (in radians).
+
+# See also
+- [`Ry`](@ref): For rotation around the y-axis.
+- [`Rz`](@ref): For rotation around the z-axis.
+"""
 struct Rx <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function Rx(angle)
+    function Rx(θ)
         # creating M and inv cloumn by column
-        app = convert(Float64, angle)
+        app = convert(Float64, θ)
         M=[[1.0, 0.0, 0.0, 0.0] [0.0, cos(app), sin(app), 0.0] [0.0, -sin(app), cos(app), 0.0] [0.0, 0.0, 0.0, 1.0]]
         inv=[[1.0, 0.0, 0.0, 0.0] [0.0, cos(app), -sin(app), 0.0] [0.0, sin(app), cos(app), 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
 
+"""
+    struct Ry <: AbstractTransformation
+
+Represents a rotation transformation around the y-axis in 3D space.
+This structure is a subtype of [`AbstractTransformation`](@ref).
+
+# Fields
+- `M::Matrix{Float64}`: The 4x4 transformation matrix.
+- `inv::Matrix{Float64}`: The 4x4 inverse of the transformation matrix.
+
+# Constructor
+- `Ry(θ)`: Creates an `Ry` instance for a given rotation `θ` (in radians).
+
+# See also
+- [`Rx`](@ref): For rotation around the x-axis.
+- [`Rz`](@ref): For rotation around the z-axis.
+"""
 struct Ry <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function Ry(angle)
+    function Ry(θ)
         # creating M and inv cloumn by column
-        app = convert(Float64, angle)
+        app = convert(Float64, θ)
         M=[[cos(app), 0.0, -sin(app), 0.0] [0.0, 1.0, 0.0, 0.0] [sin(app), 0.0, cos(app), 0.0] [0.0, 0.0, 0.0, 1.0]]
         inv=[[cos(app), 0.0, sin(app), 0.0] [0.0, 1.0, 0.0, 0.0] [-sin(app), 0.0, cos(app), 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
 
+"""
+    struct Rz <: AbstractTransformation
+
+Represents a rotation transformation around the z-axis in 3D space.
+This structure is a subtype of [`AbstractTransformation`](@ref).
+
+# Fields
+- `M::Matrix{Float64}`: The 4x4 transformation matrix.
+- `inv::Matrix{Float64}`: The 4x4 inverse of the transformation matrix.
+
+# Constructor
+- `Rz(θ)`: Creates an `Rz` instance for a given rotation `θ` (in radians).
+
+# See also
+- [`Rx`](@ref): For rotation around the x-axis.
+- [`Ry`](@ref): For rotation around the y-axis.
+"""
 struct Rz <: AbstractTransformation
     M::Matrix{Float64}
     inv::Matrix{Float64}
 
-    function Rz(angle)
+    function Rz(θ)
         # creating M and inv cloumn by column
-        app = convert(Float64, angle)
+        app = convert(Float64, θ)
         M=[[cos(app), sin(app), 0.0, 0.0] [-sin(app), cos(app), 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
         inv=[[cos(app), -sin(app), 0.0, 0.0] [sin(app), cos(app), 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
@@ -266,11 +391,12 @@ struct Rz <: AbstractTransformation
 end
 
 #--------------------------------------------------------------------------
-# Common methods
+# Common methods for transformations
 #--------------------------------------------------------------------------
 """
-    \\odot(a, b)
-Composition of two transformations, where `b` is the first acting on the object and `a` the second
+    ⊙(a, b)
+
+Composition of two transformations, where `b` is the first acting on the object and `a` the second.
 """
 function ⊙(a, b)
     M::Matrix{Float64} = a.M * b.M
@@ -279,7 +405,8 @@ function ⊙(a, b)
 end
 
 """
-    inv(a::T)
+    inverse(a::AbstractTransformation)
+
 Return the inverse transformation
 """
 function inverse(a::AbstractTransformation)
@@ -287,18 +414,21 @@ function inverse(a::AbstractTransformation)
 end
 
 """
-    Transformation(v::Vec)
-Applying the transformation to a Vec
+    (t::AbstractTransformation)(v::Vec)
+
+Applies the transformation to a `Vec`.
 """
 function (t::AbstractTransformation)(v::Vec)
+    # homogeneous coordinates
     v4 = [v.x; v.y; v.z; 0]
     v4t = t.M * v4
     return Vec(v4t[1], v4t[2], v4t[3])
 end
 
 """
-    Transformation(p::Point)
-Applying the transformation to a Point
+    (t::AbstractTransformation)(p::Point)
+
+Applies the transformation to a `Point`.
 """
 function (t::AbstractTransformation)(p::Point)
     v4 = [p.x; p.y; p.z; 1]
@@ -307,8 +437,9 @@ function (t::AbstractTransformation)(p::Point)
 end
 
 """
-    Transformation(n::Normal)
-Applying the transformation to a Normal
+    (t::AbstractTransformation)(n::Normal)
+
+Applies the transformation to a `Normal`.
 """
 function (t::AbstractTransformation)(n::Normal)
     v4 = [n.x; n.y; n.z; 1]
@@ -316,4 +447,10 @@ function (t::AbstractTransformation)(n::Normal)
     return Normal(v4t[1], v4t[2], v4t[3])
 end
 
+"""
+    ≈(a::Union{Transformation, Translation, Scaling, Rx, Ry, Rz}, b::Union{Transformation, Translation, Scaling, Rx, Ry, Rz})
+
+Defines an approximate equality operator `≈` for geometric transformations. 
+Two transformations `a` and `b` are considered approximately equal if both their transformation matrices (`M`) and their inverses (`inv`) are approximately equal.
+"""
 Base.:≈(a::Union{Transformation,Translation,Scaling,Rx,Ry,Rz},b::Union{Transformation,Translation,Scaling,Rx,Ry,Rz}) = a.M ≈ b.M && a.inv ≈ b.inv
