@@ -24,6 +24,6 @@ include("inputoutput.jl")
 export save_ldrimage, get_matrix, write_pfm_image, InvalidPfmFileFormat, read_pfm_image
 
 include("geometry.jl")
-export Vec, Point, Normal, squared_norm, norm, normalize, to_string, ⋅, ×, tranformation, traslation, scaling, Rx, Ry, Rz, ⊙
+export Vec, Point, Normal, squared_norm, norm, normalize, to_string, ⋅, ×, transformation, traslation, scaling, Rx, Ry, Rz, ⊙
 
 end # module jujutracer

@@ -179,115 +179,100 @@ end
 #--------------------------------------------------------------------------
 # Transformations
 #--------------------------------------------------------------------------
-struct transformation()
-    M::Matrix
-    inv::Matrix
-    function tranformation()
-        M=[[1.0, 0.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
-        inv=[[1.0, 0.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
+struct transformation
+    M::Matrix{Float64}
+    inv::Matrix{Float64}
+    function transformation()
+        # creating M and inv cloumn by column
+        M=[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
+        inv=[[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
-    function tranformation(M::Matrix, inv::Matrix)
+    function transformation(M::Matrix, inv::Matrix)
         new(M, inv)
     end
 end
 
-struct traslation(v::Vec)
-    M::Matrix
-    inv::Matrix
+struct traslation
+    M::Matrix{Float64}
+    inv::Matrix{Float64}
+
     function traslation(v::Vec)
-        M=[[1.0, 0.0, 0.0, v.x],
-        [0.0, 1.0, 0.0, v.y],
-        [0.0, 0.0, 1.0, v.z],
-        [0.0, 0.0, 0.0, 1.0]]
-        inv = [[1.0, 0.0, 0.0, -v.x],
-        [0.0, 1.0, 0.0, -v.y],
-        [0.0, 0.0, 1.0, -v.z],
-        [0.0, 0.0, 0.0, 1.0]]
+        # creating M and inv cloumn by column
+        M = [[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [v.x, v.y, v.z, 1.0]]
+        inv = [[1.0, 0.0, 0.0, 0.0] [0.0, 1.0, 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [-v.x, -v.y, -v.z, 1.0]]
         new(M,inv)
     end
 end
 
-struct scaling(x, y, z)
-    M::Matrix
-    inv::Matrix
-    function tranformation()
-        M=[[x, 0.0, 0.0, 0.0],
-        [0.0, y, 0.0, 0.0],
-        [0.0, 0.0, z, 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
-        inv=[[1/x, 0.0, 0.0, 0.0],
-        [0.0, 1/y, 0.0, 0.0],
-        [0.0, 0.0, 1/z, 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
+struct scaling
+    M::Matrix{Float64}
+    inv::Matrix{Float64}
+
+    function scaling(x::T,y::T,z::T) where{T<:Float64}
+        # creating M and inv cloumn by column
+        M=[[x, 0.0, 0.0, 0.0] [0.0, y, 0.0, 0.0] [0.0, 0.0, z, 0.0] [0.0, 0.0, 0.0, 1.0]]
+        inv=[[1/x, 0.0, 0.0, 0.0] [0.0, 1/y, 0.0, 0.0] [0.0, 0.0, 1/z, 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
 
-struct Rx(angle::Float64)
-    M::Matrix
-    inv::Matrix
-    function Rx()
-        M=[[1.0, 0.0, 0.0, 0.0],
-        [0.0, cos(angle), -sin(angle), 0.0],
-        [0.0, sin(angle), cos(angle), 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
-        inv=[[1.0, 0.0, 0.0, 0.0],
-        [0.0, cos(angle), sin(angle), 0.0],
-        [0.0, -sin(angle), cos(angle), 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
+struct Rx
+    M::Matrix{Float64}
+    inv::Matrix{Float64}
+
+    function Rx(angle::Float64)
+        # creating M and inv cloumn by column
+        M=[[1.0, 0.0, 0.0, 0.0] [0.0, cos(angle), sin(angle), 0.0] [0.0, -sin(angle), cos(angle), 0.0] [0.0, 0.0, 0.0, 1.0]]
+        inv=[[1.0, 0.0, 0.0, 0.0] [0.0, cos(angle), -sin(angle), 0.0] [0.0, sin(angle), cos(angle), 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
 
-struct Ry(angle::Float64)
-    M::Matrix
-    inv::Matrix
-    function Ry()
-        M=[[cos(angle), 0.0, sin(angle), 0.0],
-        [0.0, 1.0, 0.0, 0.0],
-        [-sin(angle), 0.0, cos(angle), 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
-        inv=[[cos(angle), 0.0, -sin(angle), 0.0],
-        [0.0, 1.0, 0.0, 0.0],
-        [sin(angle), 0.0, cos(angle), 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
+struct Ry
+    M::Matrix{Float64}
+    inv::Matrix{Float64}
+
+    function Ry(angle::Float64)
+        # creating M and inv cloumn by column
+        M=[[cos(angle), 0.0, -sin(angle), 0.0] [0.0, 1.0, 0.0, 0.0] [sin(angle), 0.0, cos(angle), 0.0] [0.0, 0.0, 0.0, 1.0]]
+        inv=[[cos(angle), 0.0, sin(angle), 0.0] [0.0, 1.0, 0.0, 0.0] [-sin(angle), 0.0, cos(angle), 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
 
-struct Rz(angle::Float64)
-    M::Matrix
-    inv::Matrix
-    function Rz()
-        M=[[cos(angle), -sin(angle), 0.0, 0.0],
-        [sin(angle), cos(angle), 0.0, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
-        inv=[[cos(angle), sin(angle), 0.0, 0.0],
-        [-sin(angle), cos(angle), 0.0, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0]]
+struct Rz
+    M::Matrix{Float64}
+    inv::Matrix{Float64}
+
+    function Rz(angle::Float64)
+        # creating M and inv cloumn by column
+        M=[[cos(angle), sin(angle), 0.0, 0.0] [-sin(angle), cos(angle), 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
+        inv=[[cos(angle), -sin(angle), 0.0, 0.0] [sin(angle), cos(angle), 0.0, 0.0] [0.0, 0.0, 1.0, 0.0] [0.0, 0.0, 0.0, 1.0]]
         new(M,inv)
     end
 end
+
+#--------------------------------------------------------------------------
+# Common methods
+#--------------------------------------------------------------------------
 
 function ⊙(a ,b)
-    M::Matrix
-    inv::Matrix
-    for i in (1,4)
-        for j in (1,4)
-            for k in (1,4)
+    M = Matrix{Float64}(undef,4,4)
+    inv = Matrix{Float64}(undef,4,4)
+    for i in 1:4
+        for j in 1:4
+            for k in 1:4
                 M[i,j] += a.M[i,k] * b.M[k,j]
                 inv[i,j] += b.inv[i,k] * a.inv[k,j]
             end
         end
     end
-    return tranformation(M,inv)
+    return transformation(M,inv)
 end
+
+function inv(a::T) where {T<:Union{transformation,traslation,scaling,Rx,Ry,Rz}}
+    return T(a.inv,a.M)
+end
+
+Base.:≈(a::Union{transformation,traslation,scaling,Rx,Ry,Rz},b::Union{transformation,traslation,scaling,Rx,Ry,Rz}) = a.M ≈ b.M && a.inv ≈ b.inv
