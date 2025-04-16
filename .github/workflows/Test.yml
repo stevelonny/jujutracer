@@ -1,0 +1,47 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'Project.toml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'Project.toml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+    test:
+        strategy:
+          matrix:
+            julia-arch: [x64, x86]
+            os: [ubuntu-latest, windows-latest, macOS-latest]
+        runs-on: ${{ matrix.os }}
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v2
+            
+          - name: Set up Julia
+            uses: julia-actions/setup-julia@v1
+            with:
+              version: 1.11
+            
+          - name: Cache Julia packages
+            uses: julia-actions/cache@v2
+            
+          - name: Build package
+            uses: julia-actions/julia-buildpkg@v1
+            
+          - name: Run tests
+            uses: julia-actions/julia-runtest@v1
+            with:
+              annotate: true
