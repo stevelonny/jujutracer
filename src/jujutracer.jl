@@ -26,4 +26,7 @@ export save_ldrimage, get_matrix, write_pfm_image, InvalidPfmFileFormat, read_pf
 include("geometry.jl")
 export Vec, Point, Normal, squared_norm, norm, normalize, to_string, ⋅, ×, Transformation, Translation, Scaling, Rx, Ry, Rz, ⊙, inverse
 
+include("camera.jl")
+export Ray
+
 end # module jujutracer
