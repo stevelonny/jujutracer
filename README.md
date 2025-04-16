@@ -3,8 +3,8 @@
 # jujutracer
 ![Julia](https://img.shields.io/badge/-Julia-9558B2?style=for-the-badge&logo=julia&logoColor=white)
 [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENCE.md)
-![Wiki](https://img.shields.io/badge/Docs-Dev?style=for-the-badge&color=blue&link=https%3A%2F%2Fstevelonny.github.io%2Fjujutracer%2F)
-![Test](https://img.shields.io/github/actions/workflow/status/stevelonny/jujutracer/Test.yml?style=for-the-badge&label=Test)
+[![Wiki](https://img.shields.io/badge/Docs-Dev?style=for-the-badge&color=blue&link=https%3A%2F%2Fstevelonny.github.io%2Fjujutracer%2F)](https://stevelonny.github.io/jujutracer/)
+[![Test](https://img.shields.io/github/actions/workflow/status/stevelonny/jujutracer/Test.yml?style=for-the-badge&label=Test&link=https%3A%2F%2Fgithub.com%2Fstevelonny%2Fjujutracer%2Factions%2Fworkflows%2FTest.yml)](https://github.com/stevelonny/jujutracer/actions/workflows/Test.yml)
 
 <!-- ![GitHub branch check runs](https://img.shields.io/github/check-runs/stevelonny/jujutracer/main?style=for-the-badge) -->
 
