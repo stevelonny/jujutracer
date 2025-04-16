@@ -3,6 +3,11 @@
 # jujutracer
 ![Julia](https://img.shields.io/badge/-Julia-9558B2?style=for-the-badge&logo=julia&logoColor=white)
 [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENCE.md)
+![Wiki](https://img.shields.io/badge/Docs-Dev?style=for-the-badge&color=blue&link=https%3A%2F%2Fstevelonny.github.io%2Fjujutracer%2F)
+![Test](https://img.shields.io/github/actions/workflow/status/stevelonny/jujutracer/Test.yml?style=for-the-badge&label=Test)
+
+<!-- ![GitHub branch check runs](https://img.shields.io/github/check-runs/stevelonny/jujutracer/main?style=for-the-badge) -->
+
 
 Simple raytracer built in julia by Boldini M., Galafassi G. and Lonardoni S. during _Calcolo Numerico per la Generazione di Immagini Fotorealistiche_ (AY 2024/25) @ UNIMI.
 
