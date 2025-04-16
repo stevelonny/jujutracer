@@ -22,8 +22,7 @@ jobs:
     test:
         strategy:
           matrix:
-            julia-arch: [x64, x86]
-            os: [ubuntu-latest, windows-latest, macOS-latest]
+            os: [ubuntu-latest, windows-latest, macOS-latest, macos-13]
         runs-on: ${{ matrix.os }}
 
         steps:
