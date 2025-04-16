@@ -16,5 +16,6 @@ makedocs(
 # for more information.
 deploydocs(
     repo = "github.com/stevelonny/jujutracer.git",
+    branch = "gh-pages",
     devbranch = "main"
 )
