@@ -10,12 +10,6 @@ on:
       - 'docs/src/**'
       - 'src/**'
       - 'main.jl'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'docs/src/**'
-      - 'src/**'
-      - 'main.jl'
 
 jobs:
   build:
