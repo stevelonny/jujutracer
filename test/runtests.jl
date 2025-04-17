@@ -311,3 +311,14 @@ end
     @test Rx(π) ≈ Scaling(1.,-1.,-1.)
     @test Rx(π/2) ⊙ Rx(π/2) ⊙ inverse(Rx(π)) ≈ Id
 end
+
+@testset "Ray" begin
+    a = Vec(1.0,0.0,0.0)
+    b = Point(1.,2.,3.)
+    r = Ray(origin=b, dir=a)
+    r1= Ray(origin=b, dir=a)
+    @test r1 ≈ r
+    @test r(1.) ≈ Point(2.,2.,3.)
+    @test_throws ArgumentError r(0.)    
+    @test !(r(1.) ≈ r1.origin)
+end

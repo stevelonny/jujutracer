@@ -442,7 +442,7 @@ end
 Applies the transformation to a `Normal`.
 """
 function (t::AbstractTransformation)(n::Normal)
-    v4 = [n.x; n.y; n.z; 1]
+    v4 = [n.x; n.y; n.z; 0]
     v4t = transpose(t.inv) * v4
     return Normal(v4t[1], v4t[2], v4t[3])
 end
@@ -453,4 +453,4 @@ end
 Defines an approximate equality operator `≈` for geometric transformations. 
 Two transformations `a` and `b` are considered approximately equal if both their transformation matrices (`M`) and their inverses (`inv`) are approximately equal.
 """
-Base.:≈(a::Union{Transformation,Translation,Scaling,Rx,Ry,Rz},b::Union{Transformation,Translation,Scaling,Rx,Ry,Rz}) = a.M ≈ b.M && a.inv ≈ b.inv
+Base.:≈(a::AbstractTransformation,b::AbstractTransformation) = a.M ≈ b.M && a.inv ≈ b.inv
