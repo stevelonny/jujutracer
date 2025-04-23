@@ -45,16 +45,16 @@ end
 # Camera type
 #--------------------------------------------------------------------------
 """
-    abstract type Camera
-Abastact type Camera
+    abstract type AbstractCamera
+Abstact type AbstractCamera
 """
-abstract type Camera end
+abstract type AbstractCamera end
 
 """
     Orthogonal
 Orthogonal camera type
 """
-struct Orthogonal <: Camera
+struct Orthogonal <: AbstractCamera
     t::Transformation
     a_ratio::Float64 
     function Orthogonal(;t::Transformation = Transformation(), a_ratio::Float64 = 16//9)
@@ -66,16 +66,16 @@ end
     Perspective
 Perspective camera type
 """
-struct Perspective <: Camera
+struct Perspective <: AbstractCamera
     d::Float64
     t::Transformation 
     a_ratio::Float64 
-    function Perspective(;d::Float64, t::Transformation = Transformation(), a_ratio::Float64 = 16//9)
+    function Perspective(;d::Float64 = 1., t::Transformation = Transformation(), a_ratio::Float64 = 16//9)
         new(d, t, a_ratio)
     end
 end
 
-function (c::Camera)(u::Float64, v::Float64)
+function (c::AbstractCamera)(u::Float64, v::Float64)
     return Ray(origin = c.t(_origin(c,u,v)),dir = c.t(_direction(c,u,v)), tmin = 1.0e-5)
 end
 

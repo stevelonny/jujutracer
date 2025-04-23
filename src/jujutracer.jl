@@ -27,7 +27,9 @@ include("geometry.jl")
 export Vec, Point, Normal, squared_norm, norm, normalize, to_string, ⋅, ×, Transformation, Translation, Scaling, Rx, Ry, Rz, ⊙, inverse
 
 include("camera.jl")
-export Ray, Orthogonal, Perspective
+export Ray, AbstractCamera, Orthogonal, Perspective
 
+include("imagetracer.jl")
+export ImageTracer
 
 end # module jujutracer

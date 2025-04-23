@@ -355,3 +355,32 @@ end
     @test ray3(1.) ≈ Point(0.,2.,1.)
     @test ray4(1.) ≈ Point(0.,-2.,1.)
 end
+
+@testset "ImageTracer" begin
+    img = hdrimg(4, 2)
+    cam = Perspective(a_ratio = 2.0)
+    tracer = ImageTracer(img, cam)
+
+    ray1 = tracer(0, 0; u_pixel=2.5, v_pixel=1.5)
+    ray2 = tracer(2, 1; u_pixel=0.5, v_pixel=0.5)
+    @test ray1 ≈ ray2
+
+    tracer(ray -> RGB(1.0, 2.0, 3.0))
+    for row in 1:img.h
+        for col in 1:img.w
+            @test img.img[row, col] ≈ RGB(1.0, 2.0, 3.0)
+        end
+    end
+
+    cam = Orthogonal(a_ratio = 2.0)
+    tracer = ImageTracer(img, cam)
+    tracer(ray -> RGB(1.0, 2.0, 3.0))
+    for row in 1:img.h
+        for col in 1:img.w
+            @test img.img[row, col] ≈ RGB(1.0, 2.0, 3.0)
+        end
+    end
+
+    inv_fun1 = (x::Int64 -> RGB(1.0, 2.0, 3.0))
+    @test_throws MethodError tracer(inv_fun)
+end
