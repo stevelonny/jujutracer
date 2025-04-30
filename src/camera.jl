@@ -47,12 +47,21 @@ end
 """
     abstract type AbstractCamera
 Abstact type AbstractCamera
+
+`AbstractCamera(u, v)` returns a ray fired in the pixel (u, v) of the screen
 """
 abstract type AbstractCamera end
 
 """
     Orthogonal
 Orthogonal camera type
+
+# Fields 
+- `t::Transformation` the transformation related to the camera's standing
+- `a_ratio::Float64` aspect ratio of the screen of the camera
+# Constructor 
+- `Orthogonal()` creates an orthogonal camera with Identity `Transformation` and a 16:9 aspect ratio
+- `Ortoghonal(t = trans, a_ratio = a)` creates an orthogonal camera with trans `Transformation` and an `a` aspect ratio
 """
 struct Orthogonal <: AbstractCamera
     t::Transformation
@@ -65,6 +74,13 @@ end
 """
     Perspective
 Perspective camera type
+
+# Fields 
+- `t::Transformation` the transformation related to the camera's standing
+- `a_ratio::Float64` aspect ratio of the screen of the camera
+# Constructor 
+- `Perspective()` creates a perspective camera with Identity `Transformation`, a 16:9 aspect ratio placed in (-1, 0, 0)
+- `Perspective(d = dist, t = trans, a_ratio = a)` creates a perspective camera with trans `Transformation`, an `a` aspect ratio placed in (-d, 0, 0)
 """
 struct Perspective <: AbstractCamera
     d::Float64
