@@ -33,8 +33,11 @@ Return the ray cast from the camera through the pixel at (col, row) in the image
 - `u_pixel::Float64`, `u_pixel::Float64`: The pixel offset in the u and v directions (default is 0.5, center of the pixel).
 """
 function (it::ImageTracer)(col::Int, row::Int; u_pixel::Float64 = 0.5, v_pixel::Float64 = 0.5)
-    u = (col + u_pixel) / (it.img.w - 1)
-    v = (row + v_pixel) / (it.img.h - 1)
+    # u = (col + u_pixel) / (it.img.w - 1)
+    # v = (row + v_pixel) / (it.img.h - 1)
+    u=( col -1 + u_pixel )/(it.img.w)
+    v= 1+ (-row +1-v_pixel)/(it.img.h)
+
     return it.camera(u, v)
 end
 
