@@ -311,3 +311,76 @@ end
     @test Rx(π) ≈ Scaling(1.,-1.,-1.)
     @test Rx(π/2) ⊙ Rx(π/2) ⊙ inverse(Rx(π)) ≈ Id
 end
+
+@testset "Ray" begin
+    a = Vec(1.0,0.0,0.0)
+    b = Point(1.,2.,3.)
+    r = Ray(origin=b, dir=a)
+    r1= Ray(origin=b, dir=a)
+    @test r1 ≈ r
+    @test r(1.) ≈ Point(2.,2.,3.)
+    @test_throws ArgumentError r(0.)    
+    @test !(r(1.) ≈ r1.origin)
+end
+
+@testset "Cameras" begin
+    t = Transformation()
+    cam = Orthogonal(a_ratio = 2.)
+    ray1 = cam(0.,0.)
+    ray2 = cam(1.,0.)
+    ray3 = cam(0.,1.)
+    ray4 = cam(1.,1.)
+
+    @test squared_norm(ray1.dir × ray2.dir) ≈ 0.
+    @test squared_norm(ray2.dir × ray3.dir) ≈ 0.
+    @test squared_norm(ray3.dir × ray4.dir) ≈ 0.
+
+    @test ray1(1.) ≈ Point(0.,2.,-1.)
+    @test ray2(1.) ≈ Point(0.,-2.,-1.)
+    @test ray3(1.) ≈ Point(0.,2.,1.)
+    @test ray4(1.) ≈ Point(0.,-2.,1.)
+
+    cam = Perspective(d = 1., a_ratio = 2.)
+    ray1 = cam(0.,0.)
+    ray2 = cam(1.,0.)
+    ray3 = cam(0.,1.)
+    ray4 = cam(1.,1.)
+
+    @test ray1.origin ≈ ray2.origin
+    @test ray2.origin ≈ ray3.origin
+    @test ray3.origin ≈ ray4.origin
+
+    @test ray1(1.) ≈ Point(0.,2.,-1.)
+    @test ray2(1.) ≈ Point(0.,-2.,-1.)
+    @test ray3(1.) ≈ Point(0.,2.,1.)
+    @test ray4(1.) ≈ Point(0.,-2.,1.)
+end
+
+@testset "ImageTracer" begin
+    img = hdrimg(4, 2)
+    cam = Perspective(a_ratio = 2.0)
+    tracer = ImageTracer(img, cam)
+
+    ray1 = tracer(0, 0; u_pixel=2.5, v_pixel=1.5)
+    ray2 = tracer(2, 1; u_pixel=0.5, v_pixel=0.5)
+    @test ray1 ≈ ray2
+
+    tracer(ray -> RGB(1.0, 2.0, 3.0))
+    for row in 1:img.h
+        for col in 1:img.w
+            @test img.img[row, col] ≈ RGB(1.0, 2.0, 3.0)
+        end
+    end
+
+    cam = Orthogonal(a_ratio = 2.0)
+    tracer = ImageTracer(img, cam)
+    tracer(ray -> RGB(1.0, 2.0, 3.0))
+    for row in 1:img.h
+        for col in 1:img.w
+            @test img.img[row, col] ≈ RGB(1.0, 2.0, 3.0)
+        end
+    end
+
+    inv_fun = (x::Int64 -> RGB(1.0, 2.0, 3.0))
+    @test_throws MethodError tracer(inv_fun)
+end
