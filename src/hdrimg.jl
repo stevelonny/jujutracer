@@ -31,9 +31,13 @@ struct hdrimg
     end
 end
 
-function valid_coordinates(img::hdrimg, x, y)
-    return x > 0 && x <= img.w && y > 0 && y <= img.h
-end
+# Access method for hdrimg
+Base.getindex(img::hdrimg, x::Int, y::Int) = img.img[y + 1, x + 1]
+Base.setindex!(img::hdrimg, value::RGB, x::Int, y::Int) = (img.img[y + 1, x + 1] = value)
+
+#function valid_coordinates(img::hdrimg, x, y)
+#    return x >= 0 && x < img.w && y >= 0 && y < img.h
+#end
 
 #-------------------------------------------------------------
 # Tone mapping 

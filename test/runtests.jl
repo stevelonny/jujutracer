@@ -16,16 +16,11 @@ end
 @testset "hdrimg" begin
     img=hdrimg(10, 10)
     @test img.w == 10
-    @test valid_coordinates(img, 5, 5) == true
-    @test valid_coordinates(img, -5, -5) == false 
 
     # Test for adding value in non valid coordinates
-    try
-        img.img[11, 11] = RGB(0.0, 0.0, 0.0)
-        @test false 
-    catch e
-        @test true  
-    end
+    @test_throws BoundsError img.img[11, 11] = RGB(0.0, 0.0, 0.0)
+    @test_throws BoundsError img.img[0, 0] = RGB(0.0, 0.0, 0.0)
+    @test_throws BoundsError img[10, 10] = RGB(0.0, 0.0, 0.0)
 
     try
         img.img[10, 10] = RGB(0.0, 0.0, 0.0)
@@ -33,7 +28,6 @@ end
     catch e
         @test false  
     end
-
 
     # Test for non RGB value
     i::Int = 10
