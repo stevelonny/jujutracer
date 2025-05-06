@@ -142,6 +142,18 @@ function normalize(v::Union{Vec, Normal})
     return v/norm(v)
 end
 
+"""
+    to_vector(p::Point)
+Convert a Point to a Vec.
+# Arguments
+- `p::Point`: The Point to be converted.
+# Returns
+- A Vec object with the same coordinates as the Point.
+"""
+function to_vector(p::Point)
+    return Vec(p.x, p.y, p.z)
+end
+
 
 #--------------------------------------------------------------------------
 # Operations

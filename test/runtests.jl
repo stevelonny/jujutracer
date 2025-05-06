@@ -264,6 +264,10 @@ end
     @test_throws MethodError p1 * 2 
     @test_throws MethodError p1 / 2
 
+    p1=Point(1.0, 2.0, 3.0)
+    @test v1 ≈ to_vector(p1)
+    
+
     #Test for Norm 
     v = Vec(1.0, 2.0, 3.0)
     n = Normal(10.0, 20.0, 30.0)
@@ -388,4 +392,10 @@ end
 
     inv_fun = (x::Int64 -> RGB(1.0, 2.0, 3.0))
     @test_throws MethodError tracer(inv_fun)
+end
+
+
+@testset "Shapes" begin
+    
+
 end
