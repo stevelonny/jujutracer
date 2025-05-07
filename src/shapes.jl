@@ -1,60 +1,140 @@
-struct HitRecord
-    world_P::Point
-    normal::Normal
-    surface_P::Tuple{Float64,Float64}
-    t::Float64
-    ray::Ray
+#---------------------------------------------------------
+# HitRecord
+#---------------------------------------------------------
+struct SurfacePoint
+    u::Float64
+    v::Float64
 
-    function HitRecord(; world_P::Point, normal::Normal, surface_P::Tuple{Float64,Float64}, t::Float64, ray::Ray)
-        new(world_P, normal,surface_P, t, ray)
+    function SurfacePoint(; u::Float64, v::Float64)
+        new(u, v)
     end
 end
 
-abstract type shape end
+"""
 
-struct Sphere <: shape
+    HitRecord(world_point::Point, normal::Normal, surface_point::SurfacePoint, t::Float64, ray::Ray)
+
+Information about an intersection
+# Fields
+- `world_P::Point` the point in the world where the ray hit
+- `normal::Normal` the normal vector at the point of intersection
+- `surface_P::SurfacePoint` the point on the surface where the ray hit
+- `t::Float64` the distance from the ray origin to the hit point
+- `ray::Ray` the ray that hit the surface
+"""
+struct HitRecord
+    world_P::Point    
+    normal::Normal
+    surface_P::SurfacePoint
+    t::Float64
+    ray::Ray
+
+    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray)
+        new(world_point, normal, surface_point, t, ray)
+    end
+
+end
+
+Base.:≈(h1::HitRecord, h2::HitRecord) = h1.world_P ≈ h2.world_P && h1.normal ≈ h2.normal && h1.surface_P ≈ h2.surface_P && h1.t ≈ h2.t && h1.ray ≈ h2.ray
+Base.:≈(h::HitRecord, p::Point) = h.world_P ≈ p
+Base.:≈(h::HitRecord, s::SurfacePoint) = h.surface_P ≈ s
+Base.:≈(h::HitRecord, r::Ray) = h.ray ≈ r
+
+
+#---------------------------------------------------------
+#shapes
+#---------------------------------------------------------
+"""
+    Shape
+
+Abstract type for all shapes
+"""
+abstract type Shape end
+
+#---------------------------------------------------------
+#Sphere and methods
+#---------------------------------------------------------
+
+"""
+    Sphere(radius::Float64, t::Transformation)
+
+A sphere shape
+# Fields
+- `radius::Float64` the radius of the sphere
+- `t::Transformation` the transformation of the sphere
+"""
+struct Sphere <: Shape
     Tr::Transformation
 end
 
-function (S::Sphere)(ray::Ray)
-    inv_ray = inverse(Tr)(ray)
-    O = inv_ray.origin
+"""
+
+    _sphere_normal(p::Point, dir::Vec)
+
+Calculate the normal vector of a point on the sphere
+# Arguments
+- `p::Point` the point on the sphere
+- `dir::Vec` the direction vector of the ray
+# Returns
+- `Normal` the normal vector of the sphere at the point
+"""
+function _sphere_normal(p::Point, dir::Vec )
+    norm = Normal(p.x, p.y, p.z)
+    return (Vec(p) ⋅ dir < 0.0) ? norm : -norm
+end
+
+"""
+
+    _sphere_point_to_uv(p::Point)
+
+Calculate the UV coordinates of a point on the sphere
+# Arguments
+- `p::Point` the point on the sphere
+# Returns
+- `SurfacePoint` the UV coordinates of the point on the sphere
+"""
+function _sphere_point_to_uv(p::Point)
+    return SurfacePoint(u = atan(p.y, p.x) / (2.0 * π), v = acos(p.z) / π)
+end
+
+
+""" 
+
+    ray_intereption(s::Sphere, r::Ray)
+
+Calculate the intersection of a ray and a sphere
+# Arguments
+- `S::Sphere` the sphere
+- `ray::Ray` the ray
+# Returns
+- `HitRecord` the hit record if there is an intersection, nothing otherwise
+"""
+function ray_interception(S::Sphere, ray::Ray)
+    inv_ray = inverse(S.Tr)(ray)
+    O = Vec(inv_ray.origin)
     d = inv_ray.dir
     Δrid = (O⋅d)^2 - squared_norm(d)*(squared_norm(O) - 1)
+
     if Δrid > 0
         t1 = (- O⋅d - sqrt(Δrid))/squared_norm(d)
         t2 = (- O⋅d + sqrt(Δrid))/squared_norm(d)
         if t1 > inv_ray.tmin && t1 < inv_ray.tmax
             first_hit = t1
-            if t2 > inv_ray.tmin && t2 < t1
-                first_hit = t2
-            end
         elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
             first_hit = t2
+        else
+            return nothing
         end
+    else
+        return nothing
     end
+    
     hit_point = inv_ray(first_hit)
     return HitRecord(
-        world_P = Tr(hit_point),
-        normal = Tr(_sphere_normal(hit_point, ray)),
-        surface_P = _sphere_to_uv(hit_point),
+        world_P = S.Tr(hit_point),
+        normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
+        surface_P = _sphere_point_to_uv(hit_point),
         t = first_hit,
         ray = ray
     )
-end
-
-function _sphere_normal(p::Point, ray::Ray)
-    return _adj_normal(Normal(p), ray)
-end
-
-function _adj_normal(p, ray::Ray)
-    if Vec(p)⋅ray.dir < 0
-        return p
-    else 
-        return -p
-    end
-end
-
-function _sphere_to_uv(p::Point)
-    return (p⋅p,-p⋅p) # write casual thing, to be implemented
 end

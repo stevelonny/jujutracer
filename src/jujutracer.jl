@@ -32,4 +32,8 @@ export Ray, AbstractCamera, Orthogonal, Perspective
 include("imagetracer.jl")
 export ImageTracer
 
+include("shapes.jl")
+export SurfacePoint, HitRecord, Shape, Sphere, ray_interception
+
+
 end # module jujutracer
