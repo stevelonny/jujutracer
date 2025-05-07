@@ -449,20 +449,20 @@ end
     O6 = inverse(Tr)(O3)
     ray6 = Ray(origin = O6, dir = -êz)
     HR6 = ray_interception(S, ray6)
-    @test HR6 == nothing
+    @test HR6 === nothing
 
     HR7 = ray_interception(S, ray1)
-    @test HR7 == nothing
+    @test HR7 === nothing
 
     # test for plane
     vec = Vec(1.0, 2.0, -1.0)
     o = Point(0.0, 1.0, 2.0)
-    r = Ray(origin=o, dir=vec)
-    a = Vec(0.,0.,1.)
+    r = Ray(origin = o, dir = vec)
+    a = Vec(0.0, 0.0, 1.0)
     plane = Plane(Translation(a))
     HitRecord = ray_interception(plane, r)
     @test HitRecord.t ≈ 1.0
-    @test HitRecord.world_P ≈ Point(1.,3.,1.)
+    @test HitRecord.world_P ≈ Point(1.0, 3.0, 1.0)
     @test HitRecord.normal ≈ Normal(êz) 
     @test HitRecord.surface_P.u ≈ 0.0
     @test HitRecord.surface_P.v ≈ 0.0

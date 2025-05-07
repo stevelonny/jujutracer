@@ -72,9 +72,9 @@ Orthogonal camera type
 - `Ortoghonal(t = trans, a_ratio = a)` creates an orthogonal camera with trans `Transformation` and an `a` aspect ratio
 """
 struct Orthogonal <: AbstractCamera
-    t::Transformation
+    t::AbstractTransformation
     a_ratio::Float64 
-    function Orthogonal(;t::Transformation = Transformation(), a_ratio::Float64 = 16//9)
+    function Orthogonal(;t::AbstractTransformation = Transformation(), a_ratio::Float64 = 16//9)
         new(t, a_ratio)
     end
 end
@@ -92,9 +92,9 @@ Perspective camera type
 """
 struct Perspective <: AbstractCamera
     d::Float64
-    t::Transformation 
+    t::AbstractTransformation 
     a_ratio::Float64 
-    function Perspective(;d::Float64 = 1., t::Transformation = Transformation(), a_ratio::Float64 = 16//9)
+    function Perspective(;d::Float64 = 1., t::AbstractTransformation = Transformation(), a_ratio::Float64 = 16/9)
         new(d, t, a_ratio)
     end
 end

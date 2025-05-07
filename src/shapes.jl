@@ -49,7 +49,7 @@ Abstract type for all shapes
 abstract type Shape end
 
 #---------------------------------------------------------
-#Sphere and methods
+# Sphere and methods
 #---------------------------------------------------------
 
 """
@@ -137,7 +137,7 @@ function ray_interception(S::Sphere, ray::Ray)
 end
 
 #---------------------------------------------------------
-#Plane and methods
+# Plane and methods
 #---------------------------------------------------------
 
 """
@@ -166,6 +166,16 @@ function _plane_normal(p::Point, dir::Vec)
     return (dir.z < 0.0) ? norm : -norm
 end
 
+"""
+
+    _plane_point_to_uv(p::Point)
+
+Calculate the UV coordinates of a point on the plane in PBC
+# Arguments
+- `p::Point` the point on the plane
+# Returns
+- `SurfacePoint` the UV coordinates of the point in PBC
+"""
 function _plane_point_to_uv(p::Point)
     return SurfacePoint(p.x - floor(p.x), p.y - floor(p.y))
 end
@@ -205,4 +215,35 @@ function ray_interception(pl::Plane, ray::Ray)
         t = first_hit,
         ray = ray
     )
+end
+
+#---------------------------------------------------------
+# World type
+#---------------------------------------------------------
+
+struct World
+    shapes::Vector{Shape}
+    
+    function World()
+        new(Vector{Shape}(nothing))
+    end
+
+    function World(S::Vector{Shape})
+        new(S)
+    end
+end
+
+function ray_interception(W::World, ray::Ray)
+    dim = length(W.shapes)
+    closest = nothing
+
+    for i in dim
+        inter = ray_interception(W.shapes[i], ray)
+
+        if isnothing(closest) || inter.t < closest.t
+            closest = inter
+        end
+    end
+
+    return closest
 end

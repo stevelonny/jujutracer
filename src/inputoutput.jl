@@ -237,6 +237,7 @@ function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
             _write_float!(color.g, io, endianness)
             _write_float!(color.b, io, endianness)
         end
+        println(row_pixel)
     end
 end
 

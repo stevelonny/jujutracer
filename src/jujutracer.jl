@@ -33,7 +33,7 @@ include("imagetracer.jl")
 export ImageTracer
 
 include("shapes.jl")
-export SurfacePoint, HitRecord, Shape, Sphere, ray_interception, Plane
+export SurfacePoint, HitRecord, Shape, Sphere, ray_interception, Plane, World
 
 
 end # module jujutracer
