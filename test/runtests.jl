@@ -92,13 +92,19 @@ end
             @test img.h == 2
 
             # Acces to hdrimg.matrix with indexes going from 1 to h/w
-            @test img.img[1, 1] ≈ RGB(1.0e1, 2.0e1, 3.0e1)
-            @test img.img[1, 2] ≈ RGB(4.0e1, 5.0e1, 6.0e1)
-            @test img.img[1, 3] ≈ RGB(7.0e1, 8.0e1, 9.0e1)
-            @test img.img[2, 1] ≈ RGB(1.0e2, 2.0e2, 3.0e2)
-            @test img.img[1, 1] ≈ RGB(1.0e1, 2.0e1, 3.0e1)
-            @test img.img[2, 2] ≈ RGB(4.0e2, 5.0e2, 6.0e2)
-            @test img.img[2, 3] ≈ RGB(7.0e2, 8.0e2, 9.0e2)
+            #@test img.img[1, 1] ≈ RGB(1.0e1, 2.0e1, 3.0e1)
+            #@test img.img[1, 2] ≈ RGB(4.0e1, 5.0e1, 6.0e1)
+            #@test img.img[1, 3] ≈ RGB(7.0e1, 8.0e1, 9.0e1)
+            #@test img.img[2, 1] ≈ RGB(1.0e2, 2.0e2, 3.0e2)
+            #@test img.img[2, 2] ≈ RGB(4.0e2, 5.0e2, 6.0e2)
+            #@test img.img[2, 3] ≈ RGB(7.0e2, 8.0e2, 9.0e2)
+            # Access to hdrimg from getindex
+            @test img[0,0] ≈ RGB(1.0e1, 2.0e1, 3.0e1)
+            @test img[1,0] ≈ RGB(4.0e1, 5.0e1, 6.0e1)
+            @test img[2,0] ≈ RGB(7.0e1, 8.0e1, 9.0e1)
+            @test img[0,1] ≈ RGB(1.0e2, 2.0e2, 3.0e2)
+            @test img[1,1] ≈ RGB(4.0e2, 5.0e2, 6.0e2)
+            @test img[2,1] ≈ RGB(7.0e2, 8.0e2, 9.0e2)
         end
 
         buf = IOBuffer(b"PF\n3 2\n-1.0\nstop")
@@ -119,13 +125,20 @@ end
         buf = IOBuffer()
         # Tests for write_pfm_image
         img = hdrimg(3, 2)
-        img.img[1, 1] = RGB(1.0e1, 2.0e1, 3.0e1)
-        img.img[1, 2] = RGB(4.0e1, 5.0e1, 6.0e1)
-        img.img[1, 3] = RGB(7.0e1, 8.0e1, 9.0e1)
-        img.img[2, 1] = RGB(1.0e2, 2.0e2, 3.0e2)
-        img.img[1, 1] = RGB(1.0e1, 2.0e1, 3.0e1)
-        img.img[2, 2] = RGB(4.0e2, 5.0e2, 6.0e2)
-        img.img[2, 3] = RGB(7.0e2, 8.0e2, 9.0e2)
+        #img.img[1, 1] = RGB(1.0e1, 2.0e1, 3.0e1)
+        #img.img[1, 2] = RGB(4.0e1, 5.0e1, 6.0e1)
+        #img.img[1, 3] = RGB(7.0e1, 8.0e1, 9.0e1)
+        #img.img[2, 1] = RGB(1.0e2, 2.0e2, 3.0e2)
+        #img.img[2, 2] = RGB(4.0e2, 5.0e2, 6.0e2)
+        #img.img[2, 3] = RGB(7.0e2, 8.0e2, 9.0e2)
+
+        img[0,0] = RGB(1.0e1, 2.0e1, 3.0e1)
+        img[1,0] = RGB(4.0e1, 5.0e1, 6.0e1)
+        img[2,0] = RGB(7.0e1, 8.0e1, 9.0e1)
+        img[0,1] = RGB(1.0e2, 2.0e2, 3.0e2)
+        img[1,1] = RGB(4.0e2, 5.0e2, 6.0e2)
+        img[2,1] = RGB(7.0e2, 8.0e2, 9.0e2)
+
         buf = IOBuffer()
         write_pfm_image(img, buf, true)
         seekstart(buf)
@@ -177,44 +190,44 @@ end
 
     @testset "Average luminosity" begin
         img = hdrimg(2, 1)
-        img.img[1, 1] = RGB(5.0, 10.0, 15.0)   #mean luminosity = 10
-        img.img[1, 2] = RGB(50.0, 100.0, 150.0) #mean luminosity = 100
+        img[0,0] = RGB(5.0, 10.0, 15.0)   #mean luminosity = 10
+        img[1,0] = RGB(50.0, 100.0, 150.0) #mean luminosity = 100
         @test jujutracer._average_luminosity(img, delta=0.0) ≈ 10^1.5
         @test_throws ArgumentError jujutracer._average_luminosity(img, type="X", delta=0)
         @test_throws ArgumentError jujutracer._average_luminosity(img, delta="prova")
         @test_throws ArgumentError jujutracer._average_luminosity(img, delta=-1.0)
-        img.img[1, 1] = RGB(0.0, 0.0, 0.0)   #activating delta
-        img.img[1, 2] = RGB(5.0e3, 1.0e4, 1.5e4) #mean luminosity = 1e4
+        img[0,0] = RGB(0.0, 0.0, 0.0)   #activating delta
+        img[1,0] = RGB(5.0e3, 1.0e4, 1.5e4) #mean luminosity = 1e4
         @test jujutracer._average_luminosity(img) ≈ 1
     end
 
     #test for _normalize_img
     @testset "Normalize image" begin
         img = hdrimg(1, 1)
-        img.img[1, 1] = RGB(10.0, 20.0, 30.0)   #luminosity = 20
+        img[0,0] = RGB(10.0, 20.0, 30.0)   #luminosity = 20
         @test_throws ArgumentError jujutracer._normalize_img!(img, a=-1.0)
         @test_throws ArgumentError jujutracer._normalize_img!(img, lum="prova")
         jujutracer._normalize_img!(img, a=2 , lum =10 )
-        @test img.img[1,1] ≈ RGB(2.0, 4.0, 6.0) 
+        @test img[0,0] ≈ RGB(2.0, 4.0, 6.0) 
     end
 
     # test for clamp_img
     @testset "Clamp image" begin
         img = hdrimg(1, 1)
-        img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+        img[0,0] = RGB(10.0, 20.0, 30.0)
         jujutracer._clamp_img!(img)
-        @test img.img[1, 1] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
+        @test img[0,0] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
     end
 
     # test for gamma correction
     @testset "Gamma correction" begin
         img = hdrimg(1, 1)
-        img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+        img[0,0] = RGB(10.0, 20.0, 30.0)
         jujutracer._γ_correction!(img; γ = 2.2)
-        @test img.img[1, 1] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
-        img.img[1, 1] = RGB(10.0, 20.0, 30.0)
+        @test img[0,0] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
+        img[0,0] = RGB(10.0, 20.0, 30.0)
         jujutracer._γ_correction!(img; γ = 1.0)
-        @test img.img[1, 1] ≈ RGB(10.0, 20.0, 30.0)
+        @test img[0,0] ≈ RGB(10.0, 20.0, 30.0)
         @test_throws ArgumentError jujutracer._γ_correction!(img; γ = -1.0)
         @test_throws ArgumentError jujutracer._γ_correction!(img; γ = 0.0)
         @test_throws ArgumentError jujutracer._γ_correction!(img; γ = "prova")
@@ -360,9 +373,9 @@ end
     @test ray1 ≈ ray2
 
     tracer(ray -> RGB(1.0, 2.0, 3.0))
-    for row in 1:img.h
-        for col in 1:img.w
-            @test img.img[row, col] ≈ RGB(1.0, 2.0, 3.0)
+    for y_pixel in 0:(img.h-1)
+        for x_pixel in 0:(img.w-1)
+            @test img[x_pixel, y_pixel] ≈ RGB(1.0, 2.0, 3.0)
         end
     end
 
@@ -374,9 +387,9 @@ end
     cam = Orthogonal(a_ratio = 2.0)
     tracer = ImageTracer(img, cam)
     tracer(ray -> RGB(1.0, 2.0, 3.0))
-    for row in 1:img.h
-        for col in 1:img.w
-            @test img.img[row, col] ≈ RGB(1.0, 2.0, 3.0)
+    for y_pixel in 0:(img.h-1)
+        for x_pixel in 0:(img.w-1)
+            @test img[x_pixel, y_pixel] ≈ RGB(1.0, 2.0, 3.0)
         end
     end
 

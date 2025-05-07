@@ -105,7 +105,6 @@ function _normalize_img!(img::hdrimg; a=0.18 , lum = nothing)
 end
 
 """
-
     _clamp_img!(hdr::hdrimg)
 
 Clamp the HDR image values to the range [0, 1] using the formula:
