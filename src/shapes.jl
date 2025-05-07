@@ -4,10 +4,6 @@
 struct SurfacePoint
     u::Float64
     v::Float64
-
-    function SurfacePoint(; u::Float64, v::Float64)
-        new(u, v)
-    end
 end
 
 """
@@ -30,7 +26,7 @@ struct HitRecord
     ray::Ray
 
     function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray)
-        new(world_point, normal, surface_point, t, ray)
+        new(world_P, normal, surface_P, t, ray)
     end
 
 end
@@ -39,10 +35,11 @@ Base.:≈(h1::HitRecord, h2::HitRecord) = h1.world_P ≈ h2.world_P && h1.normal
 Base.:≈(h::HitRecord, p::Point) = h.world_P ≈ p
 Base.:≈(h::HitRecord, s::SurfacePoint) = h.surface_P ≈ s
 Base.:≈(h::HitRecord, r::Ray) = h.ray ≈ r
+Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
 
 
 #---------------------------------------------------------
-#shapes
+# Shapes
 #---------------------------------------------------------
 """
     Shape
@@ -63,7 +60,7 @@ A sphere shape
 - `t::Transformation` the transformation of the sphere
 """
 struct Sphere <: Shape
-    Tr::Transformation
+    Tr::AbstractTransformation
 end
 
 """
@@ -93,7 +90,7 @@ Calculate the UV coordinates of a point on the sphere
 - `SurfacePoint` the UV coordinates of the point on the sphere
 """
 function _sphere_point_to_uv(p::Point)
-    return SurfacePoint(u = atan(p.y, p.x) / (2.0 * π), v = acos(p.z) / π)
+    return SurfacePoint(atan(p.y, p.x) / (2.0 * π), acos(p.z) / π)
 end
 
 
@@ -115,8 +112,9 @@ function ray_interception(S::Sphere, ray::Ray)
     Δrid = (O⋅d)^2 - squared_norm(d)*(squared_norm(O) - 1)
 
     if Δrid > 0
-        t1 = (- O⋅d - sqrt(Δrid))/squared_norm(d)
-        t2 = (- O⋅d + sqrt(Δrid))/squared_norm(d)
+        sqrot = sqrt(Δrid)
+        t1 = (- O⋅d - sqrot)/squared_norm(d)
+        t2 = (- O⋅d + sqrot)/squared_norm(d)
         if t1 > inv_ray.tmin && t1 < inv_ray.tmax
             first_hit = t1
         elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
@@ -169,7 +167,7 @@ function _plane_normal(p::Point, dir::Vec)
 end
 
 function _plane_point_to_uv(p::Point)
-    return SurfacePoint(u = p.x - floor(p.x), v = p.y - floor(p.y))
+    return SurfacePoint(p.x - floor(p.x), p.y - floor(p.y))
 end
 
 """
