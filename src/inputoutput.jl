@@ -126,7 +126,7 @@ Parse endianness of the PFM file from a string.
 - `InvalidPfmFileFormat`: If the endianness value is invalid or missing.
 """
 function _parse_endianness(endian::String)
-    value = try 
+    value = try
         Int(parse(Float64, endian)) 
     catch e
         throw(InvalidPfmFileFormat("Invalid or missing endianness specification"))
@@ -196,12 +196,12 @@ function read_pfm_image(io)
 
     # Read the PFM image, from the bottom to the top, from left to right
     img = hdrimg(w, h)
-    for i in h:-1:1
-        for j in 1:w
+    for row_pixel in (h-1):-1:0
+        for col_pixel in 0:(w-1)
             r = _read_float(io, endianness)
             g = _read_float(io, endianness)
             b = _read_float(io, endianness)
-            img.img[i, j] = RGB(r, g, b)
+            img[col_pixel, row_pixel] = RGB(r, g, b)
         end
     end
 
@@ -230,9 +230,9 @@ function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
         throw(InvalidPfmFileFormat("Invalid output file"))
     end
 
-    for i in img.h:-1:1
-        for j in 1:img.w
-            color = img.img[i, j]
+    for row_pixel in (img.h-1):-1:0
+        for col_pixel in 0:(img.w-1)
+            color = img[col_pixel, row_pixel]
             _write_float!(color.r, io, endianness)
             _write_float!(color.g, io, endianness)
             _write_float!(color.b, io, endianness)

@@ -5,9 +5,16 @@
     hdrimg(w::Int, h::Int)
 
 A struct representing a high dynamic range image (HDR image).
-
+Getter and setter methods are defined for accessing and modifying pixel values.
+Access is done using 0-based indexing, so the first pixel is at (0, 0): img[0, 0]; while the bottom right pixel is at (w-1, h-1): img[w-1, h-1].
+```
+    img = [ (0  , 0)   (0  , 1) ... (0  , w-1)
+            (1  , 0)   (1  , 1) ... (1  , w-1)
+             ...
+            (h-1, 1)   (h-1, 2) ... (h-1, w-1) ]
+```
 # Fields
-- `img::Matrix{RGB}`: A matrix of RGB values representing the HDR image.
+- `img::Matrix{RGB}`: A matrix of RGB values representing the HDR image. Not intedend to be accessed directly.
 - `w::Int64`: The width of the image in pixels.
 - `h::Int64`: The height of the image in pixels.
 """
@@ -31,9 +38,13 @@ struct hdrimg
     end
 end
 
-function valid_coordinates(img::hdrimg, x, y)
-    return x > 0 && x <= img.w && y > 0 && y <= img.h
-end
+# Access method for hdrimg
+Base.getindex(img::hdrimg, x::Int, y::Int) = img.img[y + 1, x + 1]
+Base.setindex!(img::hdrimg, value::RGB, x::Int, y::Int) = (img.img[y + 1, x + 1] = value)
+
+#function valid_coordinates(img::hdrimg, x, y)
+#    return x >= 0 && x < img.w && y >= 0 && y < img.h
+#end
 
 #-------------------------------------------------------------
 # Tone mapping 
@@ -101,7 +112,6 @@ function _normalize_img!(img::hdrimg; a=0.18 , lum = nothing)
 end
 
 """
-
     _clamp_img!(hdr::hdrimg)
 
 Clamp the HDR image values to the range [0, 1] using the formula:

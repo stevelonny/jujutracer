@@ -72,7 +72,6 @@ jobs:
 
   # Job to test on all platforms when "ready-for-merge" label is added
   pre-merge-tests:
-    needs: test-on-ubuntu
     if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ready-for-merge')
     strategy:
       matrix:
