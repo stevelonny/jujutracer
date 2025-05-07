@@ -368,8 +368,8 @@ end
     cam = Perspective(a_ratio = 2.0)
     tracer = ImageTracer(img, cam)
 
-    ray1 = tracer(1, 1; u_pixel=2.5, v_pixel=1.5)
-    ray2 = tracer(3, 2; u_pixel=0.5, v_pixel=0.5)
+    ray1 = tracer(0, 0; u_pixel=2.5, v_pixel=1.5)
+    ray2 = tracer(2, 1; u_pixel=0.5, v_pixel=0.5)
     @test ray1 ≈ ray2
 
     tracer(ray -> RGB(1.0, 2.0, 3.0))
@@ -379,9 +379,9 @@ end
         end
     end
 
-    ray=tracer(1,1; u_pixel=0.0 , v_pixel=0.0)
+    ray=tracer(0,0; u_pixel=0.0 , v_pixel=0.0)
     @test ray(1.0) ≈ Point(0.0, 2.0, 1.0)
-    ray=tracer(4,2; u_pixel=1.0 , v_pixel=1.0 )
+    ray=tracer(3,1; u_pixel=1.0 , v_pixel=1.0)
     @test ray(1.0) ≈ Point(0.0, -2.0, -1.0)
 
     cam = Orthogonal(a_ratio = 2.0)

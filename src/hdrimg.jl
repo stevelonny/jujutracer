@@ -5,9 +5,16 @@
     hdrimg(w::Int, h::Int)
 
 A struct representing a high dynamic range image (HDR image).
-
+Getter and setter methods are defined for accessing and modifying pixel values.
+Access is done using 0-based indexing, so the first pixel is at (0, 0): img[0, 0]; while the bottom right pixel is at (w-1, h-1): img[w-1, h-1].
+```
+    img = [ (0  , 0)   (0  , 1) ... (0  , w-1)
+            (1  , 0)   (1  , 1) ... (1  , w-1)
+             ...
+            (h-1, 1)   (h-1, 2) ... (h-1, w-1) ]
+```
 # Fields
-- `img::Matrix{RGB}`: A matrix of RGB values representing the HDR image.
+- `img::Matrix{RGB}`: A matrix of RGB values representing the HDR image. Not intedend to be accessed directly.
 - `w::Int64`: The width of the image in pixels.
 - `h::Int64`: The height of the image in pixels.
 """
