@@ -30,7 +30,7 @@ struct HitRecord
     ray::Ray
 
     function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray)
-        new(world_point, normal, surface_point, t, ray)
+        new(world_P, normal, surface_P, t, ray)
     end
 
 end
@@ -116,8 +116,9 @@ function ray_interception(S::Sphere, ray::Ray)
     Δrid = (O⋅d)^2 - squared_norm(d)*(squared_norm(O) - 1)
 
     if Δrid > 0
-        t1 = (- O⋅d - sqrt(Δrid))/squared_norm(d)
-        t2 = (- O⋅d + sqrt(Δrid))/squared_norm(d)
+        sqrot = sqrt(Δrid)
+        t1 = (- O⋅d - sqrot)/squared_norm(d)
+        t2 = (- O⋅d + sqrot)/squared_norm(d)
         if t1 > inv_ray.tmin && t1 < inv_ray.tmax
             first_hit = t1
         elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax

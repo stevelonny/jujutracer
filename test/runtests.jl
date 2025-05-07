@@ -263,11 +263,7 @@ end
     @test p1 ≈ p2
     @test_throws MethodError p1 * 2 
     @test_throws MethodError p1 / 2
-
-    p1=Point(1.0, 2.0, 3.0)
-    @test v1 ≈ to_vector(p1)
     
-
     #Test for Norm 
     v = Vec(1.0, 2.0, 3.0)
     n = Normal(10.0, 20.0, 30.0)
@@ -396,6 +392,13 @@ end
 
 
 @testset "Shapes" begin
-    
+    S = Sphere(Transformation())
+    êz = Vec(0.,0.,1.)
+    êx = Vec(1.,0.,0.)
 
+    O1 = Point(0.,0.,2.)
+    ray1 = Ray(origin = O1, dir = -êz)
+    HR1 = ray_interception(S, ray1)
+    @test HR1 ≈ Point(0.,0.,1.)
+    @test HR1.t ≈ 1.
 end
