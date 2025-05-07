@@ -263,11 +263,7 @@ end
     @test p1 ≈ p2
     @test_throws MethodError p1 * 2 
     @test_throws MethodError p1 / 2
-
-    p1=Point(1.0, 2.0, 3.0)
-    @test v1 ≈ to_vector(p1)
     
-
     #Test for Norm 
     v = Vec(1.0, 2.0, 3.0)
     n = Normal(10.0, 20.0, 30.0)
@@ -396,6 +392,16 @@ end
 
 
 @testset "Shapes" begin
-    
-
+    vec = Vec(1.0, 2.0, -1.0)
+    o = Point(0.0, 1.0, 2.0)
+    r = Ray(origin=o, dir=vec)
+    a = Vec(0.,0.,1.)
+    plane = Plane(Translation(a))
+    HitRecord = ray_interception(plane, r)
+    e\hatz = Vec(0.,0.,1.)
+    @test HitRecord.t ≈ 1.0
+    @test HitRecord.p ≈ Point(1.,3.,1.)
+    @test HitRecord.n ≈ e\hatz 
+    @test HitRecord.u ≈ 0.0
+    @test HitRecord.v ≈ 0.0
 end

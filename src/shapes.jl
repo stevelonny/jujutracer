@@ -56,11 +56,10 @@ abstract type Shape end
 #---------------------------------------------------------
 
 """
-    Sphere(radius::Float64, t::Transformation)
+    Sphere(t::Transformation)
 
 A sphere shape
 # Fields
-- `radius::Float64` the radius of the sphere
 - `t::Transformation` the transformation of the sphere
 """
 struct Sphere <: Shape
@@ -134,6 +133,77 @@ function ray_interception(S::Sphere, ray::Ray)
         world_P = S.Tr(hit_point),
         normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
         surface_P = _sphere_point_to_uv(hit_point),
+        t = first_hit,
+        ray = ray
+    )
+end
+
+#---------------------------------------------------------
+#Plane and methods
+#---------------------------------------------------------
+
+"""
+    Plane(t::Transformation)
+A plane shape
+# Fields
+- `t::Transformation` the transformation of the plane
+"""
+struct Plane <: Shape
+    Tr::AbstractTransformation
+end
+
+"""
+
+    _plane_normal(p::Point, dir::Vec)
+
+Calculate the normal vector of a point on the plane
+# Arguments
+- `p::Point` the point on the plane
+- `dir::Vec` the direction vector of the ray
+# Returns
+- `Normal` the normal vector of the plane at the point
+"""
+function _plane_normal(p::Point, dir::Vec)
+    norm = Normal(0.0, 0.0, 1.0)
+    return (dir.z < 0.0) ? norm : -norm
+end
+
+function _plane_point_to_uv(p::Point)
+    return SurfacePoint(u = p.x - floor(p.x), v = p.y - floor(p.y))
+end
+
+"""
+
+    ray_interception(p::Plane, r::Ray)
+
+Calculate the intersection of a ray and a plane
+# Arguments
+- `S::Plane` the plane
+- `ray::Ray` the ray
+# Returns
+- `HitRecord` the hit record if there is an intersection, nothing otherwise
+"""
+function ray_interception(pl::Plane, ray::Ray)
+    inv_ray = inverse(pl.Tr)(ray)
+    Oz = inv_ray.origin.z
+    d = inv_ray.dir
+    
+    if d != 0
+        t= -Oz\d.z
+        if t > inv_ray.tmin && t < inv_ray.tmax
+            first_hit = t
+        else
+            return nothing
+        end
+    else
+        return nothing
+    end
+    
+    hit_point = inv_ray(first_hit)
+    return HitRecord(
+        world_P = pl.Tr(hit_point),
+        normal = pl.Tr(_plane_normal(hit_point, ray.dir)),
+        surface_P = _plane_point_to_uv(hit_point),
         t = first_hit,
         ray = ray
     )
