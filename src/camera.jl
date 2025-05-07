@@ -41,7 +41,7 @@ function (r::Ray)(t::Float64)
     end
 end
 
-function (Tr::Transformation)(ray::Ray)
+function (Tr::AbstractTransformation)(ray::Ray)
     return Ray(origin = Tr(ray.origin), 
     dir = Tr(ray.dir), 
     tmin = ray.tmin, 

@@ -4,10 +4,6 @@
 struct SurfacePoint
     u::Float64
     v::Float64
-
-    function SurfacePoint(; u::Float64, v::Float64)
-        new(u, v)
-    end
 end
 
 """
@@ -39,10 +35,11 @@ Base.:≈(h1::HitRecord, h2::HitRecord) = h1.world_P ≈ h2.world_P && h1.normal
 Base.:≈(h::HitRecord, p::Point) = h.world_P ≈ p
 Base.:≈(h::HitRecord, s::SurfacePoint) = h.surface_P ≈ s
 Base.:≈(h::HitRecord, r::Ray) = h.ray ≈ r
+Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
 
 
 #---------------------------------------------------------
-#shapes
+# Shapes
 #---------------------------------------------------------
 """
     Shape
@@ -64,7 +61,7 @@ A sphere shape
 - `t::Transformation` the transformation of the sphere
 """
 struct Sphere <: Shape
-    Tr::Transformation
+    Tr::AbstractTransformation
 end
 
 """
@@ -94,7 +91,7 @@ Calculate the UV coordinates of a point on the sphere
 - `SurfacePoint` the UV coordinates of the point on the sphere
 """
 function _sphere_point_to_uv(p::Point)
-    return SurfacePoint(u = atan(p.y, p.x) / (2.0 * π), v = acos(p.z) / π)
+    return SurfacePoint(atan(p.y, p.x) / (2.0 * π), acos(p.z) / π)
 end
 
 
