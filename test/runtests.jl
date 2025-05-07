@@ -7,14 +7,14 @@ using Test
     @test RGB(1.2, 3.4, 5.6) + RGB(1.2, 3.4, 5.6) ≈ RGB(2.4, 6.8, 11.2)
     @test RGB(2.4, 6.8, 11.2) - RGB(1.2, 3.4, 5.6) ≈ RGB(1.2, 3.4, 5.6)
     @test RGB(1.2, 3.4, 5.6) * 2 ≈ RGB(2.4, 6.8, 11.2)
-    @test RGB(1.2, 3.4, 5.6) * RGB(2.0, 3.0, 4.0) ≈ RGB(2.4, 10.2, 22.4) 
+    @test RGB(1.2, 3.4, 5.6) * RGB(2.0, 3.0, 4.0) ≈ RGB(2.4, 10.2, 22.4)
     @test RGB(2.4, 6.9, 11.2) / RGB(2.0, 3.0, 2.0) ≈ RGB(1.2, 2.3, 5.6)
     @test RGB(2.4, 6.8, 11.2) / 2 ≈ RGB(1.2, 3.4, 5.6)
 end
 
 
 @testset "hdrimg" begin
-    img=hdrimg(10, 10)
+    img = hdrimg(10, 10)
     @test img.w == 10
 
     # Test for adding value in non valid coordinates
@@ -24,9 +24,9 @@ end
 
     try
         img.img[10, 10] = RGB(0.0, 0.0, 0.0)
-        @test true 
+        @test true
     catch e
-        @test false  
+        @test false
     end
 
     # Test for non RGB value
@@ -34,9 +34,9 @@ end
     try
         img.img[5, 5] = i
         print(img.img[5, 5])
-        @test false 
+        @test false
     catch e
-        @test true  
+        @test true
     end
 end
 
@@ -99,12 +99,12 @@ end
             #@test img.img[2, 2] ≈ RGB(4.0e2, 5.0e2, 6.0e2)
             #@test img.img[2, 3] ≈ RGB(7.0e2, 8.0e2, 9.0e2)
             # Access to hdrimg from getindex
-            @test img[0,0] ≈ RGB(1.0e1, 2.0e1, 3.0e1)
-            @test img[1,0] ≈ RGB(4.0e1, 5.0e1, 6.0e1)
-            @test img[2,0] ≈ RGB(7.0e1, 8.0e1, 9.0e1)
-            @test img[0,1] ≈ RGB(1.0e2, 2.0e2, 3.0e2)
-            @test img[1,1] ≈ RGB(4.0e2, 5.0e2, 6.0e2)
-            @test img[2,1] ≈ RGB(7.0e2, 8.0e2, 9.0e2)
+            @test img[0, 0] ≈ RGB(1.0e1, 2.0e1, 3.0e1)
+            @test img[1, 0] ≈ RGB(4.0e1, 5.0e1, 6.0e1)
+            @test img[2, 0] ≈ RGB(7.0e1, 8.0e1, 9.0e1)
+            @test img[0, 1] ≈ RGB(1.0e2, 2.0e2, 3.0e2)
+            @test img[1, 1] ≈ RGB(4.0e2, 5.0e2, 6.0e2)
+            @test img[2, 1] ≈ RGB(7.0e2, 8.0e2, 9.0e2)
         end
 
         buf = IOBuffer(b"PF\n3 2\n-1.0\nstop")
@@ -132,12 +132,12 @@ end
         #img.img[2, 2] = RGB(4.0e2, 5.0e2, 6.0e2)
         #img.img[2, 3] = RGB(7.0e2, 8.0e2, 9.0e2)
 
-        img[0,0] = RGB(1.0e1, 2.0e1, 3.0e1)
-        img[1,0] = RGB(4.0e1, 5.0e1, 6.0e1)
-        img[2,0] = RGB(7.0e1, 8.0e1, 9.0e1)
-        img[0,1] = RGB(1.0e2, 2.0e2, 3.0e2)
-        img[1,1] = RGB(4.0e2, 5.0e2, 6.0e2)
-        img[2,1] = RGB(7.0e2, 8.0e2, 9.0e2)
+        img[0, 0] = RGB(1.0e1, 2.0e1, 3.0e1)
+        img[1, 0] = RGB(4.0e1, 5.0e1, 6.0e1)
+        img[2, 0] = RGB(7.0e1, 8.0e1, 9.0e1)
+        img[0, 1] = RGB(1.0e2, 2.0e2, 3.0e2)
+        img[1, 1] = RGB(4.0e2, 5.0e2, 6.0e2)
+        img[2, 1] = RGB(7.0e2, 8.0e2, 9.0e2)
 
         buf = IOBuffer()
         write_pfm_image(img, buf, true)
@@ -152,9 +152,9 @@ end
             0x00, 0x00, 0x20, 0x42, 0x00, 0x00, 0x48, 0x42, 0x00, 0x00, 0x70, 0x42,
             0x00, 0x00, 0x8c, 0x42, 0x00, 0x00, 0xa0, 0x42, 0x00, 0x00, 0xb4, 0x42
         ])
-        data1 = take!(buf)  
-        data2 = take!(le)  
-        @test data1 == data2  
+        data1 = take!(buf)
+        data2 = take!(le)
+        @test data1 == data2
         buf = IOBuffer()
         write_pfm_image(img, buf, false)
         be = IOBuffer([
@@ -166,14 +166,14 @@ end
             0x20, 0x00, 0x00, 0x42, 0x48, 0x00, 0x00, 0x42, 0x70, 0x00, 0x00, 0x42,
             0x8c, 0x00, 0x00, 0x42, 0xa0, 0x00, 0x00, 0x42, 0xb4, 0x00, 0x00
         ])
-        data1 = take!(buf)  
-        data2 = take!(be)  
-        @test data1 == data2  
+        data1 = take!(buf)
+        data2 = take!(be)
+        @test data1 == data2
     end
 end
 
 @testset "Tone mapping" begin
-    #Tests for single RGB luminosity functions
+    # Tests for single RGB luminosity functions
     @testset "Single RGB luminosity functions" begin
         color = RGB(10.0, 30.0, 50.0)
         @test jujutracer._lumi_mean(color) ≈ 30.0
@@ -190,47 +190,47 @@ end
 
     @testset "Average luminosity" begin
         img = hdrimg(2, 1)
-        img[0,0] = RGB(5.0, 10.0, 15.0)   #mean luminosity = 10
-        img[1,0] = RGB(50.0, 100.0, 150.0) #mean luminosity = 100
+        img[0, 0] = RGB(5.0, 10.0, 15.0)   #mean luminosity = 10
+        img[1, 0] = RGB(50.0, 100.0, 150.0) #mean luminosity = 100
         @test jujutracer._average_luminosity(img, delta=0.0) ≈ 10^1.5
         @test_throws ArgumentError jujutracer._average_luminosity(img, type="X", delta=0)
         @test_throws ArgumentError jujutracer._average_luminosity(img, delta="prova")
         @test_throws ArgumentError jujutracer._average_luminosity(img, delta=-1.0)
-        img[0,0] = RGB(0.0, 0.0, 0.0)   #activating delta
-        img[1,0] = RGB(5.0e3, 1.0e4, 1.5e4) #mean luminosity = 1e4
+        img[0, 0] = RGB(0.0, 0.0, 0.0)   #activating delta
+        img[1, 0] = RGB(5.0e3, 1.0e4, 1.5e4) #mean luminosity = 1e4
         @test jujutracer._average_luminosity(img) ≈ 1
     end
 
     #test for _normalize_img
     @testset "Normalize image" begin
         img = hdrimg(1, 1)
-        img[0,0] = RGB(10.0, 20.0, 30.0)   #luminosity = 20
+        img[0, 0] = RGB(10.0, 20.0, 30.0)   #luminosity = 20
         @test_throws ArgumentError jujutracer._normalize_img!(img, a=-1.0)
         @test_throws ArgumentError jujutracer._normalize_img!(img, lum="prova")
-        jujutracer._normalize_img!(img, a=2 , lum =10 )
-        @test img[0,0] ≈ RGB(2.0, 4.0, 6.0) 
+        jujutracer._normalize_img!(img, a=2, lum=10)
+        @test img[0, 0] ≈ RGB(2.0, 4.0, 6.0)
     end
 
-    # test for clamp_img
+    # Test for clamp_img
     @testset "Clamp image" begin
         img = hdrimg(1, 1)
-        img[0,0] = RGB(10.0, 20.0, 30.0)
+        img[0, 0] = RGB(10.0, 20.0, 30.0)
         jujutracer._clamp_img!(img)
-        @test img[0,0] ≈ RGB(10.0/(1+10.0), 20.0/(1+20.0), 30.0/(1+30.0))
+        @test img[0, 0] ≈ RGB(10.0 / (1 + 10.0), 20.0 / (1 + 20.0), 30.0 / (1 + 30.0))
     end
 
-    # test for gamma correction
+    # Test for gamma correction
     @testset "Gamma correction" begin
         img = hdrimg(1, 1)
-        img[0,0] = RGB(10.0, 20.0, 30.0)
-        jujutracer._γ_correction!(img; γ = 2.2)
-        @test img[0,0] ≈ RGB(10.0^(1/2.2), 20.0^(1/2.2), 30.0^(1/2.2))
-        img[0,0] = RGB(10.0, 20.0, 30.0)
-        jujutracer._γ_correction!(img; γ = 1.0)
-        @test img[0,0] ≈ RGB(10.0, 20.0, 30.0)
-        @test_throws ArgumentError jujutracer._γ_correction!(img; γ = -1.0)
-        @test_throws ArgumentError jujutracer._γ_correction!(img; γ = 0.0)
-        @test_throws ArgumentError jujutracer._γ_correction!(img; γ = "prova")
+        img[0, 0] = RGB(10.0, 20.0, 30.0)
+        jujutracer._γ_correction!(img; γ=2.2)
+        @test img[0, 0] ≈ RGB(10.0^(1 / 2.2), 20.0^(1 / 2.2), 30.0^(1 / 2.2))
+        img[0, 0] = RGB(10.0, 20.0, 30.0)
+        jujutracer._γ_correction!(img; γ=1.0)
+        @test img[0, 0] ≈ RGB(10.0, 20.0, 30.0)
+        @test_throws ArgumentError jujutracer._γ_correction!(img; γ=-1.0)
+        @test_throws ArgumentError jujutracer._γ_correction!(img; γ=0.0)
+        @test_throws ArgumentError jujutracer._γ_correction!(img; γ="prova")
     end
 end
 
@@ -268,7 +268,7 @@ end
     p1 = Point(1.0, 2.0, 3.0)
     p2 = Point(1.0, 2.0, 3.0)
     @test p1 ≈ p2
-    @test_throws MethodError p1 * 2 
+    @test_throws MethodError p1 * 2
     @test_throws MethodError p1 / 2
 
     #Test for Norm 
@@ -282,7 +282,7 @@ end
 
     @test_throws MethodError squared_norm(p)
     @test_throws MethodError norm(p)
-    
+
     #Test for normalize
     v = Vec(3.0, 4.0, 0.0)
     n = Normal(3.0, 4.0, 0.0)
@@ -296,76 +296,76 @@ end
 end
 
 @testset "Transformations" begin
-    a = Vec(1.,0.,0.)
-    b = Point(1.,2.,3.)
-    c = Normal(0.,1.,0.)
+    a = Vec(1.0, 0.0, 0.0)
+    b = Point(1.0, 2.0, 3.0)
+    c = Normal(0.0, 1.0, 0.0)
     Id = Transformation()
     t1 = Translation(a)
     t2 = Translation(-a)
     @test t1 ⊙ t2 ≈ Id
     @test inverse(t1) ≈ t2
     @test t1(a) ≈ a
-    @test t1(b) ≈ Point(2.,2.,3.)
+    @test t1(b) ≈ Point(2.0, 2.0, 3.0)
     @test t2(c) ≈ c
 
-    s1 = Scaling(2.,1.,1.)
+    s1 = Scaling(2.0, 1.0, 1.0)
     s2 = inverse(s1)
-    @test s2 ≈ Scaling(0.5,1.,1.)
-    @test s2(a) ≈ Vec(0.5,0.,0.)
-    @test s2(b) ≈ Point(0.5,2.,3.)
+    @test s2 ≈ Scaling(0.5, 1.0, 1.0)
+    @test s2(a) ≈ Vec(0.5, 0.0, 0.0)
+    @test s2(b) ≈ Point(0.5, 2.0, 3.0)
     @test s2(c) ≈ c
 
-    @test Rx(π) ≈ Scaling(1.,-1.,-1.)
-    @test Rx(π/2) ⊙ Rx(π/2) ⊙ inverse(Rx(π)) ≈ Id
+    @test Rx(π) ≈ Scaling(1.0, -1.0, -1.0)
+    @test Rx(π / 2) ⊙ Rx(π / 2) ⊙ inverse(Rx(π)) ≈ Id
 end
 
 @testset "Ray" begin
-    a = Vec(1.0,0.0,0.0)
-    b = Point(1.,2.,3.)
+    a = Vec(1.0, 0.0, 0.0)
+    b = Point(1.0, 2.0, 3.0)
     r = Ray(origin=b, dir=a)
-    r1= Ray(origin=b, dir=a)
+    r1 = Ray(origin=b, dir=a)
     @test r1 ≈ r
-    @test r(1.) ≈ Point(2.,2.,3.)
-    @test_throws ArgumentError r(0.)    
-    @test !(r(1.) ≈ r1.origin)
+    @test r(1.0) ≈ Point(2.0, 2.0, 3.0)
+    @test_throws ArgumentError r(0.0)
+    @test !(r(1.0) ≈ r1.origin)
 end
 
 @testset "Cameras" begin
     t = Transformation()
-    cam = Orthogonal(a_ratio = 2.)
-    ray1 = cam(0.,0.)
-    ray2 = cam(1.,0.)
-    ray3 = cam(0.,1.)
-    ray4 = cam(1.,1.)
+    cam = Orthogonal(a_ratio=2.0)
+    ray1 = cam(0.0, 0.0)
+    ray2 = cam(1.0, 0.0)
+    ray3 = cam(0.0, 1.0)
+    ray4 = cam(1.0, 1.0)
 
-    @test squared_norm(ray1.dir × ray2.dir) ≈ 0.
-    @test squared_norm(ray2.dir × ray3.dir) ≈ 0.
-    @test squared_norm(ray3.dir × ray4.dir) ≈ 0.
+    @test squared_norm(ray1.dir × ray2.dir) ≈ 0.0
+    @test squared_norm(ray2.dir × ray3.dir) ≈ 0.0
+    @test squared_norm(ray3.dir × ray4.dir) ≈ 0.0
 
-    @test ray1(1.) ≈ Point(0.,2.,-1.)
-    @test ray2(1.) ≈ Point(0.,-2.,-1.)
-    @test ray3(1.) ≈ Point(0.,2.,1.)
-    @test ray4(1.) ≈ Point(0.,-2.,1.)
+    @test ray1(1.0) ≈ Point(0.0, 2.0, -1.0)
+    @test ray2(1.0) ≈ Point(0.0, -2.0, -1.0)
+    @test ray3(1.0) ≈ Point(0.0, 2.0, 1.0)
+    @test ray4(1.0) ≈ Point(0.0, -2.0, 1.0)
 
-    cam = Perspective(d = 1., a_ratio = 2.)
-    ray1 = cam(0.,0.)
-    ray2 = cam(1.,0.)
-    ray3 = cam(0.,1.)
-    ray4 = cam(1.,1.)
+    cam = Perspective(d=1.0, a_ratio=2.0)
+    ray1 = cam(0.0, 0.0)
+    ray2 = cam(1.0, 0.0)
+    ray3 = cam(0.0, 1.0)
+    ray4 = cam(1.0, 1.0)
 
     @test ray1.origin ≈ ray2.origin
     @test ray2.origin ≈ ray3.origin
     @test ray3.origin ≈ ray4.origin
 
-    @test ray1(1.) ≈ Point(0.,2.,-1.)
-    @test ray2(1.) ≈ Point(0.,-2.,-1.)
-    @test ray3(1.) ≈ Point(0.,2.,1.)
-    @test ray4(1.) ≈ Point(0.,-2.,1.)
+    @test ray1(1.0) ≈ Point(0.0, 2.0, -1.0)
+    @test ray2(1.0) ≈ Point(0.0, -2.0, -1.0)
+    @test ray3(1.0) ≈ Point(0.0, 2.0, 1.0)
+    @test ray4(1.0) ≈ Point(0.0, -2.0, 1.0)
 end
 
 @testset "ImageTracer" begin
     img = hdrimg(4, 2)
-    cam = Perspective(a_ratio = 2.0)
+    cam = Perspective(a_ratio=2.0)
     tracer = ImageTracer(img, cam)
 
     ray1 = tracer(0, 0; u_pixel=2.5, v_pixel=1.5)
@@ -379,12 +379,12 @@ end
         end
     end
 
-    ray=tracer(0,0; u_pixel=0.0 , v_pixel=0.0)
+    ray = tracer(0, 0; u_pixel=0.0, v_pixel=0.0)
     @test ray(1.0) ≈ Point(0.0, 2.0, 1.0)
-    ray=tracer(3,1; u_pixel=1.0 , v_pixel=1.0)
+    ray = tracer(3, 1; u_pixel=1.0, v_pixel=1.0)
     @test ray(1.0) ≈ Point(0.0, -2.0, -1.0)
 
-    cam = Orthogonal(a_ratio = 2.0)
+    cam = Orthogonal(a_ratio=2.0)
     tracer = ImageTracer(img, cam)
     tracer(ray -> RGB(1.0, 2.0, 3.0))
     for y_pixel in 0:(img.h-1)
