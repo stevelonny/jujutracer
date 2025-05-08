@@ -4,7 +4,7 @@ Pkg.activate(".")
 using jujutracer
 
 function demo()
-    Sc = Scaling(1. / 10., 1. / 10., 1. / 10.)
+    Sc = Scaling(1.0 / 10.0, 1.0 / 10.0, 1.0 / 10.0)
 
     S = Vector{Shape}(undef, 10)
     S[1] = Sphere(Translation(0.5, 0.5, 0.5) ⊙ Sc)
@@ -40,7 +40,14 @@ function demo()
     toned_img = tone_mapping(hdr; a=0.18, γ=2.2)
     # Save the LDR image
     save_ldrimage(get_matrix(toned_img), "blacktriangle.png")
-    # write_pfm_image(hdr, "blacktriangle.pfm")
+    println("Saved image in blacktriangle.png")
+    println("Saving image in blacktriangle.pfm")
+    buf = IOBuffer()
+    write_pfm_image(hdr, buf)
+    # Write the buffer to a file
+    seekstart(buf) # Reset the buffer position to the beginning
+    # Open the file in write mode and save the buffer content
+    write("blacktriangle.pfm", buf)
     println("Done")
 end
 
