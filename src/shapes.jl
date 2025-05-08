@@ -220,7 +220,14 @@ end
 #---------------------------------------------------------
 # World type
 #---------------------------------------------------------
+"""
 
+    struct World(shapes::Vector{Shape})
+
+The struct representig the scene
+# Fields
+- `shapes::Vector{Shapes}`
+"""
 struct World
     shapes::Vector{Shape}
     
@@ -233,6 +240,17 @@ struct World
     end
 end
 
+"""
+
+    ray_interception(W::World, ray::Ray)
+
+Return the intersection between `ray` and the shapes in the `World`
+# Arguments
+- `W::World` the plane
+- `ray::Ray` the ray
+# Returns
+- `HitRecord` the hit record if there is an intersection, nothing otherwise
+"""
 function ray_interception(W::World, ray::Ray)
     dim = length(W.shapes)
     closest = nothing
