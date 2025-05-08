@@ -237,10 +237,12 @@ function ray_interception(W::World, ray::Ray)
     dim = length(W.shapes)
     closest = nothing
 
-    for i in dim
+    for i in 1:dim
         inter = ray_interception(W.shapes[i], ray)
-
-        if isnothing(closest) || inter.t < closest.t
+        if isnothing(inter)
+            continue
+        end
+        if (isnothing(closest) || inter.t < closest.t)
             closest = inter
         end
     end
