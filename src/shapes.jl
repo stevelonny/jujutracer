@@ -46,8 +46,16 @@ Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
 
 Abstract type for all shapes
 """
-abstract type Shape end
+abstract type AbstractShape end
 
+"""
+    ∩(S1::AbstractShape, S2::AbstractShape)
+
+Rretrun the intersection between two shapes 
+"""
+function ∩(S1::AbstractShape, S2::AbstractShape)
+    retu
+end
 #---------------------------------------------------------
 # Sphere and methods
 #---------------------------------------------------------
@@ -59,7 +67,7 @@ A sphere shape
 # Fields
 - `t::Transformation` the transformation of the sphere
 """
-struct Sphere <: Shape
+struct Sphere <: AbstractShape
     Tr::AbstractTransformation
 end
 
@@ -146,7 +154,7 @@ A plane shape
 # Fields
 - `t::Transformation` the transformation of the plane
 """
-struct Plane <: Shape
+struct Plane <: AbstractShape
     Tr::AbstractTransformation
 end
 
@@ -222,20 +230,20 @@ end
 #---------------------------------------------------------
 """
 
-    struct World(shapes::Vector{Shape})
+    struct World(shapes::Vector{AbstractShape})
 
 The struct representig the scene
 # Fields
-- `shapes::Vector{Shapes}`
+- `shapes::Vector{AbstractShape}`
 """
 struct World
-    shapes::Vector{Shape}
+    shapes::Vector{AbstractShape}
     
     function World()
-        new(Vector{Shape}(nothing))
+        new(Vector{AbstractShape}(nothing))
     end
 
-    function World(S::Vector{Shape})
+    function World(S::Vector{AbstractShape})
         new(S)
     end
 end
