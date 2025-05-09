@@ -48,23 +48,15 @@ Abstract type for all shapes
 """
 abstract type AbstractShape end
 
-"""
-    ∩(S1::AbstractShape, S2::AbstractShape)
-
-Rretrun the intersection between two shapes 
-"""
-function ∩(S1::AbstractShape, S2::AbstractShape)
-    
-end
 #---------------------------------------------------------
 # Constructive Solid Geometry
 #---------------------------------------------------------
 """
-    Union(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+    union(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
 
 Return the union (\\cap ) of `Sh1`and `Sh2`
 """
-struct Union <: AbstractShape
+struct union <: AbstractShape
     Tr::AbstractTransformation
     Sh1::AbstractShape
     Sh2::AbstractShape
@@ -92,15 +84,9 @@ struct Intersection <: AbstractShape
     Sh2::AbstractShape
 end
 
-function ∪(S1::AbstractShape, S1::AbstractShape)
-    return Union(Transformation(), S1, S2)
-end
-
-Base.:-(S1::AbstractShape, S1::AbstractShape) = Difference(Transformation(), S1, S2)
-
-function ∩(S1::AbstractShape, S1::AbstractShape)
-    return Intersection(Transformation(), S1, S2)
-end
+Base.:∪(S1::AbstractShape, S2::AbstractShape) = union(Transformation(), S1, S2)
+Base.:-(S1::AbstractShape, S2::AbstractShape) = Difference(Transformation(), S1, S2)
+Base.:∩(S1::AbstractShape, S2::AbstractShape) = Intersection(Transformation(), S1, S2)
 
 """
     ray_intersection(U::Union, ray::Ray)
@@ -112,7 +98,7 @@ Calculate the intersection of a ray and a union of shapes
 # Returns
 - `HitRecord` the hit record of the shape fistly hitten if there is an intersection, nothing otherwise
 """
-function ray_intersection(U::Union, ray::Ray)
+function ray_intersection(U::union, ray::Ray)
     HR1 = ray_intersection(U.Sh1, ray)
     HR2 = ray_intersection(U.Sh2, ray)
 
@@ -170,10 +156,17 @@ end
 
 A sphere shape
 # Fields
-- `t::Transformation` the transformation of the sphere
+- `Tr::Transformation` the transformation of the sphere
 """
 struct Sphere <: AbstractShape
     Tr::AbstractTransformation
+
+    function Sphere()
+        new(Transformation())
+    end
+    function Sphere(Tr::AbstractTransformation)
+        new(Tr)
+    end
 end
 
 """
@@ -254,13 +247,20 @@ end
 #---------------------------------------------------------
 
 """
-    Plane(t::Transformation)
+    Plane(Tr::Transformation)
 A plane shape
 # Fields
-- `t::Transformation` the transformation of the plane
+- `Tr::Transformation` the transformation of the plane
 """
 struct Plane <: AbstractShape
     Tr::AbstractTransformation
+
+    function Plane()
+        new(Transformation())
+    end
+    function Plane(Tr::AbstractTransformation)
+        new(Tr)
+    end
 end
 
 """
