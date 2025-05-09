@@ -46,21 +46,127 @@ Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
 
 Abstract type for all shapes
 """
-abstract type Shape end
+abstract type AbstractShape end
 
+#---------------------------------------------------------
+# Constructive Solid Geometry
+#---------------------------------------------------------
+"""
+    union(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+
+Return the union (\\cap ) of `Sh1`and `Sh2`
+"""
+struct union <: AbstractShape
+    Tr::AbstractTransformation
+    Sh1::AbstractShape
+    Sh2::AbstractShape
+end
+
+"""
+    Difference(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+
+Return the difference `Sh1 - Sh2`
+"""
+struct Difference <: AbstractShape
+    Tr::AbstractTransformation
+    Sh1::AbstractShape
+    Sh2::AbstractShape
+end
+
+"""
+    Intersection(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+
+Return the intersection (\\cap ) of `Sh1`and `Sh2`
+"""
+struct Intersection <: AbstractShape
+    Tr::AbstractTransformation
+    Sh1::AbstractShape
+    Sh2::AbstractShape
+end
+
+Base.:∪(S1::AbstractShape, S2::AbstractShape) = union(Transformation(), S1, S2)
+Base.:-(S1::AbstractShape, S2::AbstractShape) = Difference(Transformation(), S1, S2)
+Base.:∩(S1::AbstractShape, S2::AbstractShape) = Intersection(Transformation(), S1, S2)
+
+"""
+    ray_intersection(U::Union, ray::Ray)
+
+Calculate the intersection of a ray and a union of shapes
+# Arguments
+- `U::Union` the union of shapes
+- `ray::Ray` the ray
+# Returns
+- `HitRecord` the hit record of the shape fistly hitten if there is an intersection, nothing otherwise
+"""
+function ray_intersection(U::union, ray::Ray)
+    HR1 = ray_intersection(U.Sh1, ray)
+    HR2 = ray_intersection(U.Sh2, ray)
+
+    if isnothing(HR1)
+        if isnothing(HR2)
+            return nothing
+        else 
+            return HR2
+        end
+    elseif isnothing(HR2)
+        return HR1
+    else
+        return (HR1.t < HR2.t) ? HR1 : HR2
+    end    
+end
+
+"""
+    ray_intersection(U::Difference, ray::Ray)
+
+Calculate the intersection of a ray and a difference of shapes
+# Arguments
+- `D::Difference` the difference of shapes
+- `ray::Ray` the ray
+# Returns
+- `HitRecord` the hit record of the shape fistly hitten if there is an intersection, nothing otherwise
+"""
+function ray_intersection(D::Difference, ray::Ray)
+    HR1 = ray_intersection(D.Sh1, ray)
+    HR2 = ray_intersection(D.Sh2, ray)
+   
+end
+
+"""
+    ray_intersection(I::Intersection, ray::Ray)
+
+Calculate the intersection of a ray and a union of shapes
+# Arguments
+- `U::Union` the intersection of shapes
+- `ray::Ray` the ray
+# Returns
+- `HitRecord` the hit record of the shape fistly hitten if there is an intersection, nothing otherwise
+"""
+function ray_intersection(I::Intersection, ray::Ray)
+    HR1 = ray_intersection(I.Sh1, ray)
+    HR2 = ray_intersection(I.Sh2, ray)
+
+  
+end
 #---------------------------------------------------------
 # Sphere and methods
 #---------------------------------------------------------
 
 """
-    Sphere(t::Transformation)
+    Sphere(Tr::Transformation)
 
 A sphere shape
 # Fields
-- `t::Transformation` the transformation of the sphere
+- `Tr::Transformation` the transformation of the sphere
 """
-struct Sphere <: Shape
+struct Sphere <: AbstractShape
     Tr::AbstractTransformation
+
+    function Sphere()
+        new(Transformation())
+    end
+    function Sphere(Tr::AbstractTransformation)
+        new(Tr)
+    end
 end
 
 """
@@ -96,7 +202,7 @@ end
 
 """ 
 
-    ray_intereption(s::Sphere, r::Ray)
+    function ray_intersection(S::Sphere, ray::Ray)
 
 Calculate the intersection of a ray and a sphere
 # Arguments
@@ -105,7 +211,7 @@ Calculate the intersection of a ray and a sphere
 # Returns
 - `HitRecord` the hit record if there is an intersection, nothing otherwise
 """
-function ray_interception(S::Sphere, ray::Ray)
+function ray_intersection(S::Sphere, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
@@ -141,13 +247,20 @@ end
 #---------------------------------------------------------
 
 """
-    Plane(t::Transformation)
+    Plane(Tr::Transformation)
 A plane shape
 # Fields
-- `t::Transformation` the transformation of the plane
+- `Tr::Transformation` the transformation of the plane
 """
-struct Plane <: Shape
+struct Plane <: AbstractShape
     Tr::AbstractTransformation
+
+    function Plane()
+        new(Transformation())
+    end
+    function Plane(Tr::AbstractTransformation)
+        new(Tr)
+    end
 end
 
 """
@@ -182,7 +295,7 @@ end
 
 """
 
-    ray_interception(p::Plane, r::Ray)
+    ray_intersection(p::Plane, r::Ray)
 
 Calculate the intersection of a ray and a plane
 # Arguments
@@ -191,7 +304,7 @@ Calculate the intersection of a ray and a plane
 # Returns
 - `HitRecord` the hit record if there is an intersection, nothing otherwise
 """
-function ray_interception(pl::Plane, ray::Ray)
+function ray_intersection(pl::Plane, ray::Ray)
     inv_ray = inverse(pl.Tr)(ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
@@ -222,27 +335,27 @@ end
 #---------------------------------------------------------
 """
 
-    struct World(shapes::Vector{Shape})
+    struct World(shapes::Vector{AbstractShape})
 
 The struct representig the scene
 # Fields
-- `shapes::Vector{Shapes}`
+- `shapes::Vector{AbstractShape}`
 """
 struct World
-    shapes::Vector{Shape}
+    shapes::Vector{AbstractShape}
     
     function World()
-        new(Vector{Shape}(nothing))
+        new(Vector{AbstractShape}(nothing))
     end
 
-    function World(S::Vector{Shape})
+    function World(S::Vector{AbstractShape})
         new(S)
     end
 end
 
 """
 
-    ray_interception(W::World, ray::Ray)
+    ray_intersection(W::World, ray::Ray)
 
 Return the intersection between `ray` and the shapes in the `World`
 # Arguments
@@ -251,12 +364,12 @@ Return the intersection between `ray` and the shapes in the `World`
 # Returns
 - `HitRecord` the hit record if there is an intersection, nothing otherwise
 """
-function ray_interception(W::World, ray::Ray)
+function ray_intersection(W::World, ray::Ray)
     dim = length(W.shapes)
     closest = nothing
 
     for i in 1:dim
-        inter = ray_interception(W.shapes[i], ray)
+        inter = ray_intersection(W.shapes[i], ray)
         if isnothing(inter)
             continue
         end
