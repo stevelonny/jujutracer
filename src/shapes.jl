@@ -54,14 +54,59 @@ abstract type AbstractShape end
 Rretrun the intersection between two shapes 
 """
 function ∩(S1::AbstractShape, S2::AbstractShape)
-    retu
+    
+end
+#---------------------------------------------------------
+# Constructive Solid Geometry
+#---------------------------------------------------------
+"""
+    Union(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+
+Return the union (\\cap ) of `Sh1`and `Sh2`
+"""
+struct Union <: AbstractShape
+    Tr::AbstractTransformation
+    Sh1::AbstractShape
+    Sh2::AbstractShape
+end
+
+"""
+    Difference(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+
+Return the difference `Sh1 - Sh2`
+"""
+struct Difference <: AbstractShape
+    Tr::AbstractTransformation
+    Sh1::AbstractShape
+    Sh2::AbstractShape
+end
+
+"""
+    Intersection(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+
+Return the intersection (\\cap ) of `Sh1`and `Sh2`
+"""
+struct Intersection <: AbstractShape
+    Tr::AbstractTransformation
+    Sh1::AbstractShape
+    Sh2::AbstractShape
+end
+
+function ∪(S1::AbstractShape, S1::AbstractShape)
+    return Union(Transformation(), S1, S2)
+end
+
+Base.:-(S1::AbstractShape, S1::AbstractShape) = Difference(Transformation(), S1, S2)
+
+function ∩(S1::AbstractShape, S1::AbstractShape)
+    return Intersection(Transformation(), S1, S2)
 end
 #---------------------------------------------------------
 # Sphere and methods
 #---------------------------------------------------------
 
 """
-    Sphere(t::Transformation)
+    Sphere(Tr::Transformation)
 
 A sphere shape
 # Fields
