@@ -406,7 +406,7 @@ end
 
     O1 = Point(0.0, 0.0, 2.0)
     ray1 = Ray(origin = O1, dir = -êz)
-    HR1 = ray_interception(S, ray1)
+    HR1 = ray_intersection(S, ray1)
     @test HR1 ≈ Point(0.0 ,0.0 ,1.0)
     @test HR1.t ≈ 1.0
     @test HR1 ≈ SurfacePoint(0.0, 0.0)
@@ -414,7 +414,7 @@ end
 
     O2 = Point(3.0, 0.0, 0.0)
     ray2 = Ray(origin = O2, dir = -êx)
-    HR2 = ray_interception(S, ray2)
+    HR2 = ray_intersection(S, ray2)
     @test HR2 ≈ Point(1.0, 0.0, 0.0)
     @test HR2.t ≈ 2.0
     @test HR2 ≈ SurfacePoint(0.0, 0.5)
@@ -422,7 +422,7 @@ end
 
     O3 = Point(0.0, 0.0, 0.0)
     ray3 = Ray(origin = O3, dir = êx)
-    HR3 = ray_interception(S, ray3)
+    HR3 = ray_intersection(S, ray3)
     @test HR3 ≈ Point(1.0, 0.0, 0.0)
     @test HR3.t ≈ 1.0
     @test HR3 ≈ SurfacePoint(0.0, 0.5)
@@ -433,14 +433,14 @@ end
     
     O4 = Tr(O1)
     ray4 = Ray(origin = O4, dir = -êz)
-    HR4 = ray_interception(S, ray4)
+    HR4 = ray_intersection(S, ray4)
     @test HR4 ≈ Point(10.0 ,0.0 ,1.0)
     @test HR4.t ≈ 1.0
     @test HR4 ≈ SurfacePoint(0.0, 0.0)
     @test HR4.normal ≈ Normal(êz)
 
     ray5 = Tr(ray2)
-    HR5 = ray_interception(S, ray5)
+    HR5 = ray_intersection(S, ray5)
     @test HR5 ≈ Point(11.0, 0.0, 0.0)
     @test HR5.t ≈ 2.0
     @test HR5 ≈ SurfacePoint(0.0, 0.5)
@@ -448,10 +448,10 @@ end
 
     O6 = inverse(Tr)(O3)
     ray6 = Ray(origin = O6, dir = -êz)
-    HR6 = ray_interception(S, ray6)
+    HR6 = ray_intersection(S, ray6)
     @test HR6 === nothing
 
-    HR7 = ray_interception(S, ray1)
+    HR7 = ray_intersection(S, ray1)
     @test HR7 === nothing
 
     # test for plane
@@ -460,7 +460,7 @@ end
     r = Ray(origin = o, dir = vec)
     a = Vec(0.0, 0.0, 1.0)
     plane = Plane(Translation(a))
-    HitRecord = ray_interception(plane, r)
+    HitRecord = ray_intersection(plane, r)
     @test HitRecord.t ≈ 1.0
     @test HitRecord.world_P ≈ Point(1.0, 3.0, 1.0)
     @test HitRecord.normal ≈ Normal(êz) 
