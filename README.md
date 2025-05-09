@@ -3,7 +3,7 @@
 # jujutracer
 ![Julia](https://img.shields.io/badge/-Julia-9558B2?style=for-the-badge&logo=julia&logoColor=white)
 [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENCE.md)
-[![Wiki](https://img.shields.io/badge/Docs-Dev?style=for-the-badge&color=blue&link=https%3A%2F%2Fstevelonny.github.io%2Fjujutracer%2F)](https://stevelonny.github.io/jujutracer/)
+[![Wiki](https://img.shields.io/badge/Docs-Dev?style=for-the-badge&color=blue&link=https%3A%2F%2Fstevelonny.github.io%2Fjujutracer%2Fdev)](https://stevelonny.github.io/jujutracer/dev/)
 [![Test](https://img.shields.io/github/actions/workflow/status/stevelonny/jujutracer/Test.yml?style=for-the-badge&label=Test&link=https%3A%2F%2Fgithub.com%2Fstevelonny%2Fjujutracer%2Factions%2Fworkflows%2FTest.yml)](https://github.com/stevelonny/jujutracer/actions/workflows/Test.yml)
 
 <!-- ![GitHub branch check runs](https://img.shields.io/github/check-runs/stevelonny/jujutracer/main?style=for-the-badge) -->
@@ -22,11 +22,18 @@ git clone https://github.com/stevelonny/jujutracer.git
 ```
 
 ## Usage
-At this stage, this software only converts a PFM image into a LDR format. 
-A command line interface is provided through [`main.jl`](main.jl).
+
+### Conversion PFM -> LDR formats
 The user must provide the input file in the correct PFM format, the _a_ value and _gamma_ correction value, and the output file, which must be of the `.png` or `.jpg` extension.
 ```bash
 julia main.jl <pfm_file> <a> <gamma> <output_file>
+```
+
+### Demo version
+A demo scene is provided with the `demo.jl` script. The scene is composed by 8 spheres positioned on the edges of a cube, and 2 spheres placed in the middle of two adiacent faces.
+The user must provide the output filename, which will be used to saved the output image in both `.pfm` and `.png` formats, the width and height of the image and the camera angle.
+```bash
+julia demo.jl <output_file> <width> <height> <cam_angle>
 ```
 
 ## Contributing
