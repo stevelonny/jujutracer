@@ -1,4 +1,5 @@
 # HEAD
+- Wrong operator in `ray_interception(pl::Plane, ray::Ray)` [#12](https://github.com/stevelonny/jujutracer/issues/7)
 
 # Version 0.2.0
 - Implement geometry operations [#1](https://github.com/stevelonny/jujutracer/pull/1)
