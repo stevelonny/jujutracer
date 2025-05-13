@@ -5,7 +5,7 @@ using Images, FileIO, ImageIO
 
 # import
 import Base:
-    +, -, *, ≈, /
+    +, -, *, ≈, /, sort
 import ColorTypes: ColorTypes, RGB
 import Colors
 

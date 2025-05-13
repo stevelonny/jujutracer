@@ -34,14 +34,15 @@ Retains the information about the intersection between a ray and a shape.
 struct HitRecord
     world_P::Point
     normal::Normal
-    normal2::Normal
+    #normal2::Normal # redundant if we leverage method overloading
     surface_P::SurfacePoint
     t::Float64
-    t2::Float64
+    t2::Float64 # if not CSG, it wont be used, however in every concave shape we already calculated it
+    #tfurther::Vector{Float64} # [t3, t4, ...] will be used solely for CSG: this way we can account for convex shapes.
     ray::Ray
 
-    function HitRecord(; world_P::Point, normal::Normal, normal2::Normal,surface_P::SurfacePoint, t::Float64, t2::Float64,ray::Ray)
-        new(world_P, normal, normal2, surface_P, t, t2, ray)
+    function HitRecord(; world_P::Point, normal::Normal,surface_P::SurfacePoint, t::Float64, t2::Float64, ray::Ray)
+        new(world_P, normal, surface_P, t, t2, ray)
     end
 
 end
@@ -152,12 +153,56 @@ function ray_intersection(S::Sphere, ray::Ray)
     return HitRecord(
         world_P = S.Tr(hit_point),
         normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
-        normal2 = S.Tr(_sphere_normal(inv_ray(t2), ray.dir)),
+        #normal2 = S.Tr(_sphere_normal(inv_ray(t2), ray.dir)),
         surface_P = _point_to_uv(S, hit_point),
         t = first_hit,
         t2 = t2,
         ray = ray
     )
+end
+
+function ray_intersection_list(S::Sphere, ray::Ray)
+    inv_ray = inverse(S.Tr)(ray)
+    O = Vec(inv_ray.origin)
+    d = inv_ray.dir
+    Δrid = (O ⋅ d)^2 - squared_norm(d) * (squared_norm(O) - 1)
+
+    if Δrid > 0
+        sqrot = sqrt(Δrid)
+        t1 = (-O ⋅ d - sqrot) / squared_norm(d)
+        t2 = (-O ⋅ d + sqrot) / squared_norm(d)
+        if t1 > inv_ray.tmin && t1 < inv_ray.tmax
+            first_hit = t1
+            second_hit = t2
+        elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
+            first_hit = t2
+            second_hit = t1
+        else
+            return nothing
+        end
+    else
+        return nothing
+    end
+
+    hit_point_1 = inv_ray(first_hit)
+    hit_point_2 = inv_ray(second_hit)
+    HR1 = HitRecord(
+        world_P = S.Tr(hit_point_1),
+        normal = S.Tr(_sphere_normal(hit_point_1, ray.dir)),
+        surface_P = _point_to_uv(S, hit_point_1),
+        t = first_hit,
+        t2 = second_hit,
+        ray = ray
+    )
+    HR2 = HitRecord(
+        world_P = S.Tr(hit_point_2),
+        normal = S.Tr(_sphere_normal(hit_point_2, ray.dir)),
+        surface_P = _point_to_uv(S, hit_point_2),
+        t = second_hit,
+        t2 = first_hit,
+        ray = ray
+    )
+    return [HR1, HR2]
 end
 
 function internal(S::Sphere, P::Point)

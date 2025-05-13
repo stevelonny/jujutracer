@@ -1,13 +1,14 @@
 #---------------------------------------------------------
 # Constructive Solid Geometry
 #---------------------------------------------------------
+abstract type AbstractCSG <: AbstractShape end
 
 """
     CSGUnion(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
 
 Return the union (\\cap ) of `Sh1`and `Sh2`
 """
-struct CSGUnion <: AbstractShape
+struct CSGUnion <: AbstractCSG
     Tr::AbstractTransformation
     Sh1::AbstractShape
     Sh2::AbstractShape
@@ -18,7 +19,7 @@ end
 
 Return the difference `Sh1 - Sh2`
 """
-struct CSGDifference <: AbstractShape
+struct CSGDifference <: AbstractCSG
     Tr::AbstractTransformation
     Sh1::AbstractShape
     Sh2::AbstractShape
@@ -29,7 +30,7 @@ end
 
 Return the intersection (\\cap ) of `Sh1`and `Sh2`
 """
-struct CSGIntersection <: AbstractShape
+struct CSGIntersection <: AbstractCSG
     Tr::AbstractTransformation
     Sh1::AbstractShape
     Sh2::AbstractShape
@@ -66,6 +67,30 @@ function ray_intersection(U::CSGUnion, ray::Ray)
     end
 end
 
+# this function is used when we are constructing with more than one csg
+function ray_intersection_list(U::CSGUnion, ray::Ray)
+    # collects the hit records list of the two shapes
+    HR1_list = ray_intersection_list(U.Sh1, ray)
+    HR2_list = ray_intersection_list(U.Sh2, ray)
+
+    if isnothing(HR1_list)
+        if isnothing(HR2_list)
+            return nothing
+        else
+            return HR2_list
+        end
+    elseif isnothing(HR2_list)
+        return HR1_list
+    else
+        # construct list of hits from both shapes, sort them by t
+        # and return the first one
+        hits = vcat(HR1_list, HR2_list)
+        sort!(hits, by=x -> x.t)
+        # return the first hit record
+        return hits
+    end
+end
+
 function internal(U::CSGUnion, P::Point)
     p = inverse(U.Tr)(P) # P in the un-transofmed union system
     return internal(U.Sh1, p) || internal(U.Sh2, p)
@@ -82,36 +107,36 @@ Calculate the intersection of a ray and a difference of shapes
 - `HitRecord` the hit record of the shape fistly hitten if there is an intersection, nothing otherwise
 """
 function ray_intersection(D::CSGDifference, ray::Ray)
-    HR1 = ray_intersection(D.Sh1, ray)
-    HR2 = ray_intersection(D.Sh2, ray)
-
-    if isnothing(HR1) || isnothing(HR2)
-        return HR1
-    elseif HR1.t < HR2.t # && !internal(D.Sh2, HR1.world_P)
-        return HitRecord(
-            world_P=HR1.world_P,
-            normal=HR1.normal,
-            normal2=(HR2.normal ⋅ ray.dir > 0.0) ? HR2.normal : -HR2.normal,
-            surface_P=HR1.surface_P,
-            t=HR1.t,
-            t2=HR2.t,
-            ray=ray
-        ) # HR1 but with exit point the one entering in Sh1
-    elseif HR2.t < HR1.t && !internal(D.Sh1, HR2.world_P) && !internal(D.Sh1, ray(HR2.t2))
-        return nothing
-    else
-        hit_point = (inverse(D.Sh2.Tr))(ray)(HR2.t2)
-        return HitRecord(
-            world_P=D.Sh2.Tr(hit_point),
-            normal=(HR2.normal2 ⋅ ray.dir < 0) ? HR2.normal2 : -HR2.normal2,
-            normal2=(HR1.normal2 ⋅ ray.dir > 0) ? HR1.normal2 : -HR1.normal2,
-            surface_P=_point_to_uv(D.Sh2, hit_point),
-            t=HR2.t2,
-            t2=HR1.t2,
-            ray=ray
-        )
-    end
+    HR_list = ray_intersection_list(D, ray)
+    return isnothing(HR_list) ? nothing : HR_list[1]
 end
+
+function ray_intersection_list(D::CSGDifference, ray::Ray)
+    # collect the hrs of the first shape
+    HR1_list = ray_intersection_list(D.Sh1, ray)
+
+    if isnothing(HR1_list)
+        return nothing
+    end
+
+    # remove hits that are not inside the second shape: correspond to points eliminated by the difference
+    HR1_list = filter(x -> !internal(D.Sh2, x.world_P), HR1_list)
+
+    # collect the hrs of the second shape
+    HR2_list = ray_intersection_list(D.Sh2, ray)
+
+    if !isnothing(HR2_list)
+        # remove hits that are inside the first shape: conserve only internal points to the first shape
+        HR2_list = filter(x -> internal(D.Sh1, x.world_P), HR2_list)
+    else
+        HR2_list = []
+    end
+
+    # combine the list and sort them by t (will be used to find the first hit)
+    HR_list = vcat(HR1_list, HR2_list)
+    return isempty(HR_list) ? nothing : sort(HR_list, by=hit -> hit.t)
+end
+
 
 function internal(D::CSGDifference, P::Point)
     p = inverse(D.Tr)(P) # P in the un-transofmed difference system
