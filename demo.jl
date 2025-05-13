@@ -17,7 +17,7 @@ function demo()
 
     Sc = Scaling(1.0 / 10.0, 1.0 / 10.0, 1.0 / 10.0)
 
-    S = Vector{Shape}(undef, 10)
+    S = Vector{AbstractShape}(undef, 10)
     S[1] = Sphere(Translation(0.5, 0.5, 0.5) ⊙ Sc)
     S[2] = Sphere(Translation(-0.5, 0.5, 0.5) ⊙ Sc)
     S[3] = Sphere(Translation(0.5, -0.5, 0.5) ⊙ Sc)
@@ -36,7 +36,7 @@ function demo()
     ImgTr = ImageTracer(hdr, cam)
 
     function delta(ray)
-        repo = ray_interception(world, ray)
+        repo = ray_intersection(world, ray)
 
         if isnothing(repo)
             return RGB(0.0, 0.0, 0.0)
