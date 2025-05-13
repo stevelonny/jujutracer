@@ -242,12 +242,12 @@ function write_pfm_image(img::hdrimg, io::IOBuffer, endianness::Bool=true)
 end
 
 """
-    write_pfm_image(img::hdrimg, io, endianness::Bool=true)
+    write_pfm_image(img::hdrimg, filename::String, endianness::Bool=true)
 
-Write a PFM file encodiding the content of an `hdrimg`
+Write a PFM file encoding the content of an `hdrimg`.
 # Arguments
 - `img::hdrimg`: The HDR image to be written to the PFM file.
-- `filename::String`: The name of the file to save the PFM image to, including the ".pfm" extension.
+- `filename::String`: The file path where the PFM image will be saved, including the ".pfm" extension.
 - `endianness::Bool`: A boolean indicating whether to write the float values in little-endian format (default is true).
 # Raises
 - `InvalidPfmFileFormat`: If the file extension is not ".pfm".
@@ -266,7 +266,7 @@ function write_pfm_image(img::hdrimg, filename::String, endianness::Bool=true)
     open(filename, "w") do file
         write(file, io)
     end
-    close(io)  # Close the IOBuffer
+    # No need to close the IOBuffer as it does not hold external resources
 
 end
 
