@@ -1,6 +1,8 @@
 # HEAD
 
 ## Bugfixes
+- Change `Shape` -> `AbstractShape`
+- Update documentation in `shapes.jl`
 - Correct typo `ray_interception` -> `ray_intersection`
 - Wrong operator in `ray_interception(pl::Plane, ray::Ray)` [#12](https://github.com/stevelonny/jujutracer/issues/7)
 
