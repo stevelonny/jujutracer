@@ -455,16 +455,49 @@ end
     @test HR7 === nothing
 
     # test for plane
-    vec = Vec(1.0, 2.0, -1.0)
-    o = Point(0.0, 1.0, 2.0)
-    r = Ray(origin = o, dir = vec)
-    a = Vec(0.0, 0.0, 1.0)
-    plane = Plane(Translation(a))
-    HitRecord = ray_intersection(plane, r)
-    @test HitRecord.t ≈ 1.0
-    @test HitRecord.world_P ≈ Point(1.0, 3.0, 1.0)
-    @test HitRecord.normal ≈ Normal(êz) 
-    @test HitRecord.surface_P.u ≈ 0.0
-    @test HitRecord.surface_P.v ≈ 0.0
+    P = Plane(Transformation())
+
+    O8 = Point(0.5, 0.5, 1.0)
+    ray8 = Ray(origin = O8, dir = -êz)
+    HR8 = ray_intersection(P, ray8)
+    @test HR8 ≈ Point(0.5, 0.5, 0.0)
+    @test HR8.t ≈ 1.0
+    @test HR8 ≈ SurfacePoint(0.5, 0.5)
+    @test HR8.normal ≈ Normal(êz)
+
+    O9 = Point(0.2, 0.3, -2.0)
+    ray9 = Ray(origin = O9, dir = êz)
+    HR9 = ray_intersection(P, ray9)
+    @test HR9 ≈ Point(0.2, 0.3, 0.0)
+    @test HR9.t ≈ 2.0
+    @test HR9 ≈ SurfacePoint(0.2, 0.3)
+    @test HR9.normal ≈ -Normal(êz)
+
+    O10 = Point(1.0, 1.0, 1.0)
+    ray10 = Ray(origin = O10, dir = êx)
+    HR10 = ray_intersection(P, ray10)
+    @test HR10 === nothing
+
+    O11 = Point(0.0, 0.0, 0.0)
+    ray11 = Ray(origin = O11, dir = êx)
+    HR11 = ray_intersection(P, ray11)
+    @test HR11 === nothing
+
+    Tr2 = Translation(0.0, 0.0, 2.0)
+    P2 = Plane(Tr2)
+
+    ray12 = Ray(origin = O8, dir = êz)
+    HR12 = ray_intersection(P2, ray12)
+    @test HR12 ≈ Point(0.5, 0.5, 2.0)
+    @test HR12.t ≈ 1.0
+    @test HR12 ≈ SurfacePoint(0.5, 0.5)
+    @test HR12.normal ≈ Normal(-êz)
+
+    O13 = Point(0.0, 0.0, 1.0)
+    ray13 = Ray(origin = O13, dir = -êz)
+    HR13 = ray_intersection(P2, ray13)
+    @test HR13 === nothing
+
+    
 
 end
