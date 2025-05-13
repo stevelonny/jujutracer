@@ -17,7 +17,7 @@ function demo()
 
     Sc = Scaling(1.0 / 10.0, 1.0 / 10.0, 1.0 / 10.0)
 
-    S = Vector{Shape}(undef, 10)
+    S = Vector{AbstractShape}(undef, 10)
     S[1] = Sphere(Translation(0.5, 0.5, 0.5) ⊙ Sc)
     S[2] = Sphere(Translation(-0.5, 0.5, 0.5) ⊙ Sc)
     S[3] = Sphere(Translation(0.5, -0.5, 0.5) ⊙ Sc)
@@ -53,12 +53,7 @@ function demo()
     save_ldrimage(get_matrix(toned_img), png_output)
     println("Saved image in ", png_output)
     println("Saving image in ", pfm_output)
-    buf = IOBuffer()
-    write_pfm_image(hdr, buf)
-    # Write the buffer to a file
-    seekstart(buf) # Reset the buffer position to the beginning
-    # Open the file in write mode and save the buffer content
-    write(pfm_output, buf)
+    write_pfm_image(hdr, pfm_output)
     println("Done")
 end
 
