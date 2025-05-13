@@ -91,7 +91,7 @@ function _read_float(io::IO, is_little_endian)
         throw(InvalidPfmFileFormat("Impossible to read bytes from the file"))
     end
 
-    if !is_little_endian 
+    if !is_little_endian
         bytes = bswap(bytes)
     end
 
@@ -127,7 +127,7 @@ Parse endianness of the PFM file from a string.
 """
 function _parse_endianness(endian::String)
     value = try
-        Int(parse(Float64, endian)) 
+        Int(parse(Float64, endian))
     catch e
         throw(InvalidPfmFileFormat("Invalid or missing endianness specification"))
     end
@@ -160,7 +160,7 @@ function _parse_image_size(line::String)
         throw(InvalidPfmFileFormat("Invalid image size specification"))
     end
 
-    w , h = try
+    w, h = try
         parse(Int, dims[1]), parse(Int, dims[2])
     catch e
         throw(InvalidPfmFileFormat("Invalid weight/hight"))
@@ -220,7 +220,7 @@ Write a PFM file encodiding the content of an `hdrimg`
 - `io::IO`: The output stream to which the PFM image will be written.
 - `endianness::Bool`: A boolean indicating whether to write the float values in little-endian format (default is true).
 """
-function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
+function write_pfm_image(img::hdrimg, io::IOBuffer, endianness::Bool=true)
     endian_str = endianness ? "-1.0" : "1.0"
     header = string("PF\n", img.w, " ", img.h, "\n", endian_str, "\n")
 
@@ -239,6 +239,35 @@ function write_pfm_image(img::hdrimg, io, endianness::Bool=true)
         end
         # println(row_pixel)
     end
+end
+
+"""
+    write_pfm_image(img::hdrimg, filename::String, endianness::Bool=true)
+
+Write a PFM file encoding the content of an `hdrimg`.
+# Arguments
+- `img::hdrimg`: The HDR image to be written to the PFM file.
+- `filename::String`: The file path where the PFM image will be saved, including the ".pfm" extension.
+- `endianness::Bool`: A boolean indicating whether to write the float values in little-endian format (default is true).
+# Raises
+- `InvalidPfmFileFormat`: If the file extension is not ".pfm".
+"""
+function write_pfm_image(img::hdrimg, filename::String, endianness::Bool=true)
+    # Check if the file extension is valid
+    if !(endswith(filename, ".pfm"))
+        throw(InvalidPfmFileFormat("Invalid file extension. Only .pfm is supported."))
+    end
+
+    # Open a temporary IOBuffer to write the PFM image
+    io = IOBuffer()
+    write_pfm_image(img, io, endianness)
+    seekstart(io)  # Reset the buffer position to the beginning
+
+    open(filename, "w") do file
+        write(file, io)
+    end
+    # No need to close the IOBuffer as it does not hold external resources
+
 end
 
 """
