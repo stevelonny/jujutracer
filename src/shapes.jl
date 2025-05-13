@@ -105,7 +105,7 @@ Calculate the intersection of a ray and a sphere
 # Returns
 - `HitRecord` the hit record if there is an intersection, nothing otherwise
 """
-function ray_interception(S::Sphere, ray::Ray)
+function ray_intersection(S::Sphere, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
@@ -182,7 +182,7 @@ end
 
 """
 
-    ray_interception(p::Plane, r::Ray)
+    ray_intersection(p::Plane, r::Ray)
 
 Calculate the intersection of a ray and a plane
 # Arguments
@@ -191,7 +191,7 @@ Calculate the intersection of a ray and a plane
 # Returns
 - `HitRecord` the hit record if there is an intersection, nothing otherwise
 """
-function ray_interception(pl::Plane, ray::Ray)
+function ray_intersection(pl::Plane, ray::Ray)
     inv_ray = inverse(pl.Tr)(ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
@@ -242,7 +242,7 @@ end
 
 """
 
-    ray_interception(W::World, ray::Ray)
+    ray_intersection(W::World, ray::Ray)
 
 Return the intersection between `ray` and the shapes in the `World`
 # Arguments
@@ -251,12 +251,12 @@ Return the intersection between `ray` and the shapes in the `World`
 # Returns
 - `HitRecord` the hit record if there is an intersection, nothing otherwise
 """
-function ray_interception(W::World, ray::Ray)
+function ray_intersection(W::World, ray::Ray)
     dim = length(W.shapes)
     closest = nothing
 
     for i in 1:dim
-        inter = ray_interception(W.shapes[i], ray)
+        inter = ray_intersection(W.shapes[i], ray)
         if isnothing(inter)
             continue
         end

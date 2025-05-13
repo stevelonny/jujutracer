@@ -406,7 +406,7 @@ end
 
     O1 = Point(0.0, 0.0, 2.0)
     ray1 = Ray(origin = O1, dir = -êz)
-    HR1 = ray_interception(S, ray1)
+    HR1 = ray_intersection(S, ray1)
     @test HR1 ≈ Point(0.0 ,0.0 ,1.0)
     @test HR1.t ≈ 1.0
     @test HR1 ≈ SurfacePoint(0.0, 0.0)
@@ -414,7 +414,7 @@ end
 
     O2 = Point(3.0, 0.0, 0.0)
     ray2 = Ray(origin = O2, dir = -êx)
-    HR2 = ray_interception(S, ray2)
+    HR2 = ray_intersection(S, ray2)
     @test HR2 ≈ Point(1.0, 0.0, 0.0)
     @test HR2.t ≈ 2.0
     @test HR2 ≈ SurfacePoint(0.0, 0.5)
@@ -422,7 +422,7 @@ end
 
     O3 = Point(0.0, 0.0, 0.0)
     ray3 = Ray(origin = O3, dir = êx)
-    HR3 = ray_interception(S, ray3)
+    HR3 = ray_intersection(S, ray3)
     @test HR3 ≈ Point(1.0, 0.0, 0.0)
     @test HR3.t ≈ 1.0
     @test HR3 ≈ SurfacePoint(0.0, 0.5)
@@ -433,14 +433,14 @@ end
     
     O4 = Tr(O1)
     ray4 = Ray(origin = O4, dir = -êz)
-    HR4 = ray_interception(S, ray4)
+    HR4 = ray_intersection(S, ray4)
     @test HR4 ≈ Point(10.0 ,0.0 ,1.0)
     @test HR4.t ≈ 1.0
     @test HR4 ≈ SurfacePoint(0.0, 0.0)
     @test HR4.normal ≈ Normal(êz)
 
     ray5 = Tr(ray2)
-    HR5 = ray_interception(S, ray5)
+    HR5 = ray_intersection(S, ray5)
     @test HR5 ≈ Point(11.0, 0.0, 0.0)
     @test HR5.t ≈ 2.0
     @test HR5 ≈ SurfacePoint(0.0, 0.5)
@@ -448,10 +448,10 @@ end
 
     O6 = inverse(Tr)(O3)
     ray6 = Ray(origin = O6, dir = -êz)
-    HR6 = ray_interception(S, ray6)
+    HR6 = ray_intersection(S, ray6)
     @test HR6 === nothing
 
-    HR7 = ray_interception(S, ray1)
+    HR7 = ray_intersection(S, ray1)
     @test HR7 === nothing
 
     # test for plane
@@ -459,7 +459,7 @@ end
 
     O8 = Point(0.5, 0.5, 1.0)
     ray8 = Ray(origin = O8, dir = -êz)
-    HR8 = ray_interception(P, ray8)
+    HR8 = ray_intersection(P, ray8)
     @test HR8 ≈ Point(0.5, 0.5, 0.0)
     @test HR8.t ≈ 1.0
     @test HR8 ≈ SurfacePoint(0.5, 0.5)
@@ -467,7 +467,7 @@ end
 
     O9 = Point(0.2, 0.3, -2.0)
     ray9 = Ray(origin = O9, dir = êz)
-    HR9 = ray_interception(P, ray9)
+    HR9 = ray_intersection(P, ray9)
     @test HR9 ≈ Point(0.2, 0.3, 0.0)
     @test HR9.t ≈ 2.0
     @test HR9 ≈ SurfacePoint(0.2, 0.3)
@@ -475,19 +475,19 @@ end
 
     O10 = Point(1.0, 1.0, 1.0)
     ray10 = Ray(origin = O10, dir = êx)
-    HR10 = ray_interception(P, ray10)
+    HR10 = ray_intersection(P, ray10)
     @test HR10 === nothing
 
     O11 = Point(0.0, 0.0, 0.0)
     ray11 = Ray(origin = O11, dir = êx)
-    HR11 = ray_interception(P, ray11)
+    HR11 = ray_intersection(P, ray11)
     @test HR11 === nothing
 
     Tr2 = Translation(0.0, 0.0, 2.0)
     P2 = Plane(Tr2)
 
     ray12 = Ray(origin = O8, dir = êz)
-    HR12 = ray_interception(P2, ray12)
+    HR12 = ray_intersection(P2, ray12)
     @test HR12 ≈ Point(0.5, 0.5, 2.0)
     @test HR12.t ≈ 1.0
     @test HR12 ≈ SurfacePoint(0.5, 0.5)
@@ -495,7 +495,7 @@ end
 
     O13 = Point(0.0, 0.0, 1.0)
     ray13 = Ray(origin = O13, dir = -êz)
-    HR13 = ray_interception(P2, ray13)
+    HR13 = ray_intersection(P2, ray13)
     @test HR13 === nothing
 
     

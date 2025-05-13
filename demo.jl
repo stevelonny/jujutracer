@@ -36,7 +36,7 @@ function demo()
     ImgTr = ImageTracer(hdr, cam)
 
     function delta(ray)
-        repo = ray_interception(world, ray)
+        repo = ray_intersection(world, ray)
 
         if isnothing(repo)
             return RGB(0.0, 0.0, 0.0)
