@@ -497,7 +497,15 @@ end
     ray13 = Ray(origin = O13, dir = -êz)
     HR13 = ray_intersection(P2, ray13)
     @test HR13 === nothing
+end
 
-    
+@testset "Random Generator" begin
+    pcg = PCG()
+    @test pcg.state == 1753877967969059832
+    @test pcg.inc == 109
+    for expected in [2707161783, 2068313097,3122475824, 2211639955, 3215226955, 3421331566]
+        @test expected == rand_pcg(pcg)
+    end
+
 
 end

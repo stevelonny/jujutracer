@@ -36,7 +36,7 @@ include("shapes.jl")
 export SurfacePoint, HitRecord, AbstractShape, Sphere, ray_intersection, Plane, World
 
 include("randgen.jl")
-export PCG, rand
+export PCG, rand_pcg
 
 
 end # module jujutracer
