@@ -67,9 +67,6 @@ Calculates the intersection of a ray with the union of two shapes.
 # Returns
 - [`HitRecord`](@ref): The hit record of the first shape hit, if any.
 - `nothing`: If no intersection occurs.
-# See also
-- [`ray_intersection`](@ref CSGDifference): For ray intersection with a difference of shapes.
-- [`ray_intersection`](@ref CSGIntersection): For ray intersection with an intersection of shapes.
 """
 function ray_intersection(U::CSGUnion, ray::Ray)
     HR1 = ray_intersection(U.Sh1, ray)
@@ -98,9 +95,6 @@ Calculates all intersections of a ray with the union of two shapes.
 # Returns
 - `Vector{HitRecord}`: A sorted list of hit records for all intersections.
 - `nothing`: If no intersections occur.
-# See also
-- [`ray_intersection_list`](@ref CSGDifference): For ray intersection lists with a difference of shapes.
-- [`ray_intersection_list`](@ref CSGIntersection): For ray intersection lists with an intersection of shapes.
 """
 function ray_intersection_list(U::CSGUnion, ray::Ray)
     # collects the hit records list of the two shapes
@@ -134,9 +128,6 @@ Checks if a point is inside the union of two shapes.
 - `P::Point`: The point to check.
 # Returns
 - `Bool`: `true` if the point is inside the union, `false` otherwise.
-# See also
-- [`internal`](@ref CSGDifference): For checking if a point is inside a difference of shapes.
-- [`internal`](@ref CSGIntersection): For checking if a point is inside an intersection of shapes.
 """
 function internal(U::CSGUnion, P::Point)
     p = inverse(U.Tr)(P) # P in the un-transofmed union system
@@ -153,9 +144,6 @@ Calculates the intersection of a ray with the difference of two shapes.
 # Returns
 - [`HitRecord`](@ref): The hit record of the first shape hit, if any.
 - `nothing`: If no intersection occurs.
-# See also
-- [`ray_intersection`](@ref CSGUnion): For ray intersection with a union of shapes.
-- [`ray_intersection`](@ref CSGIntersection): For ray intersection with an intersection of shapes.
 """
 function ray_intersection(D::CSGDifference, ray::Ray)
     HR_list = ray_intersection_list(D, ray)
@@ -172,9 +160,6 @@ Calculates all intersections of a ray with the difference of two shapes.
 # Returns
 - `Vector{HitRecord}`: A sorted list of hit records for all intersections.
 - `nothing`: If no intersections occur.
-# See also
-- [`ray_intersection_list`](@ref CSGUnion): For ray intersection lists with a union of shapes.
-- [`ray_intersection_list`](@ref CSGIntersection): For ray intersection lists with an intersection of shapes.
 """
 function ray_intersection_list(D::CSGDifference, ray::Ray)
     # collect the hrs of the first shape
@@ -211,9 +196,6 @@ Checks if a point is inside the difference of two shapes.
 - `P::Point`: The point to check.
 # Returns
 - `Bool`: `true` if the point is inside the difference, `false` otherwise.
-# See also
-- [`internal`](@ref CSGUnion): For checking if a point is inside a union of shapes.
-- [`internal`](@ref CSGIntersection): For checking if a point is inside an intersection of shapes.
 """
 function internal(D::CSGDifference, P::Point)
     p = inverse(D.Tr)(P) # P in the un-transofmed difference system
@@ -230,9 +212,6 @@ Calculates the intersection of a ray with the intersection of two shapes.
 # Returns
 - [`HitRecord`](@ref): The hit record of the first shape hit, if any.
 - `nothing`: If no intersection occurs.
-# See also
-- [`ray_intersection`](@ref CSGUnion): For ray intersection with a union of shapes.
-- [`ray_intersection`](@ref CSGDifference): For ray intersection with a difference of shapes.
 """
 function ray_intersection(I::CSGIntersection, ray::Ray)
     HR1 = ray_intersection(I.Sh1, ray)
@@ -244,20 +223,16 @@ function ray_intersection(I::CSGIntersection, ray::Ray)
         return HitRecord(
             world_P=HR2.world_P,
             normal=HR2.normal,
-            normal2=(HR1.normal2 ⋅ ray.dir > 0.0) ? HR1.normal2 : -HR1.normal2,
             surface_P=HR2.surface_P,
             t=HR2.t,
-            t2=HR1.t2,
             ray=ray
         ) # HR2 but with the exit point of Sh1
     elseif HR1.t > HR2.t && internal(I.Sh2, HR1.world_P)
         return return HitRecord(
             world_P=HR1.world_P,
             normal=HR1.normal,
-            normal2=(HR2.normal2 ⋅ ray.dir > 0.0) ? HR2.normal2 : -HR2.normal2,
             surface_P=HR1.surface_P,
             t=HR1.t,
-            t2=HR2.t2,
             ray=ray
         ) # HR1 but with the exit point of Sh2
     else
@@ -274,9 +249,6 @@ Checks if a point is inside the intersection of two shapes.
 - `P::Point`: The point to check.
 # Returns
 - `Bool`: `true` if the point is inside the intersection, `false` otherwise.
-# See also
-- [`internal`](@ref CSGUnion): For checking if a point is inside a union of shapes.
-- [`internal`](@ref CSGDifference): For checking if a point is inside a difference of shapes.
 """
 function internal(I::CSGIntersection, P::Point)
     p = inverse(I.Tr)(P) # P in the un-transofmed intersection system

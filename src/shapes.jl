@@ -34,15 +34,12 @@ Retains the information about the intersection between a ray and a shape.
 struct HitRecord
     world_P::Point
     normal::Normal
-    #normal2::Normal # redundant if we leverage method overloading
     surface_P::SurfacePoint
     t::Float64
-    t2::Float64 # if not CSG, it wont be used, however in every concave shape we already calculated it
-    #tfurther::Vector{Float64} # [t3, t4, ...] will be used solely for CSG: this way we can account for convex shapes.
     ray::Ray
 
-    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, t2::Float64, ray::Ray)
-        new(world_P, normal, surface_P, t, t2, ray)
+    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray)
+        new(world_P, normal, surface_P, t, ray)
     end
 
 end
@@ -153,10 +150,8 @@ function ray_intersection(S::Sphere, ray::Ray)
     return HitRecord(
         world_P=S.Tr(hit_point),
         normal=S.Tr(_sphere_normal(hit_point, ray.dir)),
-        #normal2 = S.Tr(_sphere_normal(inv_ray(t2), ray.dir)),
         surface_P=_point_to_uv(S, hit_point),
         t=first_hit,
-        t2=t2,
         ray=ray
     )
 end
@@ -204,7 +199,6 @@ function ray_intersection_list(S::Sphere, ray::Ray)
         normal=S.Tr(_sphere_normal(hit_point_1, ray.dir)),
         surface_P=_point_to_uv(S, hit_point_1),
         t=first_hit,
-        t2=second_hit,
         ray=ray
     )
     HR2 = HitRecord(
@@ -212,7 +206,6 @@ function ray_intersection_list(S::Sphere, ray::Ray)
         normal=S.Tr(_sphere_normal(hit_point_2, ray.dir)),
         surface_P=_point_to_uv(S, hit_point_2),
         t=second_hit,
-        t2=first_hit,
         ray=ray
     )
     return [HR1, HR2]
@@ -316,10 +309,8 @@ function ray_intersection(pl::Plane, ray::Ray)
     return HitRecord(
         world_P=pl.Tr(hit_point),
         normal=norm,
-        normal2=norm, # arbitrarly chosen as second hit
         surface_P=_point_to_uv(pl, hit_point),
         t=first_hit,
-        t2=first_hit, # arbitrarly chosen as second hit
         ray=ray
     )
 end
@@ -327,29 +318,6 @@ end
 function internal(S::Plane, P::Point)
     return (inverse(S.Tr)(P).z <= 0.0) ? true : false
 end
-
-#---------------------------------------------------------
-# Cube and methods
-#---------------------------------------------------------
-
-#struct Square <: AbstractShape
-#    Tr::AbstractTransformation
-#
-#    function Square(Tr::AbstractTransformation)
-#        P_front = Plane(Tr ⊙ Translation(-0.5, 0.0, 0.0) ⊙ Ry(π/2.0))
-#        P_back = Plane(Tr ⊙ Translation(0.5, 0.0, 0.0) ⊙ Ry(-π/2.0))
-#        P_up = Plane(Tr ⊙ Translation(0.0, 0.0, 0.5))
-#        P_down = Plane(Tr ⊙ Translation(0.0, 0.0, -0.5) ⊙ Ry(π))
-#        P_right = Plane(Tr ⊙ Translation(0.0, -0.5, 0.0) ⊙ Rx(-π/2.0))
-#        P_left = Plane(Tr ⊙ Translation(0.0, 0.5, 0.0) ⊙ Rx(π/2.0))
-#        return P_front ∩ P_back ∩ P_up ∩ P_down ∩ P_right ∩ P_left
-#    end
-#
-#    function Square()
-#        Square(Transformation())
-#    end
-#end
-
 
 #---------------------------------------------------------
 # World type
