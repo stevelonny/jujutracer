@@ -35,5 +35,8 @@ export ImageTracer
 include("shapes.jl")
 export SurfacePoint, HitRecord, AbstractShape, Sphere, ray_intersection, Plane, World
 
+include("randgen.jl")
+export PCG, rand
+
 
 end # module jujutracer
