@@ -24,9 +24,10 @@ struct HitRecord
     surface_P::SurfacePoint
     t::Float64
     ray::Ray
+    shape::Shape
 
-    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray)
-        new(world_P, normal, surface_P, t, ray)
+    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray, shape::Shape)
+        new(world_P, normal, surface_P, t, ray, shape)
     end
 
 end
@@ -61,6 +62,7 @@ A sphere shape
 """
 struct Sphere <: Shape
     Tr::AbstractTransformation
+    Mat::Material
 end
 
 """
@@ -132,7 +134,8 @@ function ray_interception(S::Sphere, ray::Ray)
         normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
         surface_P = _sphere_point_to_uv(hit_point),
         t = first_hit,
-        ray = ray
+        ray = ray,
+        shape = S
     )
 end
 
@@ -148,6 +151,7 @@ A plane shape
 """
 struct Plane <: Shape
     Tr::AbstractTransformation
+    Mat::Material
 end
 
 """
@@ -213,7 +217,8 @@ function ray_interception(pl::Plane, ray::Ray)
         normal = pl.Tr(_plane_normal(hit_point, ray.dir)),
         surface_P = _plane_point_to_uv(hit_point),
         t = first_hit,
-        ray = ray
+        ray = ray,
+        sphere = pl
     )
 end
 
