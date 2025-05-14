@@ -33,7 +33,7 @@ include("imagetracer.jl")
 export ImageTracer
 
 include("shapes.jl")
-export SurfacePoint, HitRecord, AbstractShape, union, Sphere, ray_intersection, Plane, Square, World
+export SurfacePoint, HitRecord, AbstractShape, Sphere, ray_intersection, Plane, Square, World
 
 include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal

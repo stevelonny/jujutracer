@@ -499,3 +499,80 @@ end
     @test HR13 === nothing
 
 end
+
+@testset "CSG" begin
+    Sc = Scaling(1.0 / 1.5, 1.0 / 1.5, 1.0 / 1.5)
+
+    # union and difference
+    S_UD = Vector{AbstractShape}(undef, 2)
+    S_2 = Vector{AbstractShape}(undef, 3)
+    S1 = Sphere(Translation(0.0, 0.5, 0.0) ⊙ Sc)
+    S2 = Sphere(Translation(0.0, -0.5, 0.0) ⊙ Sc)
+    S3 = Sphere(Translation(0.0, 0.0, 0.5) ⊙ Sc)
+    S_UD[1] = (S1 ∪ S2) - S3
+    S_UD[2] = S3 - (S1 ∪ S2)
+    S_2[1] = S1
+    S_2[2] = S2
+    S_2[3] = S3
+    world1 = World(S_UD)
+    world2 = World(S_2)
+    cam = Perspective(d = 2.0, t = Translation(-1.0, 0.0, 0.0))
+    hdr1 = hdrimg(160, 90)
+    hdr2 = hdrimg(160, 90)
+    ImgTr1 = ImageTracer(hdr1, cam)
+    ImgTr2 = ImageTracer(hdr2, cam)
+
+    function delta1(ray)
+        repo = ray_intersection(world1, ray)
+
+        if isnothing(repo)
+            return RGB(0.0, 0.0, 0.0)
+        else
+            return RGB(1.0, 1.0, 1.0)
+        end
+    end
+    function delta2(ray)
+        repo = ray_intersection(world2, ray)
+
+        if isnothing(repo)
+            return RGB(0.0, 0.0, 0.0)
+        else
+            return RGB(1.0, 1.0, 1.0)
+        end
+    end
+    ImgTr1(delta1)
+    ImgTr2(delta2)
+    @test all(hdr1[x_pixel, y_pixel] ≈ hdr2[x_pixel, y_pixel] for y_pixel in 0:(hdr1.h-1), x_pixel in 0:(hdr1.w-1))
+    
+    # union
+    S_U = Vector{AbstractShape}(undef, 1)
+    S_1 = Vector{AbstractShape}(undef, 2)
+    S_U[1] = S1 ∪ S2
+    S_1[1] = S1
+    S_1[2] = S2
+    world3 = World(S_1)
+    world4 = World(S_U)
+    function delta3(ray)
+        repo = ray_intersection(world3, ray)
+
+        if isnothing(repo)
+            return RGB(0.0, 0.0, 0.0)
+        else
+            return RGB(1.0, 1.0, 1.0)
+        end
+    end
+    function delta4(ray)
+        repo = ray_intersection(world4, ray)
+
+        if isnothing(repo)
+            return RGB(0.0, 0.0, 0.0)
+        else
+            return RGB(1.0, 1.0, 1.0)
+        end
+    end
+    ImgTr1(delta3)
+    ImgTr2(delta4)
+    @test all(hdr1[x_pixel, y_pixel] ≈ hdr2[x_pixel, y_pixel] for y_pixel in 0:(hdr1.h-1), x_pixel in 0:(hdr1.w-1))
+
+end
+
