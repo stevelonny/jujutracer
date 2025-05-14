@@ -507,5 +507,5 @@ end
         @test expected == rand_pcg(pcg)
     end
 
-
+    vals = [rand_pcg(pcg) for _ in 1:10^6]
 end
