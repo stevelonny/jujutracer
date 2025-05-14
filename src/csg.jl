@@ -1,36 +1,53 @@
 #---------------------------------------------------------
 # Constructive Solid Geometry
 #---------------------------------------------------------
-abstract type AbstractCSG <: AbstractShape end
 
 """
-    CSGUnion(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+    struct CSGUnion <: AbstractShape
 
-Return the union (\\cap ) of `Sh1`and `Sh2`
+Represents the union of two shapes.
+# Fields
+- `Tr::AbstractTransformation`: The transformation applied to the union.
+- `Sh1::AbstractShape`, `Sh2::AbstractShape`: The two shapes being united.
+# See also
+- [`CSGDifference`](@ref): Represents the difference of two shapes.
+- [`CSGIntersection`](@ref): Represents the intersection of two shapes.
 """
-struct CSGUnion <: AbstractCSG
+struct CSGUnion <: AbstractShape
     Tr::AbstractTransformation
     Sh1::AbstractShape
     Sh2::AbstractShape
 end
 
 """
-    CSGDifference(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+    struct CSGDifference <: AbstractShape
 
-Return the difference `Sh1 - Sh2`
+Represents the difference of two shapes.
+# Fields
+- `Tr::AbstractTransformation`: The transformation applied to the difference.
+- `Sh1::AbstractShape`, `Sh2::AbstractShape`: The two shapes where `Sh1 - Sh2` is computed.
+# See also
+- [`CSGUnion`](@ref): Represents the union of two shapes.
+- [`CSGIntersection`](@ref): Represents the intersection of two shapes.
 """
-struct CSGDifference <: AbstractCSG
+struct CSGDifference <: AbstractShape
     Tr::AbstractTransformation
     Sh1::AbstractShape
     Sh2::AbstractShape
 end
 
 """
-    CSGIntersection(Tr::Transformation, Sh1::AbstractShape, Sh2::AbstractShape)
+    struct CSGIntersection <: AbstractShape
 
-Return the intersection (\\cap ) of `Sh1`and `Sh2`
+Represents the intersection of two shapes.
+# Fields
+- `Tr::AbstractTransformation`: The transformation applied to the intersection.
+- `Sh1::AbstractShape`, `Sh2::AbstractShape`: The two shapes being intersected.
+# See also
+- [`CSGUnion`](@ref): Represents the union of two shapes.
+- [`CSGDifference`](@ref): Represents the difference of two shapes.
 """
-struct CSGIntersection <: AbstractCSG
+struct CSGIntersection <: AbstractShape
     Tr::AbstractTransformation
     Sh1::AbstractShape
     Sh2::AbstractShape
@@ -43,12 +60,16 @@ Base.:∩(S1::AbstractShape, S2::AbstractShape) = CSGIntersection(Transformation
 """
     ray_intersection(U::CSGUnion, ray::Ray)
 
-Calculate the intersection of a ray and a union of shapes
+Calculates the intersection of a ray with the union of two shapes.
 # Arguments
-- `U::CSGUnion` the union of shapes
-- `ray::Ray` the ray
+- `U::CSGUnion`: The union of shapes.
+- `ray::Ray`: The ray to intersect.
 # Returns
-- `HitRecord` the hit record of the shape fistly hitten if there is an intersection, nothing otherwise
+- [`HitRecord`](@ref): The hit record of the first shape hit, if any.
+- `nothing`: If no intersection occurs.
+# See also
+- [`ray_intersection`](@ref CSGDifference): For ray intersection with a difference of shapes.
+- [`ray_intersection`](@ref CSGIntersection): For ray intersection with an intersection of shapes.
 """
 function ray_intersection(U::CSGUnion, ray::Ray)
     HR1 = ray_intersection(U.Sh1, ray)
@@ -67,7 +88,20 @@ function ray_intersection(U::CSGUnion, ray::Ray)
     end
 end
 
-# this function is used when we are constructing with more than one csg
+"""
+    ray_intersection_list(U::CSGUnion, ray::Ray)
+
+Calculates all intersections of a ray with the union of two shapes.
+# Arguments
+- `U::CSGUnion`: The union of shapes.
+- `ray::Ray`: The ray to intersect.
+# Returns
+- `Vector{HitRecord}`: A sorted list of hit records for all intersections.
+- `nothing`: If no intersections occur.
+# See also
+- [`ray_intersection_list`](@ref CSGDifference): For ray intersection lists with a difference of shapes.
+- [`ray_intersection_list`](@ref CSGIntersection): For ray intersection lists with an intersection of shapes.
+"""
 function ray_intersection_list(U::CSGUnion, ray::Ray)
     # collects the hit records list of the two shapes
     HR1_list = ray_intersection_list(U.Sh1, ray)
@@ -91,26 +125,57 @@ function ray_intersection_list(U::CSGUnion, ray::Ray)
     end
 end
 
+"""
+    internal(U::CSGUnion, P::Point)
+
+Checks if a point is inside the union of two shapes.
+# Arguments
+- `U::CSGUnion`: The union of shapes.
+- `P::Point`: The point to check.
+# Returns
+- `Bool`: `true` if the point is inside the union, `false` otherwise.
+# See also
+- [`internal`](@ref CSGDifference): For checking if a point is inside a difference of shapes.
+- [`internal`](@ref CSGIntersection): For checking if a point is inside an intersection of shapes.
+"""
 function internal(U::CSGUnion, P::Point)
     p = inverse(U.Tr)(P) # P in the un-transofmed union system
     return internal(U.Sh1, p) || internal(U.Sh2, p)
 end
 
 """
-    ray_intersection(U::Difference, ray::Ray)
+    ray_intersection(D::CSGDifference, ray::Ray)
 
-Calculate the intersection of a ray and a difference of shapes
+Calculates the intersection of a ray with the difference of two shapes.
 # Arguments
-- `D::CSGDifference` the difference of shapes
-- `ray::Ray` the ray
+- `D::CSGDifference`: The difference of shapes.
+- `ray::Ray`: The ray to intersect.
 # Returns
-- `HitRecord` the hit record of the shape fistly hitten if there is an intersection, nothing otherwise
+- [`HitRecord`](@ref): The hit record of the first shape hit, if any.
+- `nothing`: If no intersection occurs.
+# See also
+- [`ray_intersection`](@ref CSGUnion): For ray intersection with a union of shapes.
+- [`ray_intersection`](@ref CSGIntersection): For ray intersection with an intersection of shapes.
 """
 function ray_intersection(D::CSGDifference, ray::Ray)
     HR_list = ray_intersection_list(D, ray)
     return isnothing(HR_list) ? nothing : HR_list[1]
 end
 
+"""
+    ray_intersection_list(D::CSGDifference, ray::Ray)
+
+Calculates all intersections of a ray with the difference of two shapes.
+# Arguments
+- `D::CSGDifference`: The difference of shapes.
+- `ray::Ray`: The ray to intersect.
+# Returns
+- `Vector{HitRecord}`: A sorted list of hit records for all intersections.
+- `nothing`: If no intersections occur.
+# See also
+- [`ray_intersection_list`](@ref CSGUnion): For ray intersection lists with a union of shapes.
+- [`ray_intersection_list`](@ref CSGIntersection): For ray intersection lists with an intersection of shapes.
+"""
 function ray_intersection_list(D::CSGDifference, ray::Ray)
     # collect the hrs of the first shape
     HR1_list = ray_intersection_list(D.Sh1, ray)
@@ -137,7 +202,19 @@ function ray_intersection_list(D::CSGDifference, ray::Ray)
     return isempty(HR_list) ? nothing : sort(HR_list, by=hit -> hit.t)
 end
 
+"""
+    internal(D::CSGDifference, P::Point)
 
+Checks if a point is inside the difference of two shapes.
+# Arguments
+- `D::CSGDifference`: The difference of shapes.
+- `P::Point`: The point to check.
+# Returns
+- `Bool`: `true` if the point is inside the difference, `false` otherwise.
+# See also
+- [`internal`](@ref CSGUnion): For checking if a point is inside a union of shapes.
+- [`internal`](@ref CSGIntersection): For checking if a point is inside an intersection of shapes.
+"""
 function internal(D::CSGDifference, P::Point)
     p = inverse(D.Tr)(P) # P in the un-transofmed difference system
     return internal(D.Sh1, p) && !internal(D.Sh2, p)
@@ -146,12 +223,16 @@ end
 """
     ray_intersection(I::CSGIntersection, ray::Ray)
 
-Calculate the intersection of a ray and a union of shapes
+Calculates the intersection of a ray with the intersection of two shapes.
 # Arguments
-- `U::CSGIntersection` the intersection of shapes
-- `ray::Ray` the ray
+- `I::CSGIntersection`: The intersection of shapes.
+- `ray::Ray`: The ray to intersect.
 # Returns
-- `HitRecord` the hit record of the shape fistly hitten if there is an intersection, nothing otherwise
+- [`HitRecord`](@ref): The hit record of the first shape hit, if any.
+- `nothing`: If no intersection occurs.
+# See also
+- [`ray_intersection`](@ref CSGUnion): For ray intersection with a union of shapes.
+- [`ray_intersection`](@ref CSGDifference): For ray intersection with a difference of shapes.
 """
 function ray_intersection(I::CSGIntersection, ray::Ray)
     HR1 = ray_intersection(I.Sh1, ray)
@@ -184,6 +265,19 @@ function ray_intersection(I::CSGIntersection, ray::Ray)
     end
 end
 
+"""
+    internal(I::CSGIntersection, P::Point)
+
+Checks if a point is inside the intersection of two shapes.
+# Arguments
+- `I::CSGIntersection`: The intersection of shapes.
+- `P::Point`: The point to check.
+# Returns
+- `Bool`: `true` if the point is inside the intersection, `false` otherwise.
+# See also
+- [`internal`](@ref CSGUnion): For checking if a point is inside a union of shapes.
+- [`internal`](@ref CSGDifference): For checking if a point is inside a difference of shapes.
+"""
 function internal(I::CSGIntersection, P::Point)
     p = inverse(I.Tr)(P) # P in the un-transofmed intersection system
     return internal(I.Sh1, p) && internal(I.Sh2, p) # da inserire la trasformation di I

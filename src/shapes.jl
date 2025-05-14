@@ -41,7 +41,7 @@ struct HitRecord
     #tfurther::Vector{Float64} # [t3, t4, ...] will be used solely for CSG: this way we can account for convex shapes.
     ray::Ray
 
-    function HitRecord(; world_P::Point, normal::Normal,surface_P::SurfacePoint, t::Float64, t2::Float64, ray::Ray)
+    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, t2::Float64, ray::Ray)
         new(world_P, normal, surface_P, t, t2, ray)
     end
 
@@ -151,16 +151,29 @@ function ray_intersection(S::Sphere, ray::Ray)
 
     hit_point = inv_ray(first_hit)
     return HitRecord(
-        world_P = S.Tr(hit_point),
-        normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
+        world_P=S.Tr(hit_point),
+        normal=S.Tr(_sphere_normal(hit_point, ray.dir)),
         #normal2 = S.Tr(_sphere_normal(inv_ray(t2), ray.dir)),
-        surface_P = _point_to_uv(S, hit_point),
-        t = first_hit,
-        t2 = t2,
-        ray = ray
+        surface_P=_point_to_uv(S, hit_point),
+        t=first_hit,
+        t2=t2,
+        ray=ray
     )
 end
 
+"""
+    ray_intersection_list(S::Sphere, ray::Ray)
+
+Calculates all intersections of a ray with a sphere.
+# Arguments
+- `S::Sphere`: The sphere to be intersected.
+- `ray::Ray`: The ray intersecting the sphere.
+# Returns
+- `Vector{HitRecord}`: A list of hit records for all intersections, sorted by distance.
+- `nothing`: If no intersections occur.
+# See also
+- [`ray_intersection`](@ref Sphere): For the first intersection of a ray with a sphere.
+"""
 function ray_intersection_list(S::Sphere, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
@@ -187,24 +200,36 @@ function ray_intersection_list(S::Sphere, ray::Ray)
     hit_point_1 = inv_ray(first_hit)
     hit_point_2 = inv_ray(second_hit)
     HR1 = HitRecord(
-        world_P = S.Tr(hit_point_1),
-        normal = S.Tr(_sphere_normal(hit_point_1, ray.dir)),
-        surface_P = _point_to_uv(S, hit_point_1),
-        t = first_hit,
-        t2 = second_hit,
-        ray = ray
+        world_P=S.Tr(hit_point_1),
+        normal=S.Tr(_sphere_normal(hit_point_1, ray.dir)),
+        surface_P=_point_to_uv(S, hit_point_1),
+        t=first_hit,
+        t2=second_hit,
+        ray=ray
     )
     HR2 = HitRecord(
-        world_P = S.Tr(hit_point_2),
-        normal = S.Tr(_sphere_normal(hit_point_2, ray.dir)),
-        surface_P = _point_to_uv(S, hit_point_2),
-        t = second_hit,
-        t2 = first_hit,
-        ray = ray
+        world_P=S.Tr(hit_point_2),
+        normal=S.Tr(_sphere_normal(hit_point_2, ray.dir)),
+        surface_P=_point_to_uv(S, hit_point_2),
+        t=second_hit,
+        t2=first_hit,
+        ray=ray
     )
     return [HR1, HR2]
 end
 
+"""
+    internal(S::Sphere, P::Point)
+
+Checks if a point is inside a sphere.
+# Arguments
+- `S::Sphere`: The sphere to check.
+- `P::Point`: The point to check.
+# Returns
+- `Bool`: `true` if the point is inside the sphere, `false` otherwise.
+# See also
+- [`ray_intersection`](@ref Sphere): For ray intersection with a sphere.
+"""
 function internal(S::Sphere, P::Point)
     return (squared_norm(Vec(inverse(S.Tr)(P))) <= 1.0) ? true : false
 end
@@ -248,7 +273,6 @@ function _plane_normal(p::Point, dir::Vec)
 end
 
 """
-
     _point_to_uv(S::Plane, p::Point)
 
 Calculate the UV coordinates of a point on the plane in PBC
@@ -290,13 +314,13 @@ function ray_intersection(pl::Plane, ray::Ray)
     hit_point = inv_ray(first_hit)
     norm = pl.Tr(_plane_normal(hit_point, ray.dir))
     return HitRecord(
-        world_P = pl.Tr(hit_point),
-        normal = norm,
-        normal2 = norm, # arbitrarly chosen as second hit
-        surface_P = _point_to_uv(pl, hit_point),
-        t = first_hit,
-        t2 = first_hit, # arbitrarly chosen as second hit
-        ray = ray
+        world_P=pl.Tr(hit_point),
+        normal=norm,
+        normal2=norm, # arbitrarly chosen as second hit
+        surface_P=_point_to_uv(pl, hit_point),
+        t=first_hit,
+        t2=first_hit, # arbitrarly chosen as second hit
+        ray=ray
     )
 end
 
@@ -305,26 +329,26 @@ function internal(S::Plane, P::Point)
 end
 
 #---------------------------------------------------------
-# Plane and methods
+# Cube and methods
 #---------------------------------------------------------
 
-struct Square <: AbstractShape
-    Tr::AbstractTransformation
-
-    function Square(Tr::AbstractTransformation)
-        P_front = Plane(Tr ⊙ Translation(-0.5, 0.0, 0.0) ⊙ Ry(π/2.0))
-        P_back = Plane(Tr ⊙ Translation(0.5, 0.0, 0.0) ⊙ Ry(-π/2.0))
-        P_up = Plane(Tr ⊙ Translation(0.0, 0.0, 0.5))
-        P_down = Plane(Tr ⊙ Translation(0.0, 0.0, -0.5) ⊙ Ry(π))
-        P_right = Plane(Tr ⊙ Translation(0.0, -0.5, 0.0) ⊙ Rx(-π/2.0))
-        P_left = Plane(Tr ⊙ Translation(0.0, 0.5, 0.0) ⊙ Rx(π/2.0))
-        return P_front ∩ P_back ∩ P_up ∩ P_down ∩ P_right ∩ P_left
-    end
-
-    function Square()
-        Square(Transformation())
-    end
-end
+#struct Square <: AbstractShape
+#    Tr::AbstractTransformation
+#
+#    function Square(Tr::AbstractTransformation)
+#        P_front = Plane(Tr ⊙ Translation(-0.5, 0.0, 0.0) ⊙ Ry(π/2.0))
+#        P_back = Plane(Tr ⊙ Translation(0.5, 0.0, 0.0) ⊙ Ry(-π/2.0))
+#        P_up = Plane(Tr ⊙ Translation(0.0, 0.0, 0.5))
+#        P_down = Plane(Tr ⊙ Translation(0.0, 0.0, -0.5) ⊙ Ry(π))
+#        P_right = Plane(Tr ⊙ Translation(0.0, -0.5, 0.0) ⊙ Rx(-π/2.0))
+#        P_left = Plane(Tr ⊙ Translation(0.0, 0.5, 0.0) ⊙ Rx(π/2.0))
+#        return P_front ∩ P_back ∩ P_up ∩ P_down ∩ P_right ∩ P_left
+#    end
+#
+#    function Square()
+#        Square(Transformation())
+#    end
+#end
 
 
 #---------------------------------------------------------
