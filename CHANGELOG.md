@@ -1,5 +1,7 @@
 # HEAD
 
+# Version 0.2.1
+
 ## Bugfixes
 - Fixed `write_pfm_file` write to file [#9](https://github.com/stevelonny/jujutracer/issues/7)
 - Change `Shape` -> `AbstractShape`
