@@ -36,6 +36,6 @@ include("shapes.jl")
 export SurfacePoint, HitRecord, Shape, Sphere, ray_interception, Plane, World
 
 include("brdf.jl")
-export Material, UniformPigment, CheckeredPigment, DiffusiveBRDF, Eval
+export Material, UniformPigment, CheckeredPigment, ImagePigment, DiffusiveBRDF, Eval
 
 end # module jujutracer

@@ -60,10 +60,30 @@ struct CheckeredPigment <: AbstractPigment
 end
 
 function (C::CheckeredPigment)(p::SurfacePoint)
-    x::Int32 = p.u * col
-    y::Int32 = p.v * row
+    x = Int32(p.u * col)
+    y = Int32(p.v * row)
 
     return ((x + y) % 2 == 0) ? C.dark : C.bright
+end
+
+"""
+    ImagePigment(img::hdrimg)
+
+Print the image `img` as pigment of the surface
+# Fields
+- `img::hdrimg` the image in hdr format
+# Functional Usage
+`ImagePigment(p::SurfacePoint)` return the `RGB` of to the `(u, v)` coordinates of the `SurfacePoint` associated to the corresponding element of `img`
+"""
+struct ImagePigment <: AbstractPigment
+    img::hdrimg
+end
+
+function (I::ImagePigment)(p::SurfacePoint)
+    x = Int32(p.u * I.img.w)
+    y = Int32(p.v * I.img.h)
+
+    return I.img[x, y]
 end
 
 #---------------------------------------------------------
