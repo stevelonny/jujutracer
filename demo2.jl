@@ -21,11 +21,18 @@ function demo2()
     S1 = Sphere(Translation(0.0, 0.5, 0.0) ⊙ Sc)
     S2 = Sphere(Translation(0.0, -0.5, 0.0) ⊙ Sc)
     S3 = Sphere(Translation(0.0, 0.0, 0.5) ⊙ Sc)
-    S[1] = (S1 ∪ S2) - S3
+    #S[1] = (S1 ∪ S2) - S3
+    # lets see the substracted part above the first csg figure
+    #S[2] = S3 - (S1 ∪ S2)
+    #S[1] = S1
+    #S[2] = S2
+    #S[3] = S3
+    S[1] = (S1 ∩ S2) ∩ S3
 
     R_cam = Rz(cam_angle)
     world = World(S)
-    cam = Perspective(d = 2.0, t = R_cam ⊙ Ry(0.8) ⊙ Translation(-1.0, 0.0, 0.0))
+    #cam = Orthogonal(t = R_cam ⊙ Translation(-1.0, 0.0, 0.0), a_ratio = convert(Float64, 16 // 9))
+    cam = Perspective(d = 2.0, t = R_cam ⊙ Translation(-1.0, 0.0, 0.0))
     hdr = hdrimg(width, height)
     ImgTr = ImageTracer(hdr, cam)
 

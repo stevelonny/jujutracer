@@ -214,30 +214,27 @@ Calculates the intersection of a ray with the intersection of two shapes.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(I::CSGIntersection, ray::Ray)
-    HR1 = ray_intersection(I.Sh1, ray)
-    HR2 = ray_intersection(I.Sh2, ray)
+    HR_list = ray_intersection_list(I, ray)
+    return isnothing(HR_list) ? nothing : HR_list[1]
+end
 
-    if isnothing(HR1) || isnothing(HR2)
-        return nothing
-    elseif HR2.t > HR1.t && internal(I.Sh1, HR2.world_P)
-        return HitRecord(
-            world_P=HR2.world_P,
-            normal=HR2.normal,
-            surface_P=HR2.surface_P,
-            t=HR2.t,
-            ray=ray
-        ) # HR2 but with the exit point of Sh1
-    elseif HR1.t > HR2.t && internal(I.Sh2, HR1.world_P)
-        return return HitRecord(
-            world_P=HR1.world_P,
-            normal=HR1.normal,
-            surface_P=HR1.surface_P,
-            t=HR1.t,
-            ray=ray
-        ) # HR1 but with the exit point of Sh2
-    else
+function ray_intersection_list(I::CSGIntersection, ray::Ray)
+    # collect the hrs of both shapes
+    HR1_list = ray_intersection_list(I.Sh1, ray)
+    if isnothing(HR1_list)
         return nothing
     end
+    HR2_list = ray_intersection_list(I.Sh2, ray)
+    if isnothing(HR2_list)
+        return nothing
+    end
+    # HR1: remove hits that are not inside the second shape: they do not belong to the intersection
+    HR1_list = filter(x -> internal(I.Sh2, x.world_P), HR1_list)
+    # HR2: remove hits that are not inside the first shape: they do not belong to the intersection
+    HR2_list = filter(x -> internal(I.Sh1, x.world_P), HR2_list)
+
+    HR_list = vcat(HR1_list, HR2_list)
+    return isempty(HR_list) ? nothing : sort(HR_list, by=hit -> hit.t)
 end
 
 """
