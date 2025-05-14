@@ -38,4 +38,7 @@ export SurfacePoint, HitRecord, AbstractShape, union, Sphere, ray_intersection, 
 include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal
 
+include("pcg.jl")
+export PCG, rand_pcg
+
 end # module jujutracer
