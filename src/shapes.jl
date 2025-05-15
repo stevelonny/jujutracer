@@ -2,80 +2,78 @@
 # Shapes
 #---------------------------------------------------------
 """
-    Shape
+    abstract type Shape
 
-Abstract type for all shapes
+Abstract type for all shapes.
+Made concrete by [`Sphere`](@ref) and [`Plane`](@ref).
 """
-abstract type Shape end
+abstract type AbstractShape end
 
 #---------------------------------------------------------
 # Sphere and methods
 #---------------------------------------------------------
 
 """
-    Sphere(t::Transformation)
+    struct Sphere <: AbstractShape
 
-A sphere shape
+A sphere.
+This structure is a subtype of [`AbstractShape`](@ref).
 # Fields
-- `t::Transformation` the transformation of the sphere
+- `t::Transformation`: the transformation applied to the sphere.
 """
-struct Sphere <: Shape
+struct Sphere <: AbstractShape
     Tr::AbstractTransformation
     Mat::Material
 end
 
 """
-
     _sphere_normal(p::Point, dir::Vec)
 
-Calculate the normal vector of a point on the sphere
+Calculate the normal vector of a point on the sphere.
 # Arguments
-- `p::Point` the point on the sphere
-- `dir::Vec` the direction vector of the ray
+- `p::Point`: the point on the sphere.
+- `dir::Vec`: the direction vector of the ray.
 # Returns
-- `Normal` the normal vector of the sphere at the point
+- `Normal`: the normal to the sphere's surface at the point.
 """
-function _sphere_normal(p::Point, dir::Vec )
+function _sphere_normal(p::Point, dir::Vec)
     norm = Normal(p.x, p.y, p.z)
     return (Vec(p) ⋅ dir < 0.0) ? norm : -norm
 end
 
 """
-
     _sphere_point_to_uv(p::Point)
 
-Calculate the UV coordinates of a point on the sphere
+Calculate the UV coordinates of a point on the sphere.
 # Arguments
-- `p::Point` the point on the sphere
+- `p::Point`: the point on the sphere
 # Returns
-- `SurfacePoint` the UV coordinates of the point on the sphere
+- `SurfacePoint`: the UV coordinates of the point on the sphere
 """
 function _sphere_point_to_uv(p::Point)
     return SurfacePoint(atan(p.y, p.x) / (2.0 * π), acos(p.z) / π)
 end
 
-
-""" 
-
-    ray_intereption(s::Sphere, r::Ray)
-
-Calculate the intersection of a ray and a sphere
-# Arguments
-- `S::Sphere` the sphere
-- `ray::Ray` the ray
-# Returns
-- `HitRecord` the hit record if there is an intersection, nothing otherwise
 """
-function ray_interception(S::Sphere, ray::Ray)
+    ray_intersection(s::Sphere, r::Ray)
+
+Calculates the intersection of a ray and a sphere.
+# Arguments
+- `S::Sphere`: the sphere to be intersected
+- `ray::Ray`: the ray intersecting the sphere
+# Returns
+If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
+"""
+function ray_intersection(S::Sphere, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
-    Δrid = (O⋅d)^2 - squared_norm(d)*(squared_norm(O) - 1)
+    Δrid = (O ⋅ d)^2 - squared_norm(d) * (squared_norm(O) - 1)
 
     if Δrid > 0
         sqrot = sqrt(Δrid)
-        t1 = (- O⋅d - sqrot)/squared_norm(d)
-        t2 = (- O⋅d + sqrot)/squared_norm(d)
+        t1 = (-O ⋅ d - sqrot) / squared_norm(d)
+        t2 = (-O ⋅ d + sqrot) / squared_norm(d)
         if t1 > inv_ray.tmin && t1 < inv_ray.tmax
             first_hit = t1
         elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
@@ -86,7 +84,7 @@ function ray_interception(S::Sphere, ray::Ray)
     else
         return nothing
     end
-    
+
     hit_point = inv_ray(first_hit)
     return HitRecord(
         world_P = S.Tr(hit_point),
@@ -103,26 +101,27 @@ end
 #---------------------------------------------------------
 
 """
-    Plane(t::Transformation)
-A plane shape
+    struct Plane <: AbstractShape
+
+A plane.
+This structure is a subtype of [`AbstractShape`](@ref).
 # Fields
-- `t::Transformation` the transformation of the plane
+- `t::Transformation`: the transformation applied to the plane.
 """
-struct Plane <: Shape
+struct Plane <: AbstractShape
     Tr::AbstractTransformation
     Mat::Material
 end
 
 """
-
     _plane_normal(p::Point, dir::Vec)
 
 Calculate the normal vector of a point on the plane
 # Arguments
-- `p::Point` the point on the plane
-- `dir::Vec` the direction vector of the ray
+- `p::Point`: the point on the plane.
+- `dir::Vec`: the direction vector of the ray.
 # Returns
-- `Normal` the normal vector of the plane at the point
+- `Normal`: the normal to the plane's surface at the point.
 """
 function _plane_normal(p::Point, dir::Vec)
     norm = Normal(0.0, 0.0, 1.0)
@@ -130,37 +129,35 @@ function _plane_normal(p::Point, dir::Vec)
 end
 
 """
-
     _plane_point_to_uv(p::Point)
 
 Calculate the UV coordinates of a point on the plane in PBC
 # Arguments
-- `p::Point` the point on the plane
+- `p::Point`: the point on the plane
 # Returns
-- `SurfacePoint` the UV coordinates of the point in PBC
+- `SurfacePoint`: the UV coordinates of the point in PBC
 """
 function _plane_point_to_uv(p::Point)
     return SurfacePoint(p.x - floor(p.x), p.y - floor(p.y))
 end
 
 """
+    ray_intersection(p::Plane, r::Ray)
 
-    ray_interception(p::Plane, r::Ray)
-
-Calculate the intersection of a ray and a plane
+Calculate the intersection of a ray and a plane.
 # Arguments
-- `S::Plane` the plane
-- `ray::Ray` the ray
+- `S::Plane`: the plane to be intersected.
+- `ray::Ray`: the ray intersecting the plane.
 # Returns
-- `HitRecord` the hit record if there is an intersection, nothing otherwise
+If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
-function ray_interception(pl::Plane, ray::Ray)
+function ray_intersection(pl::Plane, ray::Ray)
     inv_ray = inverse(pl.Tr)(ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
-    
+
     if d != 0
-        t= -Oz/d.z
+        t = -Oz / d.z
         if t > inv_ray.tmin && t < inv_ray.tmax
             first_hit = t
         else
@@ -169,7 +166,7 @@ function ray_interception(pl::Plane, ray::Ray)
     else
         return nothing
     end
-    
+
     hit_point = inv_ray(first_hit)
     return HitRecord(
         world_P = pl.Tr(hit_point),
@@ -185,42 +182,47 @@ end
 # World type
 #---------------------------------------------------------
 """
+    struct World
 
-    struct World(shapes::Vector{Shape})
-
-The struct representig the scene
+A struct representing a collection of shapes in a 3D world.
 # Fields
-- `shapes::Vector{Shapes}`
+- `shapes::Vector{Shapes}`: the vector containing the shapes in the world.
+# Constructor
+- `World()`: creates a new `World` with an empty vector of shapes.
+- `World(S::Vector{Shapes})`: creates a new `World` with the specified vector of shapes.
+# See also
+- [`AbstractShape`](@ref): the abstract type for all shapes.
+- [`Sphere`](@ref): a concrete implementation of `AbstractShape` representing a sphere.
+- [`Plane`](@ref): a concrete implementation of `AbstractShape` representing a plane.
 """
 struct World
-    shapes::Vector{Shape}
-    
+    shapes::Vector{AbstractShape}
+
     function World()
-        new(Vector{Shape}(nothing))
+        new(Vector{AbstractShape}(nothing))
     end
 
-    function World(S::Vector{Shape})
+    function World(S::Vector{AbstractShape})
         new(S)
     end
 end
 
 """
+    ray_intersection(W::World, ray::Ray)
 
-    ray_interception(W::World, ray::Ray)
-
-Return the intersection between `ray` and the shapes in the `World`
+Calculates the intersection of a ray with all shapes in the world.
 # Arguments
-- `W::World` the plane
-- `ray::Ray` the ray
+- `W::World`: the world containing the shapes
+- `ray::Ray`: the ray to be intersected with the shapes in the worlds
 # Returns
-- `HitRecord` the hit record if there is an intersection, nothing otherwise
+If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
-function ray_interception(W::World, ray::Ray)
+function ray_intersection(W::World, ray::Ray)
     dim = length(W.shapes)
     closest = nothing
 
     for i in 1:dim
-        inter = ray_interception(W.shapes[i], ray)
+        inter = ray_intersection(W.shapes[i], ray)
         if isnothing(inter)
             continue
         end

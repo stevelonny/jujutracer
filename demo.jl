@@ -23,7 +23,7 @@ function demo()
     Mat1 = Material(UniformPigment(color1), DiffusiveBRDF(UniformPigment(color1), 0.5))
     Mat2 = Material(CheckeredPigment(4, 4, color1, color2), DiffusiveBRDF(UniformPigment(color1), 0.5))
 
-    S = Vector{Shape}(undef, 10)
+    S = Vector{AbstractShape}(undef, 10)
     S[1] = Sphere(Translation(0.5, 0.5, 0.5) ⊙ Sc, Mat1)
     S[2] = Sphere(Translation(-0.5, 0.5, 0.5) ⊙ Sc, Mat1)
     S[3] = Sphere(Translation(0.5, -0.5, 0.5) ⊙ Sc, Mat1)
@@ -54,12 +54,7 @@ function demo()
     save_ldrimage(get_matrix(toned_img), png_output)
     println("Saved image in ", png_output)
     println("Saving image in ", pfm_output)
-    buf = IOBuffer()
-    write_pfm_image(hdr, buf)
-    # Write the buffer to a file
-    seekstart(buf) # Reset the buffer position to the beginning
-    # Open the file in write mode and save the buffer content
-    write(pfm_output, buf)
+    write_pfm_image(hdr, pfm_output)
     println("Done")
 end
 
