@@ -1,57 +1,4 @@
 #---------------------------------------------------------
-# HitRecord
-#---------------------------------------------------------
-"""
-    struct SurfacePoint(u::Float64, v::Float64)
-
-A struct representing a point on the surface of a shape in UV coordinates.
-# Fields
-- `u::Float64`, `v::Float64`: the UV coordinates of the point on the surface.
-"""
-struct SurfacePoint
-    u::Float64
-    v::Float64
-end
-
-"""
-    struct HitRecord
-
-Retains the information about the intersection between a ray and a shape.
-# Fields
-- `world_P::Point`: the world point of intersection.
-- `normal::Normal`: the normal vector to the surface at the hit point.
-- `surface_P::SurfacePoint`: the point on the shape's surface in UV coordinates.
-- `t::Float64`: the distance from the ray origin to the hit point along the ray.
-- `ray::Ray`: the ray that strikes the shape.
-# Constructor
-- `HitRecord(;world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray)`: creates a new `HitRecord` with the specified parameters.
-# See also
-- [`ray_intersection`](@ref): method to calculate the intersection of a ray with a shape.
-- [`SurfacePoint`](@ref): the struct representing a point on the surface of a shape in UV coordinates.
-- [`Ray`](@ref): the ray structure used in the intersection calculation.
-- [`AbstractShape`](@ref): the abstract type for all shapes.
-"""
-struct HitRecord
-    world_P::Point
-    normal::Normal
-    surface_P::SurfacePoint
-    t::Float64
-    ray::Ray
-
-    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray)
-        new(world_P, normal, surface_P, t, ray)
-    end
-
-end
-
-Base.:≈(h1::HitRecord, h2::HitRecord) = h1.world_P ≈ h2.world_P && h1.normal ≈ h2.normal && h1.surface_P ≈ h2.surface_P && h1.t ≈ h2.t && h1.ray ≈ h2.ray
-Base.:≈(h::HitRecord, p::Point) = h.world_P ≈ p
-Base.:≈(h::HitRecord, s::SurfacePoint) = h.surface_P ≈ s
-Base.:≈(h::HitRecord, r::Ray) = h.ray ≈ r
-Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
-
-
-#---------------------------------------------------------
 # Shapes
 #---------------------------------------------------------
 """
@@ -84,7 +31,8 @@ This structure is a subtype of [`AbstractSolid`](@ref).
 """
 struct Sphere <: AbstractSolid
     Tr::AbstractTransformation
-
+    Mat::Material
+    # add constructor including material: need standard material
     function Sphere()
         new(Transformation())
     end
@@ -156,11 +104,12 @@ function ray_intersection(S::Sphere, ray::Ray)
 
     hit_point = inv_ray(first_hit)
     return HitRecord(
-        world_P=S.Tr(hit_point),
-        normal=S.Tr(_sphere_normal(hit_point, ray.dir)),
-        surface_P=_point_to_uv(S, hit_point),
-        t=first_hit,
-        ray=ray
+        world_P = S.Tr(hit_point),
+        normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
+        surface_P = _point_to_uv(S, hit_point),
+        t = first_hit,
+        ray = ray,
+        shape = S
     )
 end
 
@@ -245,7 +194,8 @@ This structure is a subtype of [`AbstractShape`](@ref).
 """
 struct Plane <: AbstractShape
     Tr::AbstractTransformation
-
+    Mat::Material
+    # add constructor including material: need standard material
     function Plane()
         new(Transformation())
     end
@@ -312,11 +262,12 @@ function ray_intersection(pl::Plane, ray::Ray)
     hit_point = inv_ray(first_hit)
     norm = pl.Tr(_plane_normal(hit_point, ray.dir))
     return HitRecord(
-        world_P=pl.Tr(hit_point),
-        normal=norm,
-        surface_P=_point_to_uv(pl, hit_point),
-        t=first_hit,
-        ray=ray
+        world_P = pl.Tr(hit_point),
+        normal = norm,
+        surface_P = _point_to_uv(pl, hit_point),
+        t = first_hit,
+        ray = ray,
+        shape = pl
     )
 end
 
@@ -378,4 +329,81 @@ function ray_intersection(W::World, ray::Ray)
     end
 
     return closest
+end
+
+#---------------------------------------------------------
+# HitRecord
+#---------------------------------------------------------
+struct SurfacePoint
+    u::Float64
+    v::Float64
+end
+
+"""
+
+    HitRecord(world_point::Point, normal::Normal, surface_point::SurfacePoint, t::Float64, ray::Ray)
+
+Information about an intersection
+# Fields
+- `world_P::Point` the point in the world where the ray hit
+- `normal::Normal` the normal vector at the point of intersection
+- `surface_P::SurfacePoint` the point on the surface where the ray hit
+- `t::Float64` the distance from the ray origin to the hit point
+- `ray::Ray` the ray that hit the surface
+"""
+struct HitRecord
+    world_P::Point    
+    normal::Normal
+    surface_P::SurfacePoint
+    t::Float64
+    ray::Ray
+    shape::AbstractShape
+
+    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray, shape::AbstractShape)
+        new(world_P, normal, surface_P, t, ray, shape)
+    end
+
+end
+
+Base.:≈(h1::HitRecord, h2::HitRecord) = h1.world_P ≈ h2.world_P && h1.normal ≈ h2.normal && h1.surface_P ≈ h2.surface_P && h1.t ≈ h2.t && h1.ray ≈ h2.ray
+Base.:≈(h::HitRecord, p::Point) = h.world_P ≈ p
+Base.:≈(h::HitRecord, s::SurfacePoint) = h.surface_P ≈ s
+Base.:≈(h::HitRecord, r::Ray) = h.ray ≈ r
+Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
+
+#---------------------------------------------------------
+# BRDF Methods
+#---------------------------------------------------------
+
+"""
+    Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
+
+Return color of the diffused ray regarldless its icoming or outcoming direction
+"""
+function Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
+    return BRDF.Pigment(p) * BRDF.R / π
+end 
+
+function (U::UniformPigment)(p::SurfacePoint)
+    return U.color
+end
+
+function (C::CheckeredPigment)(p::SurfacePoint)
+    x = floor(Int, p.u * C.col)
+    y = floor(Int, p.v * C.row)
+
+    x = (x < C.col) ? x : C.col - 1
+    y = (y < C.row) ? y : C.row - 1
+
+    return ((x + y) % 2 == 0) ? C.dark : C.bright
+end
+
+function (I::ImagePigment)(p::SurfacePoint)
+    x = floor(Int, p.u * I.img.w)
+    y = floor(Int, p.v * I.img.h)
+
+    x = (x < I.img.w) ? x : I.img.w - 1
+    y = (y < I.img.h) ? y : I.img.h - 1
+
+    return I.img[x, y]
 end

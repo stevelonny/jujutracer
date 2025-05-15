@@ -1,11 +1,15 @@
 # HEAD
 - Constructive Solid Geometry [#10](https://github.com/stevelonny/jujutracer/pull/10)
+- Implement `Pigment` types and rudimental `BRDF` methods
+- Implement `Flat` renderer
+# Version 0.2.1
 
 ## Bugfixes
+- Fixed `write_pfm_file` write to file [#9](https://github.com/stevelonny/jujutracer/issues/7)
 - Change `Shape` -> `AbstractShape`
 - Update documentation in `shapes.jl`
 - Correct typo `ray_interception` -> `ray_intersection`
-- Wrong operator in `ray_interception(pl::Plane, ray::Ray)` [#12](https://github.com/stevelonny/jujutracer/issues/7)
+- Wrong operator in `ray_interception(pl::Plane, ray::Ray)` [#7](https://github.com/stevelonny/jujutracer/issues/7)
 
 # Version 0.2.0
 - Implement geometry operations [#1](https://github.com/stevelonny/jujutracer/pull/1)

@@ -400,7 +400,10 @@ end
 
 @testset "Shapes" begin
     # test for sphere
-    S = Sphere(Transformation())
+    color = RGB(1.0, 2.0, 3.0)
+    pigment = UniformPigment(color)
+    Mat = Material(pigment, DiffusiveBRDF(pigment, 0.5))
+    S = Sphere(Transformation(), Mat)
     êz = Vec(0.0, 0.0, 1.0)
     êx = Vec(1.0, 0.0, 0.0)
 
@@ -429,8 +432,8 @@ end
     @test HR3.normal ≈ -Normal(êx)
 
     Tr = Translation(10.0, 0.0, 0.0)
-    S = Sphere(Tr)
-
+    S = Sphere(Tr, Mat)
+    
     O4 = Tr(O1)
     ray4 = Ray(origin=O4, dir=-êz)
     HR4 = ray_intersection(S, ray4)
@@ -455,7 +458,7 @@ end
     @test HR7 === nothing
 
     # test for plane
-    P = Plane(Transformation())
+    P = Plane(Transformation(), Mat)
 
     O8 = Point(0.5, 0.5, 1.0)
     ray8 = Ray(origin=O8, dir=-êz)
@@ -484,7 +487,7 @@ end
     @test HR11 === nothing
 
     Tr2 = Translation(0.0, 0.0, 2.0)
-    P2 = Plane(Tr2)
+    P2 = Plane(Tr2, Mat)
 
     ray12 = Ray(origin=O8, dir=êz)
     HR12 = ray_intersection(P2, ray12)
@@ -576,3 +579,35 @@ end
 
 end
 
+@testset "Pigment" begin
+    color = RGB(1.0, 2.0, 3.0)
+    pigment = UniformPigment(color)
+
+    @test pigment(SurfacePoint(0.0, 0.0)) ≈ color
+    @test pigment(SurfacePoint(1.0, 0.0)) ≈ color
+    @test pigment(SurfacePoint(0.0, 1.0)) ≈ color
+    @test pigment(SurfacePoint(1.0, 1.0)) ≈ color
+
+    img = hdrimg(2, 2)
+
+    img[0, 0] = RGB(1.0, 2.0, 3.0)
+    img[1, 0] = RGB(2.0, 3.0, 1.0)
+    img[0, 1] = RGB(2.0, 1.0, 3.0)
+    img[1, 1] = RGB(3.0, 2.0, 1.0)
+
+    pigment = ImagePigment(img)
+
+    @test pigment(SurfacePoint(0.0, 0.0)) ≈ RGB(1.0, 2.0, 3.0)
+    @test pigment(SurfacePoint(1.0, 0.0)) ≈ RGB(2.0, 3.0, 1.0)
+    @test pigment(SurfacePoint(0.0, 1.0)) ≈ RGB(2.0, 1.0, 3.0)
+    @test pigment(SurfacePoint(1.0, 1.0)) ≈ RGB(3.0, 2.0, 1.0)
+
+    color1 = RGB(1.0, 2.0, 3.0)
+    color2 = color1 * 10.0
+    pigment = CheckeredPigment(2, 2, color1, color2)
+
+    @test pigment(SurfacePoint(0.25, 0.25)) ≈ color1
+    @test pigment(SurfacePoint(0.75, 0.25)) ≈ color2
+    @test pigment(SurfacePoint(0.25, 0.75)) ≈ color2
+    @test pigment(SurfacePoint(0.75, 0.75)) ≈ color1
+end

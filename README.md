@@ -30,7 +30,7 @@ julia main.jl <pfm_file> <a> <gamma> <output_file>
 ```
 
 ### Demo version
-A demo scene is provided with the `demo.jl` script. The scene is composed by 8 spheres positioned on the edges of a cube, and 2 spheres placed in the middle of two adiacent faces.
+A demo scene is provided with the `demo.jl` script. The scene is composed by 8 spheres with a uniform pigment positioned on the edges of a cube, and 2 checkered spheres placed in the middle of two adiacent faces.
 The user must provide the output filename, which will be used to saved the output image in both `.pfm` and `.png` formats, the width and height of the image and the camera angle.
 ```bash
 julia demo.jl <output_file> <width> <height> <cam_angle>
