@@ -513,4 +513,27 @@ end
     @test pigment(SurfacePoint(1.0, 0.0)) ≈ color
     @test pigment(SurfacePoint(0.0, 1.0)) ≈ color
     @test pigment(SurfacePoint(1.0, 1.0)) ≈ color
+
+    img = hdrimg(2, 2)
+
+    img[0, 0] = RGB(1.0, 2.0, 3.0)
+    img[1, 0] = RGB(2.0, 3.0, 1.0)
+    img[0, 1] = RGB(2.0, 1.0, 3.0)
+    img[1, 1] = RGB(3.0, 2.0, 1.0)
+
+    pigment = ImagePigment(img)
+
+    @test pigment(SurfacePoint(0.0, 0.0)) ≈ RGB(1.0, 2.0, 3.0)
+    @test pigment(SurfacePoint(1.0, 0.0)) ≈ RGB(2.0, 3.0, 1.0)
+    @test pigment(SurfacePoint(0.0, 1.0)) ≈ RGB(2.0, 1.0, 3.0)
+    @test pigment(SurfacePoint(1.0, 1.0)) ≈ RGB(3.0, 2.0, 1.0)
+
+    color1 = RGB(1.0, 2.0, 3.0)
+    color2 = color1 * 10.0
+    pigment = CheckeredPigment(2, 2, color1, color2)
+
+    @test pigment(SurfacePoint(0.25, 0.25)) ≈ color1
+    @test pigment(SurfacePoint(0.75, 0.25)) ≈ color2
+    @test pigment(SurfacePoint(0.25, 0.75)) ≈ color2
+    @test pigment(SurfacePoint(0.75, 0.75)) ≈ color1
 end

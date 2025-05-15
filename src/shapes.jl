@@ -2,7 +2,7 @@
 # Shapes
 #---------------------------------------------------------
 """
-    abstract type Shape
+    abstract type AbstractShape
 
 Abstract type for all shapes.
 Made concrete by [`Sphere`](@ref) and [`Plane`](@ref).
@@ -174,7 +174,7 @@ function ray_intersection(pl::Plane, ray::Ray)
         surface_P = _plane_point_to_uv(hit_point),
         t = first_hit,
         ray = ray,
-        sphere = pl
+        shape = pl
     )
 end
 
@@ -260,9 +260,9 @@ struct HitRecord
     surface_P::SurfacePoint
     t::Float64
     ray::Ray
-    shape::Shape
+    shape::AbstractShape
 
-    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray, shape::Shape)
+    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray, shape::AbstractShape)
         new(world_P, normal, surface_P, t, ray, shape)
     end
 
@@ -295,12 +295,18 @@ function (C::CheckeredPigment)(p::SurfacePoint)
     x = floor(Int, p.u * C.col)
     y = floor(Int, p.v * C.row)
 
+    x = (x < C.col) ? x : C.col - 1
+    y = (y < C.row) ? y : C.row - 1
+
     return ((x + y) % 2 == 0) ? C.dark : C.bright
 end
 
 function (I::ImagePigment)(p::SurfacePoint)
     x = floor(Int, p.u * I.img.w)
     y = floor(Int, p.v * I.img.h)
+
+    x = (x < I.img.w) ? x : I.img.w - 1
+    y = (y < I.img.h) ? y : I.img.h - 1
 
     return I.img[x, y]
 end

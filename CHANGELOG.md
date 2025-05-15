@@ -1,5 +1,6 @@
 # HEAD
-
+- Implement `Pigment` types and rudimental `BRDF` methods
+- Implement `Flat` renderer
 # Version 0.2.1
 
 ## Bugfixes

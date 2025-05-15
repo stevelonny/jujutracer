@@ -41,10 +41,7 @@ function demo()
     hdr = hdrimg(width, height)
     ImgTr = ImageTracer(hdr, cam)
 
-    function flat(ray)
-        repo = ray_interception(world, ray)
-        return (isnothing(repo)) ? RGB(0.0, 0.0, 0.0) : repo.shape.Mat.Emition(repo.surface_P)
-    end
+    flat = Flat(world)
 
     ImgTr(flat)
 
