@@ -55,26 +55,34 @@ Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
 # Shapes
 #---------------------------------------------------------
 """
-    abstract type Shape
+    abstract type AbstractShape
 
 Abstract type for all shapes.
-Made concrete by [`Sphere`](@ref) and [`Plane`](@ref).
 """
 abstract type AbstractShape end
+
+"""
+    abstract type AbstractSolid <: AbstractShape
+
+Abstract type for solid shapes.
+Made concrete by [`Sphere`](@ref).
+"""
+abstract type AbstractSolid <: AbstractShape end
+
 
 #---------------------------------------------------------
 # Sphere and methods
 #---------------------------------------------------------
 
 """
-    struct Sphere <: AbstractShape
+    struct Sphere <: AbstractSolid
 
 A sphere.
-This structure is a subtype of [`AbstractShape`](@ref).
+This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `t::Transformation`: the transformation applied to the sphere.
 """
-struct Sphere <: AbstractShape
+struct Sphere <: AbstractSolid
     Tr::AbstractTransformation
 
     function Sphere()
@@ -164,10 +172,8 @@ Calculates all intersections of a ray with a sphere.
 - `S::Sphere`: The sphere to be intersected.
 - `ray::Ray`: The ray intersecting the sphere.
 # Returns
-- `Vector{HitRecord}`: A list of hit records for all intersections, sorted by distance.
+- `Vector{HitRecord}`: A list of of the two hit records for the two intersections, ordered by distance.
 - `nothing`: If no intersections occur.
-# See also
-- [`ray_intersection`](@ref Sphere): For the first intersection of a ray with a sphere.
 """
 function ray_intersection_list(S::Sphere, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
@@ -220,8 +226,6 @@ Checks if a point is inside a sphere.
 - `P::Point`: The point to check.
 # Returns
 - `Bool`: `true` if the point is inside the sphere, `false` otherwise.
-# See also
-- [`ray_intersection`](@ref Sphere): For ray intersection with a sphere.
 """
 function internal(S::Sphere, P::Point)
     return (squared_norm(Vec(inverse(S.Tr)(P))) <= 1.0) ? true : false
@@ -286,7 +290,8 @@ Calculate the intersection of a ray and a plane.
 - `S::Plane`: the plane to be intersected.
 - `ray::Ray`: the ray intersecting the plane.
 # Returns
-If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
+- `HitRecord`: The hit record of the first shape hit, if any.
+- `nothing`: If no intersections occur.
 """
 function ray_intersection(pl::Plane, ray::Ray)
     inv_ray = inverse(pl.Tr)(ray)

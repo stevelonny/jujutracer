@@ -3,66 +3,75 @@
 #---------------------------------------------------------
 
 """
-    struct CSGUnion <: AbstractShape
+    struct CSGUnion <: AbstractSolid
 
-Represents the union of two shapes.
+Represents the union of two solid shapes.
 # Fields
 - `Tr::AbstractTransformation`: The transformation applied to the union.
-- `Sh1::AbstractShape`, `Sh2::AbstractShape`: The two shapes being united.
+- `Sh1::AbstractSolid`, `Sh2::AbstractSolid`: The two solid shapes being united.
 # See also
-- [`CSGDifference`](@ref): Represents the difference of two shapes.
-- [`CSGIntersection`](@ref): Represents the intersection of two shapes.
+- [`CSGDifference`](@ref): Represents the difference of two solid shapes.
+- [`CSGIntersection`](@ref): Represents the intersection of two solid shapes.
 """
-struct CSGUnion <: AbstractShape
+struct CSGUnion <: AbstractSolid
     Tr::AbstractTransformation
-    Sh1::AbstractShape
-    Sh2::AbstractShape
+    Sh1::AbstractSolid
+    Sh2::AbstractSolid
 end
 
 """
-    struct CSGDifference <: AbstractShape
+    struct CSGDifference <: AbstractSolid
 
-Represents the difference of two shapes.
+Represents the difference of two solid shapes.
 # Fields
 - `Tr::AbstractTransformation`: The transformation applied to the difference.
-- `Sh1::AbstractShape`, `Sh2::AbstractShape`: The two shapes where `Sh1 - Sh2` is computed.
+- `Sh1::AbstractSolid`, `Sh2::AbstractSolid`: The two solid shapes where `Sh1 - Sh2` is computed.
 # See also
-- [`CSGUnion`](@ref): Represents the union of two shapes.
-- [`CSGIntersection`](@ref): Represents the intersection of two shapes.
+- [`CSGUnion`](@ref): Represents the union of two solid shapes.
+- [`CSGIntersection`](@ref): Represents the intersection of two solid shapes.
 """
-struct CSGDifference <: AbstractShape
+struct CSGDifference <: AbstractSolid
     Tr::AbstractTransformation
-    Sh1::AbstractShape
-    Sh2::AbstractShape
+    Sh1::AbstractSolid
+    Sh2::AbstractSolid
 end
 
 """
-    struct CSGIntersection <: AbstractShape
+    struct CSGIntersection <: AbstractSolid
 
-Represents the intersection of two shapes.
+Represents the intersection of two solid shapes.
 # Fields
 - `Tr::AbstractTransformation`: The transformation applied to the intersection.
-- `Sh1::AbstractShape`, `Sh2::AbstractShape`: The two shapes being intersected.
+- `Sh1::AbstractSolid`, `Sh2::AbstractSolid`: The two solid shapes being intersected.
 # See also
-- [`CSGUnion`](@ref): Represents the union of two shapes.
-- [`CSGDifference`](@ref): Represents the difference of two shapes.
+- [`CSGUnion`](@ref): Represents the union of two solid shapes.
+- [`CSGDifference`](@ref): Represents the difference of two solid shapes.
 """
-struct CSGIntersection <: AbstractShape
+struct CSGIntersection <: AbstractSolid
     Tr::AbstractTransformation
-    Sh1::AbstractShape
-    Sh2::AbstractShape
+    Sh1::AbstractSolid
+    Sh2::AbstractSolid
 end
 
-Base.:∪(S1::AbstractShape, S2::AbstractShape) = CSGUnion(Transformation(), S1, S2)
-Base.:-(S1::AbstractShape, S2::AbstractShape) = CSGDifference(Transformation(), S1, S2)
-Base.:∩(S1::AbstractShape, S2::AbstractShape) = CSGIntersection(Transformation(), S1, S2)
+Base.:∪(S1::AbstractSolid, S2::AbstractSolid) = CSGUnion(Transformation(), S1, S2)
+Base.:∪(S1::AbstractSolid, S2::AbstractShape) = throw(ArgumentError("CSGUnion only accepts AbstractSolid types."))
+Base.:∪(S1::AbstractShape, S2::AbstractSolid) = throw(ArgumentError("CSGUnion only accepts AbstractSolid types."))
+Base.:∪(S1::AbstractShape, S2::AbstractShape) = throw(ArgumentError("CSGUnion only accepts AbstractSolid types."))
+Base.:-(S1::AbstractSolid, S2::AbstractSolid) = CSGDifference(Transformation(), S1, S2)
+Base.:-(S1::AbstractSolid, S2::AbstractShape) = throw(ArgumentError("CSGDifference only accepts AbstractSolid types."))
+Base.:-(S1::AbstractShape, S2::AbstractSolid) = throw(ArgumentError("CSGDifference only accepts AbstractSolid types."))
+Base.:-(S1::AbstractShape, S2::AbstractShape) = throw(ArgumentError("CSGDifference only accepts AbstractSolid types."))
+Base.:∩(S1::AbstractSolid, S2::AbstractSolid) = CSGIntersection(Transformation(), S1, S2)
+Base.:∩(S1::AbstractSolid, S2::AbstractShape) = throw(ArgumentError("CSGIntersection only accepts AbstractSolid types."))
+Base.:∩(S1::AbstractShape, S2::AbstractSolid) = throw(ArgumentError("CSGIntersection only accepts AbstractSolid types."))
+Base.:∩(S1::AbstractShape, S2::AbstractShape) = throw(ArgumentError("CSGIntersection only accepts AbstractSolid types."))
 
 """
     ray_intersection(U::CSGUnion, ray::Ray)
 
-Calculates the intersection of a ray with the union of two shapes.
+Calculates the intersection of a ray with the union of two solid shapes.
 # Arguments
-- `U::CSGUnion`: The union of shapes.
+- `U::CSGUnion`: The union of solid shapes.
 - `ray::Ray`: The ray to intersect.
 # Returns
 - [`HitRecord`](@ref): The hit record of the first shape hit, if any.
@@ -88,12 +97,12 @@ end
 """
     ray_intersection_list(U::CSGUnion, ray::Ray)
 
-Calculates all intersections of a ray with the union of two shapes.
+Calculates all intersections of a ray with the union of two solid shapes.
 # Arguments
-- `U::CSGUnion`: The union of shapes.
+- `U::CSGUnion`: The union of solid shapes.
 - `ray::Ray`: The ray to intersect.
 # Returns
-- `Vector{HitRecord}`: A sorted list of hit records for all intersections.
+- `Vector{HitRecord}`: A sorted list of hit records for all intersections, ordered by distance.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(U::CSGUnion, ray::Ray)
@@ -122,9 +131,9 @@ end
 """
     internal(U::CSGUnion, P::Point)
 
-Checks if a point is inside the union of two shapes.
+Checks if a point is inside the union of two solid shapes.
 # Arguments
-- `U::CSGUnion`: The union of shapes.
+- `U::CSGUnion`: The union of solid shapes.
 - `P::Point`: The point to check.
 # Returns
 - `Bool`: `true` if the point is inside the union, `false` otherwise.
@@ -137,9 +146,9 @@ end
 """
     ray_intersection(D::CSGDifference, ray::Ray)
 
-Calculates the intersection of a ray with the difference of two shapes.
+Calculates the intersection of a ray with the difference of two solid shapes.
 # Arguments
-- `D::CSGDifference`: The difference of shapes.
+- `D::CSGDifference`: The difference of solid shapes.
 - `ray::Ray`: The ray to intersect.
 # Returns
 - [`HitRecord`](@ref): The hit record of the first shape hit, if any.
@@ -153,12 +162,12 @@ end
 """
     ray_intersection_list(D::CSGDifference, ray::Ray)
 
-Calculates all intersections of a ray with the difference of two shapes.
+Calculates all intersections of a ray with the difference of two solid shapes.
 # Arguments
-- `D::CSGDifference`: The difference of shapes.
+- `D::CSGDifference`: The difference of solid shapes.
 - `ray::Ray`: The ray to intersect.
 # Returns
-- `Vector{HitRecord}`: A sorted list of hit records for all intersections.
+- `Vector{HitRecord}`: A sorted list of hit records for all intersections, ordered by distance.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(D::CSGDifference, ray::Ray)
@@ -190,9 +199,9 @@ end
 """
     internal(D::CSGDifference, P::Point)
 
-Checks if a point is inside the difference of two shapes.
+Checks if a point is inside the difference of two solid shapes.
 # Arguments
-- `D::CSGDifference`: The difference of shapes.
+- `D::CSGDifference`: The difference of solid shapes.
 - `P::Point`: The point to check.
 # Returns
 - `Bool`: `true` if the point is inside the difference, `false` otherwise.
@@ -205,9 +214,9 @@ end
 """
     ray_intersection(I::CSGIntersection, ray::Ray)
 
-Calculates the intersection of a ray with the intersection of two shapes.
+Calculates the intersection of a ray with the intersection of two solid shapes.
 # Arguments
-- `I::CSGIntersection`: The intersection of shapes.
+- `I::CSGIntersection`: The intersection of solid shapes.
 - `ray::Ray`: The ray to intersect.
 # Returns
 - [`HitRecord`](@ref): The hit record of the first shape hit, if any.
@@ -218,6 +227,17 @@ function ray_intersection(I::CSGIntersection, ray::Ray)
     return isnothing(HR_list) ? nothing : HR_list[1]
 end
 
+"""
+    ray_intersection_list(I::CSGIntersection, ray::Ray)
+
+Calculates all intersections of a ray with the intersection of two solid shapes.
+# Arguments
+- `I::CSGIntersection`: The intersection of solid shapes.
+- `ray::Ray`: The ray to intersect.
+# Returns
+- `Vector{HitRecord}`: A sorted list of hit records for all intersections, ordered by distance.
+- `nothing`: If no intersections occur.
+"""
 function ray_intersection_list(I::CSGIntersection, ray::Ray)
     # collect the hrs of both shapes
     HR1_list = ray_intersection_list(I.Sh1, ray)
@@ -240,9 +260,9 @@ end
 """
     internal(I::CSGIntersection, P::Point)
 
-Checks if a point is inside the intersection of two shapes.
+Checks if a point is inside the intersection of two solid shapes.
 # Arguments
-- `I::CSGIntersection`: The intersection of shapes.
+- `I::CSGIntersection`: The intersection of solid shapes.
 - `P::Point`: The point to check.
 # Returns
 - `Bool`: `true` if the point is inside the intersection, `false` otherwise.
