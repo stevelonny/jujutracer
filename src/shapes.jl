@@ -1,45 +1,4 @@
 #---------------------------------------------------------
-# HitRecord
-#---------------------------------------------------------
-struct SurfacePoint
-    u::Float64
-    v::Float64
-end
-
-"""
-
-    HitRecord(world_point::Point, normal::Normal, surface_point::SurfacePoint, t::Float64, ray::Ray)
-
-Information about an intersection
-# Fields
-- `world_P::Point` the point in the world where the ray hit
-- `normal::Normal` the normal vector at the point of intersection
-- `surface_P::SurfacePoint` the point on the surface where the ray hit
-- `t::Float64` the distance from the ray origin to the hit point
-- `ray::Ray` the ray that hit the surface
-"""
-struct HitRecord
-    world_P::Point    
-    normal::Normal
-    surface_P::SurfacePoint
-    t::Float64
-    ray::Ray
-    shape::Shape
-
-    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray, shape::Shape)
-        new(world_P, normal, surface_P, t, ray, shape)
-    end
-
-end
-
-Base.:≈(h1::HitRecord, h2::HitRecord) = h1.world_P ≈ h2.world_P && h1.normal ≈ h2.normal && h1.surface_P ≈ h2.surface_P && h1.t ≈ h2.t && h1.ray ≈ h2.ray
-Base.:≈(h::HitRecord, p::Point) = h.world_P ≈ p
-Base.:≈(h::HitRecord, s::SurfacePoint) = h.surface_P ≈ s
-Base.:≈(h::HitRecord, r::Ray) = h.ray ≈ r
-Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
-
-
-#---------------------------------------------------------
 # Shapes
 #---------------------------------------------------------
 """
@@ -271,4 +230,75 @@ function ray_interception(W::World, ray::Ray)
     end
 
     return closest
+end
+
+#---------------------------------------------------------
+# HitRecord
+#---------------------------------------------------------
+struct SurfacePoint
+    u::Float64
+    v::Float64
+end
+
+"""
+
+    HitRecord(world_point::Point, normal::Normal, surface_point::SurfacePoint, t::Float64, ray::Ray)
+
+Information about an intersection
+# Fields
+- `world_P::Point` the point in the world where the ray hit
+- `normal::Normal` the normal vector at the point of intersection
+- `surface_P::SurfacePoint` the point on the surface where the ray hit
+- `t::Float64` the distance from the ray origin to the hit point
+- `ray::Ray` the ray that hit the surface
+"""
+struct HitRecord
+    world_P::Point    
+    normal::Normal
+    surface_P::SurfacePoint
+    t::Float64
+    ray::Ray
+    shape::Shape
+
+    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray, shape::Shape)
+        new(world_P, normal, surface_P, t, ray, shape)
+    end
+
+end
+
+Base.:≈(h1::HitRecord, h2::HitRecord) = h1.world_P ≈ h2.world_P && h1.normal ≈ h2.normal && h1.surface_P ≈ h2.surface_P && h1.t ≈ h2.t && h1.ray ≈ h2.ray
+Base.:≈(h::HitRecord, p::Point) = h.world_P ≈ p
+Base.:≈(h::HitRecord, s::SurfacePoint) = h.surface_P ≈ s
+Base.:≈(h::HitRecord, r::Ray) = h.ray ≈ r
+Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
+
+#---------------------------------------------------------
+# BRDF Methods
+#---------------------------------------------------------
+
+"""
+    Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
+
+Return color of the diffused ray regarldless its icoming or outcoming direction
+"""
+function Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
+    return BRDF.Pigment(p) * BRDF.R / π
+end 
+
+function (U::UniformPigment)(p::SurfacePoint)
+    return U.color
+end
+
+function (C::CheckeredPigment)(p::SurfacePoint)
+    x = floor(Int, p.u * C.col)
+    y = floor(Int, p.v * C.row)
+
+    return ((x + y) % 2 == 0) ? C.dark : C.bright
+end
+
+function (I::ImagePigment)(p::SurfacePoint)
+    x = floor(Int, p.u * I.img.w)
+    y = floor(Int, p.v * I.img.h)
+
+    return I.img[x, y]
 end

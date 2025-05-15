@@ -16,18 +16,24 @@ function demo()
     pfm_output = ARGS[1]*".pfm"
 
     Sc = Scaling(1.0 / 10.0, 1.0 / 10.0, 1.0 / 10.0)
+    
+    color1 = RGB(0.7, 0.3, 1.0)
+    color2 = RGB(0.9, 0.8, 0.7)
+    colol3 = RGB(0.1, 0.2, 0.3)
+    Mat1 = Material(UniformPigment(color1), DiffusiveBRDF(UniformPigment(color1), 0.5))
+    Mat2 = Material(CheckeredPigment(4, 4, color1, color2), DiffusiveBRDF(UniformPigment(color1), 0.5))
 
     S = Vector{Shape}(undef, 10)
-    S[1] = Sphere(Translation(0.5, 0.5, 0.5) ⊙ Sc)
-    S[2] = Sphere(Translation(-0.5, 0.5, 0.5) ⊙ Sc)
-    S[3] = Sphere(Translation(0.5, -0.5, 0.5) ⊙ Sc)
-    S[4] = Sphere(Translation(0.5, 0.5, -0.5) ⊙ Sc)
-    S[5] = Sphere(Translation(0.5, -0.5, -0.5) ⊙ Sc)
-    S[6] = Sphere(Translation(-0.5, 0.5, -0.5) ⊙ Sc)
-    S[7] = Sphere(Translation(-0.5, -0.5, 0.5) ⊙ Sc)
-    S[8] = Sphere(Translation(-0.5, -0.5, -0.5) ⊙ Sc)
-    S[9] = Sphere(Translation(0.0, 0.0, -0.5) ⊙ Sc)
-    S[10] = Sphere(Translation(0.0, 0.5, 0.0) ⊙ Sc)
+    S[1] = Sphere(Translation(0.5, 0.5, 0.5) ⊙ Sc, Mat1)
+    S[2] = Sphere(Translation(-0.5, 0.5, 0.5) ⊙ Sc, Mat1)
+    S[3] = Sphere(Translation(0.5, -0.5, 0.5) ⊙ Sc, Mat1)
+    S[4] = Sphere(Translation(0.5, 0.5, -0.5) ⊙ Sc, Mat1)
+    S[5] = Sphere(Translation(0.5, -0.5, -0.5) ⊙ Sc, Mat1)
+    S[6] = Sphere(Translation(-0.5, 0.5, -0.5) ⊙ Sc, Mat1)
+    S[7] = Sphere(Translation(-0.5, -0.5, 0.5) ⊙ Sc, Mat1)
+    S[8] = Sphere(Translation(-0.5, -0.5, -0.5) ⊙ Sc, Mat1)
+    S[9] = Sphere(Translation(0.0, 0.0, -0.5) ⊙ Sc, Mat2)
+    S[10] = Sphere(Translation(0.0, 0.5, 0.0) ⊙ Sc, Mat2)
 
     R_cam = Rz(cam_angle)
     world = World(S)
@@ -35,20 +41,15 @@ function demo()
     hdr = hdrimg(width, height)
     ImgTr = ImageTracer(hdr, cam)
 
-    function delta(ray)
+    function flat(ray)
         repo = ray_interception(world, ray)
-
-        if isnothing(repo)
-            return RGB(0.0, 0.0, 0.0)
-        else
-            return RGB(1.0, 1.0, 1.0)
-        end
+        return (isnothing(repo)) ? RGB(0.0, 0.0, 0.0) : repo.shape.Mat.Emition(repo.surface_P)
     end
 
-    ImgTr(delta)
+    ImgTr(flat)
 
     println("Saving image in ", png_output)
-    toned_img = tone_mapping(hdr; a=0.18, γ=2.2)
+    toned_img = tone_mapping(hdr; a = 0.5, lum = 0.5, γ = 1.3)
     # Save the LDR image
     save_ldrimage(get_matrix(toned_img), png_output)
     println("Saved image in ", png_output)

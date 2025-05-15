@@ -1,13 +1,4 @@
 #---------------------------------------------------------
-# Matherial
-#---------------------------------------------------------
-
-struct Material
-    Emition::AbstractPigment
-    BRDF::AbstractBRDF
-end
-
-#---------------------------------------------------------
 # Pigment
 #---------------------------------------------------------
 
@@ -35,9 +26,6 @@ struct UniformPigment <: AbstractPigment
     end
 end
 
-function (U::UniformPigment)(p::SurfacePoint)
-    return U.color
-end
 
 """
     CheckeredPigment(col::Int32, row::Int32, dark::RGB, bright::RGB)
@@ -59,12 +47,6 @@ struct CheckeredPigment <: AbstractPigment
     bright::RGB
 end
 
-function (C::CheckeredPigment)(p::SurfacePoint)
-    x = Int32(p.u * col)
-    y = Int32(p.v * row)
-
-    return ((x + y) % 2 == 0) ? C.dark : C.bright
-end
 
 """
     ImagePigment(img::hdrimg)
@@ -77,13 +59,6 @@ Print the image `img` as pigment of the surface
 """
 struct ImagePigment <: AbstractPigment
     img::hdrimg
-end
-
-function (I::ImagePigment)(p::SurfacePoint)
-    x = Int32(p.u * I.img.w)
-    y = Int32(p.v * I.img.h)
-
-    return I.img[x, y]
 end
 
 #---------------------------------------------------------
@@ -102,11 +77,13 @@ struct DiffusiveBRDF <: AbstractBRDF
     R::Float64
 end
 
-"""
-    Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
+# Eval method inside shape.jl
 
-Return color of the diffused ray regarldless its icoming or outcoming direction
-"""
-function Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
-    return BRDF.Pigment(p) * BRDF.R / π
-end 
+#---------------------------------------------------------
+# Material
+#---------------------------------------------------------
+
+struct Material
+    Emition::AbstractPigment
+    BRDF::AbstractBRDF
+end
