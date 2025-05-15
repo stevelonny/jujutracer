@@ -34,10 +34,16 @@ struct Sphere <: AbstractSolid
     Mat::Material
     # add constructor including material: need standard material
     function Sphere()
-        new(Transformation())
+        new(Transformation(), Material())
     end
     function Sphere(Tr::AbstractTransformation)
-        new(Tr)
+        new(Tr, Material())
+    end
+    function Sphere(Mat::Material)
+        new(Transformation(), Mat)
+    end
+    function Sphere(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Mat)
     end
 end
 
@@ -154,14 +160,16 @@ function ray_intersection_list(S::Sphere, ray::Ray)
         normal=S.Tr(_sphere_normal(hit_point_1, ray.dir)),
         surface_P=_point_to_uv(S, hit_point_1),
         t=first_hit,
-        ray=ray
+        ray=ray,
+        shape=S
     )
     HR2 = HitRecord(
         world_P=S.Tr(hit_point_2),
         normal=S.Tr(_sphere_normal(hit_point_2, ray.dir)),
         surface_P=_point_to_uv(S, hit_point_2),
         t=second_hit,
-        ray=ray
+        ray=ray,
+        shape=S
     )
     return [HR1, HR2]
 end
@@ -197,10 +205,16 @@ struct Plane <: AbstractShape
     Mat::Material
     # add constructor including material: need standard material
     function Plane()
-        new(Transformation())
+        new(Transformation(), Material())
     end
     function Plane(Tr::AbstractTransformation)
-        new(Tr)
+        new(Tr, Material())
+    end
+    function Plane(Mat::Material)
+        new(Transformation(), Mat)
+    end
+    function Plane(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Mat)
     end
 end
 
@@ -271,10 +285,6 @@ function ray_intersection(pl::Plane, ray::Ray)
     )
 end
 
-function internal(S::Plane, P::Point)
-    return (inverse(S.Tr)(P).z <= 0.0) ? true : false
-end
-
 #---------------------------------------------------------
 # World type
 #---------------------------------------------------------
@@ -334,6 +344,7 @@ end
 #---------------------------------------------------------
 # HitRecord
 #---------------------------------------------------------
+
 struct SurfacePoint
     u::Float64
     v::Float64
