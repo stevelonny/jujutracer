@@ -78,8 +78,9 @@ Calculates the intersection of a ray with the union of two solid shapes.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(U::CSGUnion, ray::Ray)
-    HR1 = ray_intersection(U.Sh1, ray)
-    HR2 = ray_intersection(U.Sh2, ray)
+    inv_ray = inverse(U.Tr)(ray) # ray in the un-transformed union system
+    HR1 = ray_intersection(U.Sh1, inv_ray)
+    HR2 = ray_intersection(U.Sh2, inv_ray)
 
     if isnothing(HR1)
         if isnothing(HR2)
@@ -106,9 +107,10 @@ Calculates all intersections of a ray with the union of two solid shapes.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(U::CSGUnion, ray::Ray)
+    inv_ray = inverse(U.Tr)(ray) # ray in the un-transformed union system
     # collects the hit records list of the two shapes
-    HR1_list = ray_intersection_list(U.Sh1, ray)
-    HR2_list = ray_intersection_list(U.Sh2, ray)
+    HR1_list = ray_intersection_list(U.Sh1, inv_ray)
+    HR2_list = ray_intersection_list(U.Sh2, inv_ray)
 
     if isnothing(HR1_list)
         if isnothing(HR2_list)
@@ -155,7 +157,8 @@ Calculates the intersection of a ray with the difference of two solid shapes.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(D::CSGDifference, ray::Ray)
-    HR_list = ray_intersection_list(D, ray)
+    inv_ray = inverse(D.Tr)(ray) # ray in the un-transformed difference system
+    HR_list = ray_intersection_list(D, inv_ray)
     return isnothing(HR_list) ? nothing : HR_list[1]
 end
 
@@ -171,8 +174,9 @@ Calculates all intersections of a ray with the difference of two solid shapes.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(D::CSGDifference, ray::Ray)
+    inv_ray = inverse(D.Tr)(ray) # ray in the un-transformed difference system
     # collect the hrs of the first shape
-    HR1_list = ray_intersection_list(D.Sh1, ray)
+    HR1_list = ray_intersection_list(D.Sh1, inv_ray)
 
     if isnothing(HR1_list)
         return nothing
@@ -182,7 +186,7 @@ function ray_intersection_list(D::CSGDifference, ray::Ray)
     HR1_list = filter(x -> !internal(D.Sh2, x.world_P), HR1_list)
 
     # collect the hrs of the second shape
-    HR2_list = ray_intersection_list(D.Sh2, ray)
+    HR2_list = ray_intersection_list(D.Sh2, inv_ray)
 
     if !isnothing(HR2_list)
         # remove hits that are inside the first shape: conserve only internal points to the first shape
@@ -223,7 +227,8 @@ Calculates the intersection of a ray with the intersection of two solid shapes.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(I::CSGIntersection, ray::Ray)
-    HR_list = ray_intersection_list(I, ray)
+    inv_ray = inverse(I.Tr)(ray) # ray in the un-transformed intersection system
+    HR_list = ray_intersection_list(I, inv_ray)
     return isnothing(HR_list) ? nothing : HR_list[1]
 end
 
@@ -239,12 +244,13 @@ Calculates all intersections of a ray with the intersection of two solid shapes.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(I::CSGIntersection, ray::Ray)
+    inv_ray = inverse(I.Tr)(ray) # ray in the un-transformed intersection system
     # collect the hrs of both shapes
-    HR1_list = ray_intersection_list(I.Sh1, ray)
+    HR1_list = ray_intersection_list(I.Sh1, inv_ray)
     if isnothing(HR1_list)
         return nothing
     end
-    HR2_list = ray_intersection_list(I.Sh2, ray)
+    HR2_list = ray_intersection_list(I.Sh2, inv_ray)
     if isnothing(HR2_list)
         return nothing
     end

@@ -26,12 +26,12 @@ function demo2()
     Mat1 = Material(CheckeredPigment(32, 32, green, red), DiffusiveBRDF(UniformPigment(gray), 0.5))
     Mat2 = Material(CheckeredPigment(32, 32, blue, yellow), DiffusiveBRDF(UniformPigment(gray), 0.5))
     Mat3 = Material(CheckeredPigment(32, 32, cyan, magenta), DiffusiveBRDF(UniformPigment(gray), 0.5))
-    S = Vector{AbstractShape}(undef, 1)
+    S = Vector{AbstractShape}(undef, 3)
     S1 = Sphere(Translation(0.0, 0.5, 0.0) ⊙ Sc, Mat1)
     S2 = Sphere(Translation(0.0, -0.5, 0.0) ⊙ Sc, Mat2)
     S3 = Sphere(Translation(0.0, 0.0, 0.5) ⊙ Sc, Mat3)
     #S[1] = (S1 ∪ S2) ∪ S3
-    S[1] = (S1 ∪ S2) - S3
+    #S[1] = (S1 ∪ S2) - S3
     #S[1] = (S1 ∩ S2) ∩ S3
     # lets see the substracted part above the first csg figure
     #S[2] = S3 - (S1 ∪ S2)
@@ -39,10 +39,15 @@ function demo2()
     #S[2] = S2
     #S[3] = S3
 
+    S[1] = CSGUnion(Translation(0.0, 0.0, 1.5) ⊙ Rz(0.2) ⊙ Ry(-0.4), (S1 ∪ S2), S3)
+    S[2] = CSGDifference(Translation(0.0, 1.0, 0.0) ⊙ Rx(0.4) ⊙ Ry(-0.4), (S1 ∪ S2), S3)
+    S[3] = CSGIntersection(Translation(0.0, -1.0, 0.0) ⊙ Ry(0.2) ⊙ Scaling(1.2, 1.2, 1.2), (S1 ∩ S2), S3)
+
+
     R_cam = Rz(cam_angle)
     world = World(S)
     #cam = Orthogonal(t = R_cam ⊙ Translation(-1.0, 0.0, 0.0), a_ratio = convert(Float64, 16 // 9))
-    cam = Perspective(d = 2.0, t = Ry(0.4) ⊙ R_cam ⊙ Translation(-1.0, 0.0, 0.0))
+    cam = Perspective(d = 2.0, t = R_cam ⊙ Translation(-2.5, 0.0, 1.0))
     hdr = hdrimg(width, height)
     ImgTr = ImageTracer(hdr, cam)
 
