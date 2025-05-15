@@ -32,8 +32,12 @@ export Ray, AbstractCamera, Orthogonal, Perspective
 include("imagetracer.jl")
 export ImageTracer
 
+include("brdf.jl")
+export UniformPigment, CheckeredPigment, ImagePigment, DiffusiveBRDF, Material
+
 include("shapes.jl")
-export SurfacePoint, HitRecord, AbstractShape, Sphere, ray_intersection, Plane, World
+export SurfacePoint, HitRecord, AbstractShape, Sphere, ray_intersection, Plane, World, Eval
 
-
+include("renderer.jl")
+export OnOff, Flat
 end # module jujutracer
