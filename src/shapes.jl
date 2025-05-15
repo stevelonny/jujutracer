@@ -160,7 +160,7 @@ function ray_interception(pl::Plane, ray::Ray)
     d = inv_ray.dir
     
     if d != 0
-        t= -Oz\d.z
+        t= -Oz/d.z
         if t > inv_ray.tmin && t < inv_ray.tmax
             first_hit = t
         else

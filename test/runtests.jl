@@ -400,7 +400,10 @@ end
 
 @testset "Shapes" begin
     # test for sphere
-    S = Sphere(Transformation())
+    color = RGB(1.0, 2.0, 3.0)
+    pigment = UniformPigment(color)
+    Mat = Material(pigment, DiffusiveBRDF(pigment, 0.5))
+    S = Sphere(Transformation(), Mat)
     êz = Vec(0.0, 0.0, 1.0)
     êx = Vec(1.0, 0.0, 0.0)
 
@@ -429,7 +432,7 @@ end
     @test HR3.normal ≈ - Normal(êx)
 
     Tr = Translation(10.0, 0.0, 0.0)
-    S = Sphere(Tr)
+    S = Sphere(Tr, Mat)
     
     O4 = Tr(O1)
     ray4 = Ray(origin = O4, dir = -êz)
@@ -459,7 +462,7 @@ end
     o = Point(0.0, 1.0, 2.0)
     r = Ray(origin = o, dir = vec)
     a = Vec(0.0, 0.0, 1.0)
-    plane = Plane(Translation(a))
+    plane = Plane(Translation(a), Mat)
     HitRecord = ray_interception(plane, r)
     @test HitRecord.t ≈ 1.0
     @test HitRecord.world_P ≈ Point(1.0, 3.0, 1.0)
@@ -467,4 +470,14 @@ end
     @test HitRecord.surface_P.u ≈ 0.0
     @test HitRecord.surface_P.v ≈ 0.0
 
+end
+
+@testset "Pigment" begin
+    color = RGB(1.0, 2.0, 3.0)
+    pigment = UniformPigment(color)
+
+    @test pigment(SurfacePoint(0.0, 0.0)) ≈ color
+    @test pigment(SurfacePoint(1.0, 0.0)) ≈ color
+    @test pigment(SurfacePoint(0.0, 1.0)) ≈ color
+    @test pigment(SurfacePoint(1.0, 1.0)) ≈ color
 end
