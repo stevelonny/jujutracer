@@ -525,24 +525,8 @@ end
     ImgTr1 = ImageTracer(hdr1, cam)
     ImgTr2 = ImageTracer(hdr2, cam)
 
-    function delta1(ray)
-        repo = ray_intersection(world1, ray)
-
-        if isnothing(repo)
-            return RGB(0.0, 0.0, 0.0)
-        else
-            return RGB(1.0, 1.0, 1.0)
-        end
-    end
-    function delta2(ray)
-        repo = ray_intersection(world2, ray)
-
-        if isnothing(repo)
-            return RGB(0.0, 0.0, 0.0)
-        else
-            return RGB(1.0, 1.0, 1.0)
-        end
-    end
+    delta1 = (OnOff(world1))
+    delta2 = (OnOff(world2))
     ImgTr1(delta1)
     ImgTr2(delta2)
     @test all(hdr1[x_pixel, y_pixel] ≈ hdr2[x_pixel, y_pixel] for y_pixel in 0:(hdr1.h-1), x_pixel in 0:(hdr1.w-1))
@@ -555,24 +539,8 @@ end
     S_1[2] = S2
     world3 = World(S_1)
     world4 = World(S_U)
-    function delta3(ray)
-        repo = ray_intersection(world3, ray)
-
-        if isnothing(repo)
-            return RGB(0.0, 0.0, 0.0)
-        else
-            return RGB(1.0, 1.0, 1.0)
-        end
-    end
-    function delta4(ray)
-        repo = ray_intersection(world4, ray)
-
-        if isnothing(repo)
-            return RGB(0.0, 0.0, 0.0)
-        else
-            return RGB(1.0, 1.0, 1.0)
-        end
-    end
+    delta3 = (OnOff(world3))
+    delta4 = (OnOff(world4))
     ImgTr1(delta3)
     ImgTr2(delta4)
     @test all(hdr1[x_pixel, y_pixel] ≈ hdr2[x_pixel, y_pixel] for y_pixel in 0:(hdr1.h-1), x_pixel in 0:(hdr1.w-1))
