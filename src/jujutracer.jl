@@ -2,6 +2,7 @@ module jujutracer
 
 #using
 using Images, FileIO, ImageIO
+using Base.Threads
 
 # import
 import Base:

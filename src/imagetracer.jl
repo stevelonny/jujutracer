@@ -55,12 +55,12 @@ function (it::ImageTracer)(fun::Function)
         throw(ArgumentError("The function must return a ColorTypes.RGB value."))
     end=#
     # remember: julia is column-major order
-    for row_pixel in 0:(it.img.h-1)
-        for col_pixel in 0:(it.img.w-1)
-            ray = it(col_pixel, row_pixel)
-            color = fun(ray)
-            # we could remove boundary checks with @inbounds
-            it.img[col_pixel, row_pixel] = color
-        end
+    @threads for i in eachindex(IndexCartesian(), it.img.img)
+        col_pixel = i[2] - 1
+        row_pixel = i[1] - 1
+        ray = it(col_pixel, row_pixel)
+        color = fun(ray)
+        # we could remove boundary checks with @inbounds
+        it.img[col_pixel, row_pixel] = color
     end
 end
