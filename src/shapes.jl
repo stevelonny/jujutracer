@@ -29,6 +29,7 @@ A sphere.
 This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `t::Transformation`: the transformation applied to the sphere.
+- `Mat::Material`: the material of the shape
 """
 struct Sphere <: AbstractSolid
     Tr::AbstractTransformation
@@ -234,7 +235,8 @@ end
 A plane.
 This structure is a subtype of [`AbstractShape`](@ref).
 # Fields
-- `t::Transformation`: the transformation applied to the plane.
+- `t::Transformation`: the transformation applied to the plane
+- `Mat::Material`: the material of the shape
 """
 struct Plane <: AbstractShape
     Tr::AbstractTransformation
@@ -321,6 +323,108 @@ function ray_intersection(pl::Plane, ray::Ray)
     )
 end
 
+#---------------------------------------------------------
+# Rectangle
+#---------------------------------------------------------
+"""
+    struct Rectangle <: AbstractShape
+
+1x1 Rectangle on xy plane, centered in the origin
+# Fields
+- `t::Transformation`: the transformation applied to the plane
+- `Mat::Material`: the material of the shape
+"""
+struct Rectangle <: AbstractShape
+    Tr::AbstractTransformation
+    Mat::Material
+
+    function Rectangle()
+        new(Transformation(), Material())
+    end
+    function Rectangle(Tr::AbstractTransformation)
+        new(Tr, Material())
+    end
+    function Rectangle(Mat::Material)
+        new(Transformation(), Mat)
+    end
+    function Rectangle(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Mat)
+    end
+end
+
+"""
+    _rectangle_normal(p::Point, dir::Vec)
+
+Calculate the normal vector of a point on the rectangle
+# Arguments
+- `p::Point`: the point on the rectangle.
+- `dir::Vec`: the direction vector of the ray.
+# Returns
+- `Normal`: the normal to the rectangle's surface at the point.
+"""
+function _rectangle_normal(p::Point, dir::Vec)
+    if abs(p.x) > 0.5 || abs(p.y) > 0.5
+        throw(ArgumentError("Point outside the rectangle"))
+    else
+        return Normal(0.0, 0.0, 1.0)
+    end
+end
+
+"""
+ _point_to_uv(S::Rectangle, p::Point)
+
+Calculate the UV coordinates of a point on the plane in PBC
+# Arguments
+- `p::Point`: the point on the rectangle
+# Returns
+- `SurfacePoint`: the UV coordinates of the point in PBC
+"""
+function _point_to_uv(S::Rectangle, p::Point)
+    if abs(p.x) > 0.5 || abs(p.y) > 0.5
+        throw(ArgumentError("Point outside the rectangle"))
+    else
+        return SurfacePoint(p.x + 0.5, p.y + 0.5)
+    end
+end
+
+"""
+    ray_intersection(S::Rectangle, r::Ray)
+
+Calculate the intersection of a ray and a plane.
+# Arguments
+- `S::Rectangle`: the rectangle to be intersected.
+- `ray::Ray`: the ray intersecting the rectangle.
+# Returns
+- `HitRecord`: The hit record of the first shape hit, if any.
+- `nothing`: If no intersections occur.
+"""
+function ray_intersection(S::Rectangle, ray::Ray)
+    inv_ray = inverse(S.Tr)(ray)
+    O = inv_ray.origin
+    d = inv_ray.dir
+
+    if d != 0
+        t = -O.z / d.z
+        if t > inv_ray.tmin && t < inv_ray.tmax && abs(inv_ray(t).x) <= 0.5 && abs(inv_ray(t).y) <= 0.5 
+            first_hit = t
+        else
+            return nothing
+        end
+    else
+        return nothing
+    end
+
+    hit_point = inv_ray(first_hit)
+    norm = S.Tr(_rectangle_normal(hit_point, ray.dir))
+    return HitRecord(
+        world_P = S.Tr(hit_point),
+        normal = norm,
+        surface_P = _point_to_uv(S, hit_point),
+        t = first_hit,
+        ray = ray,
+        shape = S
+    )
+end
 
 # AbstractShape is not guaranteed to be water-tight, and cannot be used to create CSG shapes. (for now)
 # For example, a plane is not water-tight.

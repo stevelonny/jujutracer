@@ -36,7 +36,7 @@ include("brdf.jl")
 export UniformPigment, CheckeredPigment, ImagePigment, DiffusiveBRDF, Material
 
 include("shapes.jl")
-export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_intersection, Plane, World, Eval
+export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_intersection, Plane, Rectangle, World, Eval
 
 include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal
