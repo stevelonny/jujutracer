@@ -270,7 +270,7 @@ end
     @test p1 ≈ p2
     @test_throws MethodError p1 * 2
     @test_throws MethodError p1 / 2
-    
+
     #Test for Norm 
     v = Vec(1.0, 2.0, 3.0)
     n = Normal(10.0, 20.0, 30.0)
@@ -408,36 +408,36 @@ end
     êx = Vec(1.0, 0.0, 0.0)
 
     O1 = Point(0.0, 0.0, 2.0)
-    ray1 = Ray(origin = O1, dir = -êz)
+    ray1 = Ray(origin=O1, dir=-êz)
     HR1 = ray_intersection(S, ray1)
-    @test HR1 ≈ Point(0.0 ,0.0 ,1.0)
+    @test HR1 ≈ Point(0.0, 0.0, 1.0)
     @test HR1.t ≈ 1.0
     @test HR1 ≈ SurfacePoint(0.0, 0.0)
     @test HR1.normal ≈ Normal(êz)
 
     O2 = Point(3.0, 0.0, 0.0)
-    ray2 = Ray(origin = O2, dir = -êx)
+    ray2 = Ray(origin=O2, dir=-êx)
     HR2 = ray_intersection(S, ray2)
     @test HR2 ≈ Point(1.0, 0.0, 0.0)
     @test HR2.t ≈ 2.0
     @test HR2 ≈ SurfacePoint(0.0, 0.5)
-    @test HR2.normal ≈ Normal(êx) 
+    @test HR2.normal ≈ Normal(êx)
 
     O3 = Point(0.0, 0.0, 0.0)
-    ray3 = Ray(origin = O3, dir = êx)
+    ray3 = Ray(origin=O3, dir=êx)
     HR3 = ray_intersection(S, ray3)
     @test HR3 ≈ Point(1.0, 0.0, 0.0)
     @test HR3.t ≈ 1.0
     @test HR3 ≈ SurfacePoint(0.0, 0.5)
-    @test HR3.normal ≈ - Normal(êx)
+    @test HR3.normal ≈ -Normal(êx)
 
     Tr = Translation(10.0, 0.0, 0.0)
     S = Sphere(Tr, Mat)
     
     O4 = Tr(O1)
-    ray4 = Ray(origin = O4, dir = -êz)
+    ray4 = Ray(origin=O4, dir=-êz)
     HR4 = ray_intersection(S, ray4)
-    @test HR4 ≈ Point(10.0 ,0.0 ,1.0)
+    @test HR4 ≈ Point(10.0, 0.0, 1.0)
     @test HR4.t ≈ 1.0
     @test HR4 ≈ SurfacePoint(0.0, 0.0)
     @test HR4.normal ≈ Normal(êz)
@@ -447,10 +447,10 @@ end
     @test HR5 ≈ Point(11.0, 0.0, 0.0)
     @test HR5.t ≈ 2.0
     @test HR5 ≈ SurfacePoint(0.0, 0.5)
-    @test HR5.normal ≈ Normal(êx) 
+    @test HR5.normal ≈ Normal(êx)
 
     O6 = inverse(Tr)(O3)
-    ray6 = Ray(origin = O6, dir = -êz)
+    ray6 = Ray(origin=O6, dir=-êz)
     HR6 = ray_intersection(S, ray6)
     @test HR6 === nothing
 
@@ -461,7 +461,7 @@ end
     P = Plane(Transformation(), Mat)
 
     O8 = Point(0.5, 0.5, 1.0)
-    ray8 = Ray(origin = O8, dir = -êz)
+    ray8 = Ray(origin=O8, dir=-êz)
     HR8 = ray_intersection(P, ray8)
     @test HR8 ≈ Point(0.5, 0.5, 0.0)
     @test HR8.t ≈ 1.0
@@ -469,7 +469,7 @@ end
     @test HR8.normal ≈ Normal(êz)
 
     O9 = Point(0.2, 0.3, -2.0)
-    ray9 = Ray(origin = O9, dir = êz)
+    ray9 = Ray(origin=O9, dir=êz)
     HR9 = ray_intersection(P, ray9)
     @test HR9 ≈ Point(0.2, 0.3, 0.0)
     @test HR9.t ≈ 2.0
@@ -477,19 +477,19 @@ end
     @test HR9.normal ≈ -Normal(êz)
 
     O10 = Point(1.0, 1.0, 1.0)
-    ray10 = Ray(origin = O10, dir = êx)
+    ray10 = Ray(origin=O10, dir=êx)
     HR10 = ray_intersection(P, ray10)
     @test HR10 === nothing
 
     O11 = Point(0.0, 0.0, 0.0)
-    ray11 = Ray(origin = O11, dir = êx)
+    ray11 = Ray(origin=O11, dir=êx)
     HR11 = ray_intersection(P, ray11)
     @test HR11 === nothing
 
     Tr2 = Translation(0.0, 0.0, 2.0)
     P2 = Plane(Tr2, Mat)
 
-    ray12 = Ray(origin = O8, dir = êz)
+    ray12 = Ray(origin=O8, dir=êz)
     HR12 = ray_intersection(P2, ray12)
     @test HR12 ≈ Point(0.5, 0.5, 2.0)
     @test HR12.t ≈ 1.0
@@ -497,11 +497,53 @@ end
     @test HR12.normal ≈ Normal(-êz)
 
     O13 = Point(0.0, 0.0, 1.0)
-    ray13 = Ray(origin = O13, dir = -êz)
+    ray13 = Ray(origin=O13, dir=-êz)
     HR13 = ray_intersection(P2, ray13)
     @test HR13 === nothing
 
+end
+
+@testset "CSG" begin
+    Sc = Scaling(1.0 / 1.5, 1.0 / 1.5, 1.0 / 1.5)
+
+    # union and difference
+    S_UD = Vector{AbstractShape}(undef, 2)
+    S_2 = Vector{AbstractShape}(undef, 3)
+    S1 = Sphere(Translation(0.0, 0.5, 0.0) ⊙ Sc)
+    S2 = Sphere(Translation(0.0, -0.5, 0.0) ⊙ Sc)
+    S3 = Sphere(Translation(0.0, 0.0, 0.5) ⊙ Sc)
+    S_UD[1] = (S1 ∪ S2) - S3
+    S_UD[2] = S3 - (S1 ∪ S2)
+    S_2[1] = S1
+    S_2[2] = S2
+    S_2[3] = S3
+    world1 = World(S_UD)
+    world2 = World(S_2)
+    cam = Perspective(d = 2.0, t = Translation(-1.0, 0.0, 0.0))
+    hdr1 = hdrimg(160, 90)
+    hdr2 = hdrimg(160, 90)
+    ImgTr1 = ImageTracer(hdr1, cam)
+    ImgTr2 = ImageTracer(hdr2, cam)
+
+    delta1 = (OnOff(world1))
+    delta2 = (OnOff(world2))
+    ImgTr1(delta1)
+    ImgTr2(delta2)
+    @test all(hdr1[x_pixel, y_pixel] ≈ hdr2[x_pixel, y_pixel] for y_pixel in 0:(hdr1.h-1), x_pixel in 0:(hdr1.w-1))
     
+    # union
+    S_U = Vector{AbstractShape}(undef, 1)
+    S_1 = Vector{AbstractShape}(undef, 2)
+    S_U[1] = S1 ∪ S2
+    S_1[1] = S1
+    S_1[2] = S2
+    world3 = World(S_1)
+    world4 = World(S_U)
+    delta3 = (OnOff(world3))
+    delta4 = (OnOff(world4))
+    ImgTr1(delta3)
+    ImgTr2(delta4)
+    @test all(hdr1[x_pixel, y_pixel] ≈ hdr2[x_pixel, y_pixel] for y_pixel in 0:(hdr1.h-1), x_pixel in 0:(hdr1.w-1))
 
 end
 

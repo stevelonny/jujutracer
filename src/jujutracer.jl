@@ -5,7 +5,7 @@ using Images, FileIO, ImageIO
 
 # import
 import Base:
-    +, -, *, ≈, /
+    +, -, *, ≈, /, sort
 import ColorTypes: ColorTypes, RGB
 import Colors
 
@@ -36,7 +36,10 @@ include("brdf.jl")
 export UniformPigment, CheckeredPigment, ImagePigment, DiffusiveBRDF, Material
 
 include("shapes.jl")
-export SurfacePoint, HitRecord, AbstractShape, Sphere, ray_intersection, Plane, World, Eval
+export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_intersection, Plane, World, Eval
+
+include("csg.jl")
+export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal
 
 include("renderer.jl")
 export OnOff, Flat

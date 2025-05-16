@@ -4,26 +4,48 @@
 """
     abstract type AbstractShape
 
-Abstract type for all shapes.
-Made concrete by [`Sphere`](@ref) and [`Plane`](@ref).
+Abstract type for all shapes. Not guaranteed to be water-tight. Cannot be used to create CSG shapes.
 """
 abstract type AbstractShape end
+
+"""
+    abstract type AbstractSolid <: AbstractShape
+
+Abstract type for solid shapes. Considered water-tight. Can be used to create CSG shapes.
+Made concrete by [`Sphere`](@ref).
+"""
+abstract type AbstractSolid <: AbstractShape end
+
+#----------------------Solid shapes----------------------#
 
 #---------------------------------------------------------
 # Sphere and methods
 #---------------------------------------------------------
 
 """
-    struct Sphere <: AbstractShape
+    struct Sphere <: AbstractSolid
 
 A sphere.
-This structure is a subtype of [`AbstractShape`](@ref).
+This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `t::Transformation`: the transformation applied to the sphere.
 """
-struct Sphere <: AbstractShape
+struct Sphere <: AbstractSolid
     Tr::AbstractTransformation
     Mat::Material
+
+    function Sphere()
+        new(Transformation(), Material())
+    end
+    function Sphere(Tr::AbstractTransformation)
+        new(Tr, Material())
+    end
+    function Sphere(Mat::Material)
+        new(Transformation(), Mat)
+    end
+    function Sphere(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Mat)
+    end
 end
 
 """
@@ -42,15 +64,17 @@ function _sphere_normal(p::Point, dir::Vec)
 end
 
 """
-    _sphere_point_to_uv(p::Point)
+
+    _point_to_uv(S::Sphere, p::Point)
 
 Calculate the UV coordinates of a point on the sphere.
 # Arguments
-- `p::Point`: the point on the sphere
+- `S::Sphere` the Sphere
+- `p::Point` the point on the sphere
 # Returns
 - `SurfacePoint`: the UV coordinates of the point on the sphere
 """
-function _sphere_point_to_uv(p::Point)
+function _point_to_uv(S::Sphere, p::Point)
     return SurfacePoint(atan(p.y, p.x) / (2.0 * π), acos(p.z) / π)
 end
 
@@ -89,12 +113,116 @@ function ray_intersection(S::Sphere, ray::Ray)
     return HitRecord(
         world_P = S.Tr(hit_point),
         normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
-        surface_P = _sphere_point_to_uv(hit_point),
+        surface_P = _point_to_uv(S, hit_point),
         t = first_hit,
         ray = ray,
         shape = S
     )
 end
+
+"""
+    ray_intersection_list(S::Sphere, ray::Ray)
+
+Calculates all intersections of a ray with a sphere.
+# Arguments
+- `S::Sphere`: The sphere to be intersected.
+- `ray::Ray`: The ray intersecting the sphere.
+# Returns
+- `Vector{HitRecord}`: A list of of the two hit records for the two intersections, ordered by distance.
+- `nothing`: If no intersections occur.
+"""
+function ray_intersection_list(S::Sphere, ray::Ray)
+    inv_ray = inverse(S.Tr)(ray)
+    O = Vec(inv_ray.origin)
+    d = inv_ray.dir
+    Δrid = (O ⋅ d)^2 - squared_norm(d) * (squared_norm(O) - 1)
+
+    if Δrid > 0
+        sqrot = sqrt(Δrid)
+        t1 = (-O ⋅ d - sqrot) / squared_norm(d)
+        t2 = (-O ⋅ d + sqrot) / squared_norm(d)
+        if t1 > inv_ray.tmin && t1 < inv_ray.tmax
+            first_hit = t1
+            second_hit = t2
+        elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
+            first_hit = t2
+            second_hit = t1
+        else
+            return nothing
+        end
+    else
+        return nothing
+    end
+
+    hit_point_1 = inv_ray(first_hit)
+    hit_point_2 = inv_ray(second_hit)
+    HR1 = HitRecord(
+        world_P=S.Tr(hit_point_1),
+        normal=S.Tr(_sphere_normal(hit_point_1, ray.dir)),
+        surface_P=_point_to_uv(S, hit_point_1),
+        t=first_hit,
+        ray=ray,
+        shape=S
+    )
+    HR2 = HitRecord(
+        world_P=S.Tr(hit_point_2),
+        normal=S.Tr(_sphere_normal(hit_point_2, ray.dir)),
+        surface_P=_point_to_uv(S, hit_point_2),
+        t=second_hit,
+        ray=ray,
+        shape=S
+    )
+    return [HR1, HR2]
+end
+
+"""
+    internal(S::Sphere, P::Point)
+
+Checks if a point is inside a sphere.
+# Arguments
+- `S::Sphere`: The sphere to check.
+- `P::Point`: The point to check.
+# Returns
+- `Bool`: `true` if the point is inside the sphere, `false` otherwise.
+"""
+function internal(S::Sphere, P::Point)
+    return (squared_norm(Vec(inverse(S.Tr)(P))) <= 1.0) ? true : false
+end
+
+
+# Solid shapes are water-tight, and can be used to create CSG shapes.
+
+#---------------------------------------------------------
+# New Solid Shape and methods
+#---------------------------------------------------------
+# Remember to add docstrings and tests for the new solid shape
+#=
+struct NewSolid <: AbstractSolid
+    Tr::AbstractTransformation
+    Mat::Material
+
+    function NewSolid()
+        new(Transformation(), Material())
+    end
+    function NewSolid(Tr::AbstractTransformation)
+        new(Tr, Material())
+    end
+    function NewSolid(Mat::Material)
+        new(Transformation(), Mat)
+    end
+    function NewSolid(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Mat)
+    end
+end
+=#
+
+# _newsolid_normal(p::Point, dir::Vec)
+# _point_to_uv(S::NewSolid, p::Point)
+# ray_intersection(S::NewSolid, ray::Ray)
+# ray_intersection_list(S::NewSolid, ray::Ray)
+# internal(S::NewSolid, P::Point)
+
+#----------------------Other shapes----------------------#
 
 #---------------------------------------------------------
 # Plane and methods
@@ -111,6 +239,19 @@ This structure is a subtype of [`AbstractShape`](@ref).
 struct Plane <: AbstractShape
     Tr::AbstractTransformation
     Mat::Material
+    # add constructor including material: need standard material
+    function Plane()
+        new(Transformation(), Material())
+    end
+    function Plane(Tr::AbstractTransformation)
+        new(Tr, Material())
+    end
+    function Plane(Mat::Material)
+        new(Transformation(), Mat)
+    end
+    function Plane(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Mat)
+    end
 end
 
 """
@@ -129,7 +270,7 @@ function _plane_normal(p::Point, dir::Vec)
 end
 
 """
-    _plane_point_to_uv(p::Point)
+    _point_to_uv(S::Plane, p::Point)
 
 Calculate the UV coordinates of a point on the plane in PBC
 # Arguments
@@ -137,7 +278,7 @@ Calculate the UV coordinates of a point on the plane in PBC
 # Returns
 - `SurfacePoint`: the UV coordinates of the point in PBC
 """
-function _plane_point_to_uv(p::Point)
+function _point_to_uv(S::Plane, p::Point)
     return SurfacePoint(p.x - floor(p.x), p.y - floor(p.y))
 end
 
@@ -149,7 +290,8 @@ Calculate the intersection of a ray and a plane.
 - `S::Plane`: the plane to be intersected.
 - `ray::Ray`: the ray intersecting the plane.
 # Returns
-If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
+- `HitRecord`: The hit record of the first shape hit, if any.
+- `nothing`: If no intersections occur.
 """
 function ray_intersection(pl::Plane, ray::Ray)
     inv_ray = inverse(pl.Tr)(ray)
@@ -168,15 +310,49 @@ function ray_intersection(pl::Plane, ray::Ray)
     end
 
     hit_point = inv_ray(first_hit)
+    norm = pl.Tr(_plane_normal(hit_point, ray.dir))
     return HitRecord(
         world_P = pl.Tr(hit_point),
-        normal = pl.Tr(_plane_normal(hit_point, ray.dir)),
-        surface_P = _plane_point_to_uv(hit_point),
+        normal = norm,
+        surface_P = _point_to_uv(pl, hit_point),
         t = first_hit,
         ray = ray,
         shape = pl
     )
 end
+
+
+# AbstractShape is not guaranteed to be water-tight, and cannot be used to create CSG shapes. (for now)
+# For example, a plane is not water-tight.
+
+#---------------------------------------------------------
+# New Shape
+#---------------------------------------------------------
+# Remember to add docstrings and tests for the new solid shape
+#=
+struct NewShape <: AbstractShape
+    Tr::AbstractTransformation
+    Mat::Material
+
+    function NewShape()
+        new(Transformation(), Material())
+    end
+    function NewShape(Tr::AbstractTransformation)
+        new(Tr, Material())
+    end
+    function NewShape(Mat::Material)
+        new(Transformation(), Mat)
+    end
+    function NewShape(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Mat)
+    end
+end
+=#
+
+# _newshape_normal(p::Point, dir::Vec)
+# _point_to_uv(S::NewShape, p::Point)
+# ray_intersection(S::NewShape, ray::Ray)
+
 
 #---------------------------------------------------------
 # World type
@@ -243,7 +419,6 @@ struct SurfacePoint
 end
 
 """
-
     HitRecord(world_point::Point, normal::Normal, surface_point::SurfacePoint, t::Float64, ray::Ray)
 
 Information about an intersection
@@ -281,7 +456,7 @@ Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
 """
     Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
 
-Return color of the diffused ray regarldless its icoming or outcoming direction
+Return color of the diffused ray regarldless its icoming or outcoming direction.
 """
 function Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
     return BRDF.Pigment(p) * BRDF.R / π
