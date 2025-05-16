@@ -410,11 +410,9 @@ function ray_intersection(W::World, ray::Ray)
     return closest
 end
 
-
 #---------------------------------------------------------
 # HitRecord
 #---------------------------------------------------------
-
 struct SurfacePoint
     u::Float64
     v::Float64
