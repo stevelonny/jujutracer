@@ -31,14 +31,31 @@ struct Triangle <: AbstractShape
     function Triangle(Tr::AbstractTransformation, Mat::Material)
         new(Tr, Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Mat)
     end
-    function(A::Point, B::Point, C::Point)
+    function Triangle(A::Point, B::Point, C::Point)
         new(Transformation(), A, B, C, Material())
     end
-    function(A::Point, B::Point, C::Point, Mat::Material)
+    function Triangle(A::Point, B::Point, C::Point, Mat::Material)
         new(Transformation(), A, B, C, Mat)
     end
 end
 
+"""
+"""
+function Mat(a::Vec, b::Vec, c::Vec)
+    return [a.x b.x c.x; a.y b.y c.y; a.z b.z c.z]
+end
+
+"""
+"""
+function Cramer(Mat::Matrix)
+    det = Mat[1,1] * Mat[2,2] * Mat[3,3]
+    det += Mat[1,2] * Mat[2,3] * Mat[3,1]
+    det += Mat[1,3] * Mat[2,1] * Mat[3,2]
+    det -= Mat[1,1] * Mat[2,3] * Mat[3,2]
+    det -= Mat[1,2] * Mat[2,1] * Mat[3,3]
+    det -= Mat[1,3] * Mat[2,2] * Mat[3,1]
+    return det
+end
 """
     ray_intersection(S::Triangle, r::Ray)
 
@@ -53,25 +70,22 @@ Calculate the intersection of a ray and a plane.
 Differently from the other shapes, `ray_intersection(S::Triangle, ray::Ray)` incorporates `_triangle_normal` and `_point_to_uv`
 """
 function ray_intersection(S::Triangle, ray::Ray)
+    A = S.A                         # Point A
+    B = S.B - A                     # Vec B - A
+    C = S.C - A                     # Vec C - A
     inv_ray = inverse(S.Tr)(ray)
-    O = inv_ray.origin
+    O = inv_ray.origin - A          # Vec O - A
     d = inv_ray.dir
-    A = S.A
-    B = S.B
-    C = S.C
+    
     # evaluating the determinant of the Matrix moltipling (β, γ, t)ᵗ
-    detM = (B.x - A.x)*(C.y - A.y)*d.z + (C.x - A.x)*d.y*(B.z - A.z) + d.x*(B.y - A.y)*(C.z - A.z)
-    detM -= (B.x - A.x)*(C.z - A.z)*d.y + (C.x - A.x)*d.z*(B.y - A.y) + d.x*(B.z - A.z)*(C.y - A.y)
+    detM = Cramer(Mat(B, C, d))
 
     if detM != 0.0
         # Cramer's rule for β, γ and t
-        β = (O.x - A.x)*(C.y - A.y)*d.z + (C.x - A.x)*d.y*(O.z - A.z) + d.x*(O.y - A.y)*(C.z - A.z) - (O.x - A.x)*(C.z - A.z)*d.y - (C.x - A.x)*d.z*(O.y - A.y) - d.x*(O.z - A.z)*(C.y - A.y)
-        γ = (B.x - A.x)*(O.y - A.y)*d.z + (O.x - A.x)*d.y*(B.z - A.z) + d.x*(B.y - A.y)*(O.z - A.z) - (B.x - A.x)*(O.z - A.z)*d.y - (O.x - A.x)*d.z*(B.y - A.y) - d.x*(B.z - A.z)*(O.y - A.y)
-        t = (B.x - A.x)*(C.y - A.y)*(O.z - A.z) + (C.x - A.x)*(O.y - A.y)*(B.z - A.z) + (O.x - A.x)*(B.y - A.y)*(C.z - A.z) - (B.x - A.x)*(C.z - A.z)*(O.y - A.y) - (C.x - A.x)*(O.z - A.z)*(B.y - A.y) - (O.x - A.x)*(B.z - A.z)*(C.y - A.y)
+        β = Cramer(Mat(O, C, d)) / detM
+        γ = Cramer(Mat(B, O, d)) / detM
+        t = Cramer(Mat(B, C, O)) / detM
 
-        β /= detM
-        γ /= detM
-        t /= detM
         if t > inv_ray.tmin && t < inv_ray.tmax && β <= 1.0 && β >= 0.0 && γ <= 1.0 && γ >= 0.0
             first_hit = t
         else
@@ -82,7 +96,7 @@ function ray_intersection(S::Triangle, ray::Ray)
     end
 
     hit_point = inv_ray(first_hit)
-    norm = Normal((B - A) × (C - A))
+    norm = Normal(B × C)
     norm = (norm ⋅ d < 0.0) ? S.Tr(norm) : S.Tr(-norm)
     
     return HitRecord(
