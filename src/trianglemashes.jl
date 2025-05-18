@@ -76,14 +76,15 @@ function ray_intersection(S::Triangle, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = inv_ray.origin - A          # Vec O - A
     d = inv_ray.dir
-    
+    # M = (B C -d)
+    # Mx = O
     # evaluating the determinant of the Matrix moltipling (β, γ, t)ᵗ
-    detM = Cramer(Mat(B, C, d))
+    detM = Cramer(Mat(B, C, -d))
 
     if detM != 0.0
         # Cramer's rule for β, γ and t
-        β = Cramer(Mat(O, C, d)) / detM
-        γ = Cramer(Mat(B, O, d)) / detM
+        β = Cramer(Mat(O, C, -d)) / detM
+        γ = Cramer(Mat(B, O, -d)) / detM
         t = Cramer(Mat(B, C, O)) / detM
 
         if t > inv_ray.tmin && t < inv_ray.tmax && β <= 1.0 && β >= 0.0 && γ <= 1.0 && γ >= 0.0
