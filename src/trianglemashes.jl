@@ -47,7 +47,7 @@ end
 
 """
 """
-function Cramer(Mat::Matrix)
+function Sarrus(Mat::Matrix)
     det = Mat[1,1] * Mat[2,2] * Mat[3,3]
     det += Mat[1,2] * Mat[2,3] * Mat[3,1]
     det += Mat[1,3] * Mat[2,1] * Mat[3,2]
@@ -79,15 +79,15 @@ function ray_intersection(S::Triangle, ray::Ray)
     # M = (B C -d)
     # Mx = O
     # evaluating the determinant of the Matrix moltipling (β, γ, t)ᵗ
-    detM = Cramer(Mat(B, C, -d))
+    detM = Sarrus(Mat(B, C, -d))
 
     if detM != 0.0
         # Cramer's rule for β, γ and t
-        β = Cramer(Mat(O, C, -d)) / detM
-        γ = Cramer(Mat(B, O, -d)) / detM
-        t = Cramer(Mat(B, C, O)) / detM
+        β = Sarrus(Mat(O, C, -d)) / detM
+        γ = Sarrus(Mat(B, O, -d)) / detM
+        t = Sarrus(Mat(B, C, O)) / detM
 
-        if t > inv_ray.tmin && t < inv_ray.tmax && β <= 1.0 && β >= 0.0 && γ <= 1.0 && γ >= 0.0
+        if t > inv_ray.tmin && t < inv_ray.tmax && β <= 1.0 && β >= 0.0 && γ <= 1.0 && γ >= 0.0 && β + γ <= 1.0
             first_hit = t
         else
             return nothing
