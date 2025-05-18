@@ -39,7 +39,7 @@ include("shapes.jl")
 export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_intersection, Plane, Rectangle, World, Eval
 
 include("trianglemashes.jl")
-export Triangle, Mat, ray_intersection
+export Mat, Sarrus, Triangle, ray_intersection, Quadrilateral
 
 include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal
