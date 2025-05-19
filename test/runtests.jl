@@ -562,7 +562,32 @@ end
         ray20 = Ray(origin=O20, dir=êx)
         HR20 = ray_intersection(T, ray20)
         @test HR20 === nothing
+    end
 
+    # test for Quadrilateral
+    @testset "Quadrilateral" begin
+        Q = Quadrilateral(Transformation(), Mat)
+
+        O21 = Point(0.5, 0.5, 1.0)
+        ray21 = Ray(origin=O21, dir=-êz)
+        HR21 = ray_intersection(Q, ray21)
+        @test HR21 ≈ Point(0.5, 0.5, 0.0)
+        @test HR21.t ≈ 1.0
+        @test HR21 ≈ SurfacePoint(0.5, 0.5)
+        @test HR21.normal ≈ Normal(êz)
+
+        O22 = Point(0.2, 0.3, -2.0)
+        ray22 = Ray(origin=O22, dir=êz)
+        HR22 = ray_intersection(Q, ray22)
+        @test HR22 ≈ Point(0.2, 0.3, 0.0)
+        @test HR22.t ≈ 2.0
+        @test HR22 ≈ SurfacePoint(0.2, 0.3)
+        @test HR22.normal ≈ -Normal(êz)
+
+        O23 = Point(1.0, 1.0, 1.0)
+        ray23 = Ray(origin=O23, dir=êx)
+        HR23 = ray_intersection(Q, ray23)
+        @test HR23 === nothing
     end
 end
 
