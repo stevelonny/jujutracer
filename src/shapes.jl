@@ -366,7 +366,8 @@ function _rectangle_normal(p::Point, dir::Vec)
     if abs(p.x) > 0.5 || abs(p.y) > 0.5
         throw(ArgumentError("Point outside the rectangle"))
     else
-        return Normal(0.0, 0.0, 1.0)
+        norm = Normal(0.0, 0.0, 1.0)
+        return (dir.z < 0.0) ? norm : -norm
     end
 end
 
@@ -517,6 +518,13 @@ end
 #---------------------------------------------------------
 # HitRecord
 #---------------------------------------------------------
+"""
+    struct SurfacePoint
+
+A struct representing a point on the surface of a shape.
+# Fields
+- `u::Float64`, `v::Float64: the (u,v) coordinates of the point on the surface.
+"""
 struct SurfacePoint
     u::Float64
     v::Float64
