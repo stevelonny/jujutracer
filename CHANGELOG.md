@@ -2,10 +2,11 @@
 - Add new shapes [#18](https://github.com/stevelonny/jujutracer/pull/18):
   - Rectangle
   - Triangle
-  - Quadrilateral
+  - Parallelogram
 - Constructive Solid Geometry [#10](https://github.com/stevelonny/jujutracer/pull/10)
 - Implement `Pigment` types and rudimental `BRDF` methods
 - Implement `Flat` renderer
+
 # Version 0.2.1
 
 ## Bugfixes
