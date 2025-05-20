@@ -237,7 +237,69 @@ function ray_intersection(box::Box, ray::Ray)
     O = inv_ray.origin
     d = inv_ray.dir
 
-    # still to do
+    # we need to make this function very fast: must be branchless
+    # precompute some values? inverse ray dir?
+    # reminder: to check if d is zero
+    # reminder: check ray.tmin ray.tmax
+
+    # first check x and y planes
+    t1x = (p1.x - O) / d.x
+    t2x = (p2.x - O) / d.x
+    txmin = min(t1x, t2x)
+    txmax = max(t1x, t2x)    
+    
+    t1y = (p1.y - O) / d.y
+    t2y = (p2.y - O) / d.y
+    tymin = min(t1y, t2y)
+    tymax = max(t1y, t2y)
+
+    if txmin > tymax || tymin > txmax
+        return nothing
+    end
+    tmin = max(txmin, tymin)
+    tmax = min(txmax, tymax)
+
+    # then check z planes
+    t1z = (p1.z - O) / d.z
+    t2z = (p2.z - O) / d.z
+    tzmin = min(t1z, t2z)
+    tzmax = max(t1z, t2z)
+
+    if tmin > tzmax || tzmin > tmax
+        return nothing
+    end
+
+    # more concise version but i dont really trust it
+    #tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
+    #tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+    #if tmax < max(0.0, tmin)
+    #    return nothing
+    #end
+    #first_hit = tmin > inv_ray.tmin ? tmin : tmax
+    
+    tmin = max(tmin, tzmin)
+    tmax = min(tmax, tzmax)
+
+    if tmin > inv_ray.tmin && tmax < inv_ray.tmax
+        first_hit = tmin
+    elseif tmax > inv_ray.tmin && tmax < inv_ray.tmax
+        first_hit = tmax
+    else
+        return nothing
+    end
+
+    # still to do: _box_normal and _point_to_uv
+
+    hit_point = inv_ray(first_hit)
+    norm = box.Tr(_box_normal(hit_point, ray.dir))
+    return HitRecord(
+        world_P = box.Tr(hit_point),
+        normal = norm,
+        surface_P = _point_to_uv(box, hit_point),
+        t = first_hit,
+        ray = ray,
+        shape = box
+    )
 end
 
 function internal(box::Box, P::Point)
