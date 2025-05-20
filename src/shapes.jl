@@ -190,6 +190,72 @@ function internal(S::Sphere, P::Point)
     return (squared_norm(Vec(inverse(S.Tr)(P))) <= 1.0) ? true : false
 end
 
+#---------------------------------------------------------
+# Box
+#---------------------------------------------------------
+"""
+Left Front Down
+"""
+function _LFD(P1::Point, P2::Point)
+    return Point(min(P1.x, p2.x), min(P1.y, P2.y), min(P1.z, P2.z))
+end
+
+"""
+Right Back Up
+"""
+function _RBU(P1::Point, P2::Point)
+    return Point(max(P1.x, p2.x), max(P1.y, P2.y), max(P1.z, P2.z))
+end
+
+struct Box <: AbstractSolid
+    Tr::AbstractTransformation
+    P1::Point
+    P2::Point
+    Mat::Material
+
+    function Box(P1::Point, P2::Point)
+        new(Transformation(), _LFD(P1, P2), _RBU(P1, P2), Material())
+    end
+    function Box(Tr::AbstractTransformation)
+        new(Tr, Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 0.5), Material())
+    end
+    function Box(Tr::AbstractTransformation, P1::Point, P2::Point)
+        new(Tr, _LFD(P1, P2), _RBU(P1, P2), Material())
+    end
+    function Box(Tr::AbstractTransformation, P1::Point, P2::Point, Mat::Material)
+        new(Tr, _LFD(P1, P2), _RBU(P1, P2), Mat)
+    end
+    function Box(P1::Point, P2::Point, Mat::Material)
+        new(Transformation(), _LFD(P1, P2), _RBU(P1, P2), Mat)
+    end
+end
+
+function ray_intersection(box::Box, ray::Ray)
+    inv_ray = inverse(box.Tr)(ray)
+    p1 = box.P1
+    p2 = box.P2
+    O = inv_ray.origin
+    d = inv_ray.dir
+
+    # still to do
+end
+
+function internal(box::Box, P::Point)
+    p = inverse(box.Tr)(P)
+    cond_x = p.x <= box.P2.x && p.x >= box.P1.x
+    cond_y = p.y <= box.P2.y && p.y >= box.P1.y
+    cond_z = p.z <= box.P2.z && p.z >= box.P1.z
+
+    return (cond_x && cond_y && cond_z) ? true : false
+end
+
+function ray_intersection_list(box::Box, ray::Ray)
+    inv_ray = inverse(box.Tr)(ray)
+    p1 = box.P1
+    p2 = box.P2
+
+    # still to do...
+end
 
 # Solid shapes are water-tight, and can be used to create CSG shapes.
 
@@ -425,6 +491,7 @@ function ray_intersection(S::Rectangle, ray::Ray)
         shape = S
     )
 end
+
 
 # AbstractShape is not guaranteed to be water-tight, and cannot be used to create CSG shapes. (for now)
 # For example, a plane is not water-tight.

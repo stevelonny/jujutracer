@@ -29,7 +29,7 @@ function demo3()
     S = Vector{AbstractShape}(undef, 2)
     
     S[1] = Triangle(Point(0.0, 0.5, 0.0), Point(0.0, -0.5, 0.0), Point(0.0, 0.0, 0.7), Mat1)
-    S[2] = Rectangle(Mat2)
+    S[2] = Box(Translation(0.0, 1.0, 0.0), Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 1.0), Mat2) - Sphere(Translation(0.0, 1.0, 0.0), Mat3)
 
 
     R_cam = Rz(cam_angle)
