@@ -5,7 +5,7 @@
 """
     Mat(a::Vec, b::Vec, c::Vec)
 
-Returns a Matrix build with the transposed Vectors aᵗ, bᵗ and cᵗ
+Returns a Matrix build with the transposed Vectors aᵗ, bᵗ and cᵗ.
 """
 function _mat(a::Vec, b::Vec, c::Vec)
     return [a.x b.x c.x; a.y b.y c.y; a.z b.z c.z]
@@ -14,7 +14,7 @@ end
 """
     Sarrus(Mat::Matrix)
 
-Implement the Sarrus method for calculation of the determinant of a 3x3 Matrix
+Implement the Sarrus method for calculation of the determinant of a 3x3 Matrix.
 """
 function _sarrus(Mat::Matrix)
     det = Mat[1,1] * Mat[2,2] * Mat[3,3]
@@ -32,13 +32,19 @@ end
 """
     struct Triangle <: AbstractShape
 
-Triangle
+Triangle.
 # Fields
 - `t::Transformation`: the transformation applied to the triangle
 - `A, B, C::Point`: the vertices of the triangle
 - `Mat::Material`: the material of the shape
 
-`Transofrmation` and `Point`s can't be assigned together. 
+# Constructor
+- `Triangle()`: creates a triangle with Identity `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a default material.
+- `Triangle(Tr::AbstractTransformation)`: creates a triangle with `Tr` `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a default material.
+- `Triangle(Mat::Material)`: creates a triangle with Identity `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a `Mat` material.
+- `Triangle(Tr::AbstractTransformation, Mat::Material)`: creates a triangle with `Tr` `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a `Mat` material.
+- `Triangle(A::Point, B::Point, C::Point)`: creates a triangle with Identity `Transformation` and vertices `A`, `B`, `C` and a default material.
+- `Triangle(A::Point, B::Point, C::Point, Mat::Material)`: creates a triangle with Identity `Transformation` and vertices `A`, `B`, `C` and a `Mat` material.
 """
 struct Triangle <: AbstractShape
     Tr::AbstractTransformation
@@ -70,7 +76,7 @@ end
 """
     ray_intersection(S::Triangle, r::Ray)
 
-Calculate the intersection of a ray and a plane.
+Calculate the intersection of a ray and a triangle.
 # Arguments
 - `S::Triangle`: the triangle to be intersected.
 - `ray::Ray`: the ray intersecting the triangle.
@@ -122,60 +128,78 @@ function ray_intersection(S::Triangle, ray::Ray)
 end
 
 #---------------------------------------------------------
-# Quadrilateral
+# Parallelogram
 #---------------------------------------------------------
 """
-    struct Quadrilateral <: AbstractShape
+    struct Parallelogram <: AbstractShape
 
-Quadrilateral
+Parallelogram
+
+```
+   C-----p
+  /     /
+ /     /
+A-----B
+```
+
 # Fields
-- `t::Transformation`: the transformation applied to the triangle
-- `A, B, C::Point`: the vertices of the triangle
+- `t::Transformation`: the transformation applied to the Parallelogram.
+- `A, B, C::Point`: the vertices defining the quadrilateral's 
 - `Mat::Material`: the material of the shape
 
-`Transofrmation` and `Point`s can't be assigned together. 
+# Constructor
+- `Parallelogram()`: creates a parallelogram with Identity `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a default material.
+- `Parallelogram(Tr::AbstractTransformation)`: creates a parallelogram with `Tr` `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a default material.
+- `Parallelogram(Mat::Material)`: creates a parallelogram with Identity `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a `Mat` material.
+- `Parallelogram(Tr::AbstractTransformation, Mat::Material)`: creates a parallelogram with `Tr` `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a `Mat` material.
+- `Parallelogram(A::Point, B::Point, C::Point)`: creates a parallelogram with Identity `Transformation` and vertices `A`, `B`, `C` and a default material.
+- `Parallelogram(A::Point, B::Point, C::Point, Mat::Material)`: creates a parallelogram with Identity `Transformation` and vertices `A`, `B`, `C` and a `Mat` material.
+- `Parallelogram(A::Point, AB::Vec, AC::Vec)`: creates a parallelogram with Identity `Transformation` and vertices `A`, `A + AB`, `A + AC` and a default material.
 """
-struct Quadrilateral <: AbstractShape
+struct Parallelogram <: AbstractShape
     Tr::AbstractTransformation
     A::Point
     B::Point
     C::Point
     Mat::Material
 
-    function Quadrilateral()
+    function Parallelogram()
         new(Transformation(), Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Material())
     end
-    function Quadrilateral(Tr::AbstractTransformation)
+    function Parallelogram(A::Point, AB::Vec, AC::Vec)
+        new(Transformation(), A, A + AB, A + AC, Material())
+    end
+    function Parallelogram(Tr::AbstractTransformation)
         new(Tr, Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Material())
     end
-    function Quadrilateral(Mat::Material)
+    function Parallelogram(Mat::Material)
         new(Transformation(), Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Mat)
     end
-    function Quadrilateral(Tr::AbstractTransformation, Mat::Material)
+    function Parallelogram(Tr::AbstractTransformation, Mat::Material)
         new(Tr, Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Mat)
     end
-    function Quadrilateral(A::Point, B::Point, C::Point)
+    function Parallelogram(A::Point, B::Point, C::Point)
         new(Transformation(), A, B, C, Material())
     end
-    function Quadrilateral(A::Point, B::Point, C::Point, Mat::Material)
+    function Parallelogram(A::Point, B::Point, C::Point, Mat::Material)
         new(Transformation(), A, B, C, Mat)
     end
 end
 
 """
-    ray_intersection(S::Quadrilateral, r::Ray)
+    ray_intersection(S::Parallelogram, r::Ray)
 
 Calculate the intersection of a ray and a plane.
 # Arguments
-- `S::Quadrilateral`: the triangle to be intersected.
+- `S::Parallelogram`: the parallelogram to be intersected.
 - `ray::Ray`: the ray intersecting the triangle.
 # Returns
 - `HitRecord`: The hit record of the first shape hit, if any.
 - `nothing`: If no intersections occur.
 
-Differently from the other shapes, `ray_intersection(S::Quadrilateral, ray::Ray)` incorporates `_triangle_normal` and `_point_to_uv`
+Differently from the other shapes, `ray_intersection(S::Parallelogram, ray::Ray)` incorporates `_parallelogram_normal` and `_point_to_uv`
 """
-function ray_intersection(S::Quadrilateral, ray::Ray)
+function ray_intersection(S::Parallelogram, ray::Ray)
     A = S.A                         # Point A
     B = S.B - A                     # Vec B - A
     C = S.C - A                     # Vec C - A
