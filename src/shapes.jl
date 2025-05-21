@@ -197,14 +197,14 @@ end
 Left Front Down
 """
 function _LFD(P1::Point, P2::Point)
-    return Point(min(P1.x, p2.x), min(P1.y, P2.y), min(P1.z, P2.z))
+    return Point(min(P1.x, P2.x), min(P1.y, P2.y), min(P1.z, P2.z))
 end
 
 """
 Right Back Up
 """
 function _RBU(P1::Point, P2::Point)
-    return Point(max(P1.x, p2.x), max(P1.y, P2.y), max(P1.z, P2.z))
+    return Point(max(P1.x, P2.x), max(P1.y, P2.y), max(P1.z, P2.z))
 end
 
 struct Box <: AbstractSolid
@@ -239,7 +239,7 @@ function ray_intersection(box::Box, ray::Ray)
 
     # we need to make this function very fast: must be branchless
     # precompute some values? inverse ray dir?
-    # reminder: to check if d is zero
+    # reminder: to check if d is zero. There's no need to do it cause julia knows that 1 / 0 = Inf
     # reminder: check ray.tmin ray.tmax
 
     # first check x and y planes
@@ -428,16 +428,14 @@ function ray_intersection(pl::Plane, ray::Ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
 
-    if d != 0
-        t = -Oz / d.z
-        if t > inv_ray.tmin && t < inv_ray.tmax
-            first_hit = t
-        else
-            return nothing
-        end
+    
+    t = -Oz / d.z
+    if t > inv_ray.tmin && t < inv_ray.tmax
+        first_hit = t
     else
         return nothing
     end
+    
 
     hit_point = inv_ray(first_hit)
     norm = pl.Tr(_plane_normal(hit_point, ray.dir))
@@ -532,16 +530,14 @@ function ray_intersection(S::Rectangle, ray::Ray)
     O = inv_ray.origin
     d = inv_ray.dir
 
-    if d != 0
-        t = -O.z / d.z
-        if t > inv_ray.tmin && t < inv_ray.tmax && abs(inv_ray(t).x) <= 0.5 && abs(inv_ray(t).y) <= 0.5 
-            first_hit = t
-        else
-            return nothing
-        end
+    
+    t = -O.z / d.z
+    if t > inv_ray.tmin && t < inv_ray.tmax && abs(inv_ray(t).x) <= 0.5 && abs(inv_ray(t).y) <= 0.5 
+        first_hit = t
     else
         return nothing
     end
+    
 
     hit_point = inv_ray(first_hit)
     norm = S.Tr(_rectangle_normal(hit_point, ray.dir))
