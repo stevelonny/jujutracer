@@ -39,6 +39,9 @@ export UniformPigment, CheckeredPigment, ImagePigment, DiffusiveBRDF, Material
 include("shapes.jl")
 export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_intersection, Plane, World, Eval
 
+include("randgen.jl")
+export PCG, rand_pcg, rand_uniform, rand_unif_hemisphere
+
 include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal
 

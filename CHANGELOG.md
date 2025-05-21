@@ -1,8 +1,10 @@
 # HEAD
+- PCG random generator implemented [#17](https://github.com/stevelonny/jujutracer/pull/17)
 - Add basic multi-threaded support [#19](https://github.com/stevelonny/jujutracer/pull/19)
 - Constructive Solid Geometry [#10](https://github.com/stevelonny/jujutracer/pull/10)
 - Implement `Pigment` types and rudimental `BRDF` methods
 - Implement `Flat` renderer
+
 # Version 0.2.1
 
 ## Bugfixes
