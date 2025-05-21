@@ -228,6 +228,9 @@ struct Box <: AbstractSolid
     function Box(P1::Point, P2::Point, Mat::Material)
         new(Transformation(), _LFD(P1, P2), _RBU(P1, P2), Mat)
     end
+    function Box(Mat::Material)
+        new(Transformation(), Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 0.5), Mat)
+    end
 end
 
 function ray_intersection(box::Box, ray::Ray)
@@ -243,13 +246,13 @@ function ray_intersection(box::Box, ray::Ray)
     # reminder: check ray.tmin ray.tmax
 
     # first check x and y planes
-    t1x = (p1.x - O) / d.x
-    t2x = (p2.x - O) / d.x
+    t1x = (p1.x - O.x) / d.x
+    t2x = (p2.x - O.x) / d.x
     txmin = min(t1x, t2x)
     txmax = max(t1x, t2x)    
     
-    t1y = (p1.y - O) / d.y
-    t2y = (p2.y - O) / d.y
+    t1y = (p1.y - O.y) / d.y
+    t2y = (p2.y - O.y) / d.y
     tymin = min(t1y, t2y)
     tymax = max(t1y, t2y)
 
@@ -260,8 +263,8 @@ function ray_intersection(box::Box, ray::Ray)
     tmax = min(txmax, tymax)
 
     # then check z planes
-    t1z = (p1.z - O) / d.z
-    t2z = (p2.z - O) / d.z
+    t1z = (p1.z - O.z) / d.z
+    t2z = (p2.z - O.z) / d.z
     tzmin = min(t1z, t2z)
     tzmax = max(t1z, t2z)
 
@@ -291,11 +294,11 @@ function ray_intersection(box::Box, ray::Ray)
     # still to do: _box_normal and _point_to_uv
 
     hit_point = inv_ray(first_hit)
-    norm = box.Tr(_box_normal(hit_point, ray.dir))
+    #norm = box.Tr(_box_normal(hit_point, ray.dir))
     return HitRecord(
         world_P = box.Tr(hit_point),
-        normal = norm,
-        surface_P = _point_to_uv(box, hit_point),
+        normal = Normal(1.0, 0.0, 0.0) #= norm =# ,
+        surface_P = SurfacePoint(0.5,0.5) #= _point_to_uv(box, hit_point) =#,
         t = first_hit,
         ray = ray,
         shape = box
