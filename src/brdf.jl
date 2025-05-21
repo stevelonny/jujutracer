@@ -13,6 +13,7 @@ Uniform Pigment for Shapes
 
 # Functional Usage
 `UniformPigment(p::SurfacePoint)` return the `RGB` associated to the `(u, v)` coordinates of the `SurfacePoint`
+Methods in [`renderer.jl`](@ref)
 """
 struct UniformPigment <: AbstractPigment
     color::RGB
@@ -39,6 +40,8 @@ Checkered pigment for a Shape, subdiveded in `row` rows and `col` columns with a
 
 # Functional Usage
 `CheckeredPigment(p::SurfacePoint)` return the `RGB` associated to the `(u, v)` coordinates of the `SurfacePoint` 
+
+Methods in [`renderer.jl`](@ref)
 """
 struct CheckeredPigment <: AbstractPigment
     col::Int32
@@ -56,6 +59,8 @@ Print the image `img` as pigment of the surface
 - `img::hdrimg` the image in hdr format
 # Functional Usage
 `ImagePigment(p::SurfacePoint)` return the `RGB` of to the `(u, v)` coordinates of the `SurfacePoint` associated to the corresponding element of `img`
+
+Methods in [`renderer.jl`](@ref)
 """
 struct ImagePigment <: AbstractPigment
     img::hdrimg
@@ -71,18 +76,37 @@ abstract type AbstractBRDF end
     DiffusiveBRDF(Pigment::AbstractPigment, R::Float64)
 
 Diffusive BRDF with reflective pigment `Pigment` and refelectance `R`
+Methods in [`renderer.jl`](@ref)
 """
 struct DiffusiveBRDF <: AbstractBRDF
     Pigment::AbstractPigment
     R::Float64
 end
 
-# Eval method inside shape.jl
+"""
+    SpecularBRDF(Pigment::AbstractPigment, R::Float64)
+
+Specular BRDF with reflective pigment `Pigment` and refelectance `R`
+Methods in [`renderer.jl`](@ref)
+"""
+struct SpecularBRDF <: AbstractBRDF
+    Pigment::AbstractPigment
+    R::Float64
+end
+
+# Pigment and BRDF methods are in [`renderer.jl`](@ref)
 
 #---------------------------------------------------------
 # Material
 #---------------------------------------------------------
 
+"""
+    struct Material
+
+# Fields
+- `Emition::AbstractPigment`: the pigement with which the radiation is emitted.
+- `BRDF::AbstractBRDF`: the BRDF of the material.
+"""
 struct Material
     Emition::AbstractPigment
     BRDF::AbstractBRDF

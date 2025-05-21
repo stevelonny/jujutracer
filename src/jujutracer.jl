@@ -34,10 +34,10 @@ include("imagetracer.jl")
 export ImageTracer
 
 include("brdf.jl")
-export UniformPigment, CheckeredPigment, ImagePigment, DiffusiveBRDF, Material
+export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBRDF, Material
 
 include("shapes.jl")
-export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_intersection, Plane, Rectangle, World, Eval
+export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_intersection, Plane, Rectangle, World
 
 include("meshes.jl")
 export Mat, Sarrus, Triangle, Parallelogram, ray_intersection
