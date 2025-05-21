@@ -506,6 +506,4 @@ end
     for expected in [2707161783, 2068313097,3122475824, 2211639955, 3215226955, 3421331566]
         @test expected == rand_pcg(pcg)
     end
-
-    vals = [rand_pcg(pcg) for _ in 1:10^6]
 end

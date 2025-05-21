@@ -46,7 +46,7 @@ function rand_pcg(pcg::PCG)::UInt32
     pcg.state = oldstate * UInt64(6364136223846793005) + pcg.inc
 
     xorshifted = _to_uint32(((oldstate >> 18) ⊻ oldstate) >> 27)
-    rot = oldstate >> 59
+    rot = _to_uint32(oldstate >> 59)
 
     return _to_uint32( (xorshifted >> rot) | (xorshifted << ((-rot) & 0x1f)) )
 end
