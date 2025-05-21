@@ -588,7 +588,8 @@ end
         ray23 = Ray(origin=O23, dir=êx)
         HR23 = ray_intersection(Q, ray23)
         @test HR23 === nothing
-    endend
+    end
+end
 
 @testset "Random Generator" begin
     pcg = PCG()
