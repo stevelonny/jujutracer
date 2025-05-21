@@ -564,9 +564,9 @@ end
         @test HR20 === nothing
     end
 
-    # test for Quadrilateral
-    @testset "Quadrilateral" begin
-        Q = Quadrilateral(Transformation(), Mat)
+    # test for Parallelogram
+    @testset "Parallelogram" begin
+        Q = Parallelogram(Transformation(), Mat)
 
         O21 = Point(0.5, 0.5, 1.0)
         ray21 = Ray(origin=O21, dir=-êz)
