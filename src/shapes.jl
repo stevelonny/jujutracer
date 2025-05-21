@@ -231,6 +231,59 @@ struct Box <: AbstractSolid
     function Box(Mat::Material)
         new(Transformation(), Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 0.5), Mat)
     end
+    function Box(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 0.5), Mat)
+    end
+end
+
+
+"""
+```
+   +----+------+-----+----+
+   |xxxx| Top  |xxxxxxxxxx|
+   |xxxx| (Y+) |xxxxxxxxxx| 
+   +----+------+-----+----+2/3
+   |Left|Front |Right|Back|
+   |(X-)|(Z+)  |(X+) |(Z-)|
+   +----+------+-----+----+1/3
+   |xxxx|Bottom|xxxxxxxxxx|
+   |xxxx| (Y-) |xxxxxxxxxx|
+   +----+------+-----+----+
+```
+"""
+function _point_to_uv(box::Box, p::Point, norm::Normal)
+    # Transform point to box local space
+    # Get box bounds
+    p1, p2 = box.P1, box.P2
+
+    # Normalize coordinates to [0,1] on each axis
+    nx = (p.x - p1.x) / (p2.x - p1.x)
+    ny = (p.y - p1.y) / (p2.y - p1.y)
+    nz = (p.z - p1.z) / (p2.z - p1.z)
+    third = 1.0 / 3.0
+    if isapprox(norm.x, 1.0; atol=1e-6)      # +X (Right)
+        u = 0.5 + nz * 0.25
+        v = third + (1.0 - ny) * third
+    elseif isapprox(norm.x, -1.0; atol=1e-6) # -X (Left)
+        u = 0.0 + nz * 0.25
+        v = third + (1.0 - ny) * third
+    elseif isapprox(norm.y, 1.0; atol=1e-6)  # +Y (Top)
+        u = 0.25 + nx * 0.25
+        v = 2.0*third + (1.0 - nz) * third
+    elseif isapprox(norm.y, -1.0; atol=1e-6) # -Y (Bottom)
+        u = 0.25 + nx * 0.25
+        v = 0.0 + nz * third
+    elseif isapprox(norm.z, 1.0; atol=1e-6)  # +Z (Front)
+        u = 0.25 + nx * 0.25
+        v = third + (1.0 - ny) * third
+    elseif isapprox(norm.z, -1.0; atol=1e-6) # -Z (Back)
+        u = 0.75 + (1.0 - nx) * 0.25
+        v = third + (1.0 - ny) * third
+    else
+        error("Normal does not correspond to a box face")
+    end
+
+    return SurfacePoint(u, v)
 end
 
 function ray_intersection(box::Box, ray::Ray)
@@ -248,57 +301,69 @@ function ray_intersection(box::Box, ray::Ray)
     # first check x and y planes
     t1x = (p1.x - O.x) / d.x
     t2x = (p2.x - O.x) / d.x
-    txmin = min(t1x, t2x)
-    txmax = max(t1x, t2x)    
+    #txmin = min(t1x, t2x)
+    #txmax = max(t1x, t2x)    
     
     t1y = (p1.y - O.y) / d.y
     t2y = (p2.y - O.y) / d.y
-    tymin = min(t1y, t2y)
-    tymax = max(t1y, t2y)
+    #tymin = min(t1y, t2y)
+    #tymax = max(t1y, t2y)
 
-    if txmin > tymax || tymin > txmax
-        return nothing
-    end
-    tmin = max(txmin, tymin)
-    tmax = min(txmax, tymax)
+    #if txmin > tymax || tymin > txmax
+    #    return nothing
+    #end
+    #tmin = max(txmin, tymin)
+    #tmax = min(txmax, tymax)
 
     # then check z planes
     t1z = (p1.z - O.z) / d.z
     t2z = (p2.z - O.z) / d.z
-    tzmin = min(t1z, t2z)
-    tzmax = max(t1z, t2z)
+    #tzmin = min(t1z, t2z)
+    #tzmax = max(t1z, t2z)
 
-    if tmin > tzmax || tzmin > tmax
-        return nothing
-    end
-
-    # more concise version but i dont really trust it
-    #tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
-    #tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
-    #if tmax < max(0.0, tmin)
+    #if tmin > tzmax || tzmin > tmax
     #    return nothing
     #end
-    #first_hit = tmin > inv_ray.tmin ? tmin : tmax
-    
-    tmin = max(tmin, tzmin)
-    tmax = min(tmax, tzmax)
 
-    if tmin > inv_ray.tmin && tmax < inv_ray.tmax
-        first_hit = tmin
-    elseif tmax > inv_ray.tmin && tmax < inv_ray.tmax
-        first_hit = tmax
-    else
+    # more concise version but i dont really trust it
+    tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
+    tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+    if tmax < max(inv_ray.tmin, tmin)
         return nothing
     end
+    first_hit = tmin > inv_ray.tmin ? tmin : tmax
+    
+    #tmin = max(tmin, tzmin)
+    #tmax = min(tmax, tzmax)
+
+    #if tmin > inv_ray.tmin && tmax < inv_ray.tmax
+    #    first_hit = tmin
+    #elseif tmax > inv_ray.tmin && tmax < inv_ray.tmax
+    #    first_hit = tmax
+    #else
+    #    return nothing
+    #end
 
     # still to do: _box_normal and _point_to_uv
 
     hit_point = inv_ray(first_hit)
-    #norm = box.Tr(_box_normal(hit_point, ray.dir))
+    # normal
+    if first_hit == t1x || first_hit == t2x
+        norm =  Normal(sign(d.x), 0.0, 0.0)
+    elseif first_hit == t1y || first_hit == t2y
+        norm =  Normal(0.0, sign(d.y), 0.0)
+    else
+        norm =  Normal(0.0, 0.0, sign(d.z))
+    end
+
+    sur_point = _point_to_uv(box, hit_point, norm)
+
+    norm = box.Tr(norm)
+
     return HitRecord(
         world_P = box.Tr(hit_point),
-        normal = Normal(1.0, 0.0, 0.0) #= norm =# ,
-        surface_P = SurfacePoint(0.5,0.5) #= _point_to_uv(box, hit_point) =#,
+        normal = norm ,
+        surface_P = sur_point #= _point_to_uv(box, hit_point) =#,
         t = first_hit,
         ray = ray,
         shape = box
