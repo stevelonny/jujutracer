@@ -1,4 +1,5 @@
 # HEAD
+- PCG random generator implemented [#17](https://github.com/stevelonny/jujutracer/pull/17)
 
 # Version 0.2.1
 

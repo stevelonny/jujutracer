@@ -9,7 +9,7 @@ mutable struct PCG
         PCG(init_state::UInt64, init_seq::UInt64)
 
     Create a new PCG instance with the given initial state and sequence.
-    init_state::UInt64: The initial state of the PCG. Defoult is 42.
+    init_state::UInt64: The initial state of the PCG. Default is 42.
     init_seq::UInt64: The initial sequence number. Default is 54.
     """
     function PCG( (init_state::UInt64) = UInt64(42), (init_seq::UInt64) = UInt64(54))
@@ -50,6 +50,7 @@ end
 #--------------------------------------------------------------
 """
     rand_uniform(pcg::PCG)::Float64
+    
 Generate a random floating-point number in the range [0, 1) using the PCG algorithm.
 pcg::PCG: The PCG instance to use for random number generation.
 Returns a random floating-point number in the range [0, 1).
