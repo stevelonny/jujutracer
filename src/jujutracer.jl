@@ -46,5 +46,5 @@ include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal
 
 include("renderer.jl")
-export OnOff, Flat
+export OnOff, Flat, PathTracer
 end # module jujutracer
