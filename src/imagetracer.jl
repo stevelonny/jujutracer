@@ -32,7 +32,7 @@ Return the ray cast from the camera through the pixel at (col, row) in the image
 - `col_pixel::Int`, `row_pixel::Int`: The column and row indexes of the pixel in the image.
 - `u_pixel::Float64`, `v_pixel::Float64`: The pixel offset in the u and v directions (default is 0.5, center of the pixel).
 """
-function (it::ImageTracer)(col_pixel::Int, row_pixel::Int; u_pixel::Float64 = 0.5, v_pixel::Float64 = 0.5)
+function (it::ImageTracer)(col_pixel::Int, row_pixel::Int; u_pixel::Float64=0.5, v_pixel::Float64=0.5)
     u = (col_pixel + u_pixel) / (it.img.w)
     v = 1 - (row_pixel + v_pixel) / (it.img.h)
 
@@ -42,25 +42,19 @@ end
 """
     (it::ImageTracer)(fun::Function)
 
-Apply a function to each pixel in the image.
+Apply a function to each pixel in the image. Leverage parallel processing for performance.
 
 # Arguments
 - `fun::Function`: Must be a function that takes a `::Ray` as input and returns a color (`ColorTypes.RGB`).
 """
 function (it::ImageTracer)(fun::Function)
-    # Quick and dirty test to check if the function is a valid function
-    # Should we check if the function takes a Ray? if yes, use methods(fun)
-    #=result = fun(it.camera(0.5, 0.5))
-    if !(isa(result, ColorTypes.RGB))
-        throw(ArgumentError("The function must return a ColorTypes.RGB value."))
-    end=#
     # remember: julia is column-major order
-    for row_pixel in 0:(it.img.h-1)
-        for col_pixel in 0:(it.img.w-1)
-            ray = it(col_pixel, row_pixel)
-            color = fun(ray)
-            # we could remove boundary checks with @inbounds
-            it.img[col_pixel, row_pixel] = color
-        end
+    @threads for i in eachindex(IndexCartesian(), it.img.img)
+        col_pixel = i[2] - 1
+        row_pixel = i[1] - 1
+        ray = it(col_pixel, row_pixel)
+        color = fun(ray)
+        # we could remove boundary checks with @inbounds
+        it.img[col_pixel, row_pixel] = color
     end
 end

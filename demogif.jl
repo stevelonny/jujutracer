@@ -2,20 +2,13 @@ using Pkg
 Pkg.activate(".")
 
 using jujutracer
-using BenchmarkTools
-
-if length(ARGS) != 4
-    println("Usage: julia demo.jl <output_file> <width> <height> <cam_angle>")
-    return
-end
+using Base.Threads
+#using BenchmarkTools
 
 println("Number of threads: ", Threads.nthreads())
 
-png_output = ARGS[1]*".png"
-width = parse(Int64,ARGS[2])
-height = parse(Int64,ARGS[3])
-cam_angle = parse(Float64,ARGS[4])
-pfm_output = ARGS[1]*".pfm"
+width = 1600
+height = 900
 
 Sc = Scaling(1.0 / 10.0, 1.0 / 10.0, 1.0 / 10.0)
 
@@ -37,21 +30,26 @@ S[8] = Sphere(Translation(-0.5, -0.5, -0.5) ⊙ Sc, Mat1)
 S[9] = Sphere(Translation(0.0, 0.0, -0.5) ⊙ Sc, Mat2)
 S[10] = Sphere(Translation(0.0, 0.5, 0.0) ⊙ Sc, Mat2)
 
-R_cam = Rz(cam_angle)
 world = World(S)
-cam = Perspective(d = 2.0, t = R_cam ⊙ Translation(-1.0, 0.0, 0.0))
-hdr = hdrimg(width, height)
-ImgTr = ImageTracer(hdr, cam)
-
 flat = Flat(world)
 
-@btime ImgTr(flat)
+@threads for angle in 1:360
+    cam_angle = angle * π / 180.0
+    cam = Perspective(d = 2.0, t = Rz(cam_angle) ⊙ Translation(-1.0, 0.0, 0.0))
+    hdr = hdrimg(width, height)
+    ImgTr = ImageTracer(hdr, cam)
+    ImgTr(flat)
+    # padding
+    idx_angle = lpad(string(angle), 3, '0')
+    println("Angle: ", idx_angle)
+    filename = "./demo/demo_" * idx_angle * ".png"
+    # check if file exists
+    if isfile(filename)
+        println("File already exists: ", filename)
+        continue
+    end
+    toned_img = tone_mapping(hdr; a = 0.5, lum = 0.5, γ = 1.3)
+    save_ldrimage(get_matrix(toned_img), filename)
+end
 
-println("Saving image in ", png_output)
-toned_img = tone_mapping(hdr; a = 0.5, lum = 0.5, γ = 1.3)
-# Save the LDR image
-save_ldrimage(get_matrix(toned_img), png_output)
-println("Saved image in ", png_output)
-println("Saving image in ", pfm_output)
-write_pfm_image(hdr, pfm_output)
 println("Done")
