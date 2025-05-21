@@ -235,64 +235,66 @@ end
 end
 
 @testset "Geometry" begin
-    v1 = Vec(1.0, 2.0, 3.0)
-    v2 = Vec(1.0, 2.0, 3.0)
-    v3 = Vec(2.0, 4.0, 6.0)
-    @test v1 ≈ v2
-    @test !(v1 ≈ v3)
-    @test v1 * 2 ≈ Vec(2.0, 4.0, 6.0)
-    @test v1 / 2 ≈ Vec(0.5, 1.0, 1.5)
-    @test v1 + v2 ≈ Vec(2.0, 4.0, 6.0)
-    @test v1 - v2 ≈ Vec(0, 0, 0)
-    @test v1 ⋅ v2 ≈ 14
-    @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
-    a = Vec(1.0, 0.0, 0.0)
-    b = Vec(0.0, 1.0, 0.0)
-    c = Vec(0.0, 0.0, 1.0)
-    @test a × b ≈ c
-    @test b × c ≈ a
-    @test c × a ≈ b
-    @test c × b ≈ -a
-    point = Point(1.0, 2.0, 3.0)
-    @test_throws MethodError v1 ≈ point
-    @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
-    @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
-    @test_throws ArgumentError Normal(0.0, 0.0, 0.0)
-    normal = Normal(1.0, 2.0, 3.0)
-    @test -normal ≈ Normal(-1.0, -2.0, -3.0)
-    @test_throws MethodError v1 ≈ normal
-    @test normal * 2 ≈ Normal(2.0, 4.0, 6.0)
-    @test normal / 2 ≈ Normal(0.5, 1.0, 1.5)
-    n2 = Normal(1.0, 2.0, 3.0)
-    @test normal ≈ n2
-    p1 = Point(1.0, 2.0, 3.0)
-    p2 = Point(1.0, 2.0, 3.0)
-    @test p1 ≈ p2
-    @test_throws MethodError p1 * 2
-    @test_throws MethodError p1 / 2
+    @testset "Vectors/Point/Normal" begin
+        v1 = Vec(1.0, 2.0, 3.0)
+        v2 = Vec(1.0, 2.0, 3.0)
+        v3 = Vec(2.0, 4.0, 6.0)
+        @test v1 ≈ v2
+        @test !(v1 ≈ v3)
+        @test v1 * 2 ≈ Vec(2.0, 4.0, 6.0)
+        @test v1 / 2 ≈ Vec(0.5, 1.0, 1.5)
+        @test v1 + v2 ≈ Vec(2.0, 4.0, 6.0)
+        @test v1 - v2 ≈ Vec(0, 0, 0)
+        @test v1 ⋅ v2 ≈ 14
+        @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
+        a = Vec(1.0, 0.0, 0.0)
+        b = Vec(0.0, 1.0, 0.0)
+        c = Vec(0.0, 0.0, 1.0)
+        @test a × b ≈ c
+        @test b × c ≈ a
+        @test c × a ≈ b
+        @test c × b ≈ -a
+        point = Point(1.0, 2.0, 3.0)
+        @test_throws MethodError v1 ≈ point
+        @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
+        @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
+        @test_throws ArgumentError Normal(0.0, 0.0, 0.0)
+        normal = Normal(1.0, 2.0, 3.0)
+        @test -normal ≈ Normal(-1.0, -2.0, -3.0)
+        @test normal * 2 ≈ Normal(2.0, 4.0, 6.0)
+        @test normal / 2 ≈ Normal(0.5, 1.0, 1.5)
+        n2 = Normal(1.0, 2.0, 3.0)
+        @test normal ≈ n2
+        p1 = Point(1.0, 2.0, 3.0)
+        p2 = Point(1.0, 2.0, 3.0)
+        @test p1 ≈ p2
+        @test_throws MethodError p1 * 2
+        @test_throws MethodError p1 / 2
+    end
 
-    #Test for Norm 
-    v = Vec(1.0, 2.0, 3.0)
-    n = Normal(10.0, 20.0, 30.0)
-    p = Point(1.0, 2.0, 3.0)
-    @test squared_norm(v) ≈ 14
-    @test norm(v) ≈ sqrt(14)
-    @test squared_norm(n) ≈ 1
-    @test norm(n) ≈ 1
+    @testset "Norm" begin 
+        v = Vec(1.0, 2.0, 3.0)
+        n = Normal(10.0, 20.0, 30.0)
+        p = Point(1.0, 2.0, 3.0)
+        @test squared_norm(v) ≈ 14
+        @test norm(v) ≈ sqrt(14)
+        @test squared_norm(n) ≈ 1
+        @test norm(n) ≈ 1
 
-    @test_throws MethodError squared_norm(p)
-    @test_throws MethodError norm(p)
+        @test_throws MethodError squared_norm(p)
+        @test_throws MethodError norm(p)
 
-    #Test for normalize
-    v = Vec(3.0, 4.0, 0.0)
-    n = Normal(3.0, 4.0, 0.0)
-    v0 = normalize(v)
-    @test v0 ≈ Vec(0.6, 0.8, 0.0)
-    @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
-    n = Normal(v)
-    @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
-    v0 = Vec(0.0, 0.0, 0.0)
-    @test normalize(v0) ≈ v0
+        #Test for normalize
+        v = Vec(3.0, 4.0, 0.0)
+        n = Normal(3.0, 4.0, 0.0)
+        v0 = normalize(v)
+        @test v0 ≈ Vec(0.6, 0.8, 0.0)
+        @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
+        n = Normal(v)
+        @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
+        v0 = Vec(0.0, 0.0, 0.0)
+        @test normalize(v0) ≈ v0
+    end
 end
 
 @testset "Transformations" begin
@@ -564,9 +566,9 @@ end
         @test HR20 === nothing
     end
 
-    # test for Quadrilateral
-    @testset "Quadrilateral" begin
-        Q = Quadrilateral(Transformation(), Mat)
+    # test for Parallelogram
+    @testset "Parallelogram" begin
+        Q = Parallelogram(Transformation(), Mat)
 
         O21 = Point(0.5, 0.5, 1.0)
         ray21 = Ray(origin=O21, dir=-êz)
@@ -675,4 +677,21 @@ end
     @test pigment(SurfacePoint(0.75, 0.25)) ≈ color2
     @test pigment(SurfacePoint(0.25, 0.75)) ≈ color2
     @test pigment(SurfacePoint(0.75, 0.75)) ≈ color1
+end
+
+@testset "ONB" begin
+    pcg=PCG()
+    for i in 1:10^4
+        normal = Normal(rand_uniform(pcg), rand_uniform(pcg), rand_uniform(pcg))
+
+        e1, e2, e3 = create_onb_from_z(normal)
+        @test e3 ≈ normal
+        @test e3 ⋅ e1 ≈ 0.0 atol=1e-15
+        @test e3 ⋅ e2 ≈ 0.0 atol=1e-15
+        @test e1 ⋅ e2 ≈ 0.0 atol=1e-15
+
+        @test e1 × e2 ≈ e3
+        @test e2 × e3 ≈ e1
+        @test e3 × e1 ≈ e2 
+    end
 end
