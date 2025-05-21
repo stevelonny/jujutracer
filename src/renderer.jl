@@ -17,7 +17,7 @@ function (BRDF::DiffusiveBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, 
 end
 
 function (BRDF::SpecularBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)
-    ray_dir = Normal(in_dir)
+    ray_dir = Vec(Normal(in_dir))
     return Ray(origin = p,
                 dir = ray_dir - 2 * normal * (normal ⋅ ray_dir),
                 tmin = 10e-3,
@@ -127,7 +127,7 @@ function (P::PathTracer)(ray::Ray)
         return P.backg
     end
     
-    hit_material = repo.shape.Material
+    hit_material = repo.shape.Mat
     hit_color = hit_material.BRDF.Pigment(repo.surface_P)
     emitted_r = hit_material.Emition(repo.surface_P)
 
@@ -135,7 +135,7 @@ function (P::PathTracer)(ray::Ray)
 
     if ray.depth >= P.russian
         q = max(0.05, 1 - hit_color_lum)
-        if rand_uniform(p.rnd) > q
+        if rand_uniform(P.rnd) > q
             hit_color *= 1.0 / (1.0 - q)
         else
             return emitted_r

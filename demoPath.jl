@@ -26,7 +26,7 @@ function demo4()
     black = RGB(0.0, 0.0, 0.0)
     Mat1 = Material(UniformPigment(black), DiffusiveBRDF(CheckeredPigment(32, 32, green, red), 0.5))
     Mat2 = Material(UniformPigment(black), DiffusiveBRDF(CheckeredPigment(32, 32, blue, yellow), 0.5))
-    Mat3 = Material(UniformPigment(black), SpecularBRDF(UniformPigment(ref), 0.5))
+    Mat3 = Material(UniformPigment(black), SpecularBRDF(UniformPigment(red), 0.5))
     Mat4 = Material(UniformPigment(cyan), DiffusiveBRDF(UniformPigment(gray), 0.1))
     S = Vector{AbstractShape}(undef, 4)
     
@@ -42,10 +42,11 @@ function demo4()
     cam = Perspective(d = 2.0, t = R_cam ⊙ Translation(-2.5, 0.0, 1.0))
     hdr = hdrimg(width, height)
     ImgTr = ImageTracer(hdr, cam)
+    pcg = PCG()
 
-    flat = Flat(world)
+    path = PathTracer(world, gray, pcg, 50, 5, 2)
 
-    ImgTr(flat)
+    ImgTr(path)
 
     println("Saving image in ", png_output)
     toned_img = tone_mapping(hdr; a = 0.5, lum = 0.5, γ = 1.3)

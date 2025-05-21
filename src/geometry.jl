@@ -78,7 +78,7 @@ end
 
 # Outside constructors
 function Vec(n::Normal)
-    new(n.x, n.y, n.z)
+    return Vec(n.x, n.y, n.z)
 end
 
 #--------------------------------------------------------------------------
@@ -154,9 +154,9 @@ Base.:-(a::Normal, b::Normal) = Normal(a.x - b.x, a.y - b.y, a.z - b.z)
 Base.:-(v::T) where {T<:Union{Vec, Normal}} = T(-v.x, -v.y, -v.z)
 Base.:-(a::Point,b::Point) = Vec(a.x-b.x, a.y-b.y, a.z-b.z)
 Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal}) = a.x * b.x + a.y * b.y + a.z * b.z
-Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y * scalar, v.z * scalar)
-Base.:*(scalar::Real, v::T) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y * scalar, v.z * scalar) 
-Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y / scalar, v.z / scalar)
+Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = Vec(v.x * scalar, v.y * scalar, v.z * scalar)
+Base.:*(scalar::Real, v::T) where {T<:Union{Vec, Normal}} = Vec(v.x * scalar, v.y * scalar, v.z * scalar) 
+Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = Vec(v.x / scalar, v.y / scalar, v.z / scalar)
 Base.:≈(v1::T, v2::D) where {T<:Union{Vec, Normal}, D<:Union{Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 Base.:≈(v1::Point, v2::Point) = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 
