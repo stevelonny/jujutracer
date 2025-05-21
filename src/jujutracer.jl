@@ -2,10 +2,11 @@ module jujutracer
 
 #using
 using Images, FileIO, ImageIO
+using Base.Threads
 
 # import
 import Base:
-    +, -, *, ≈, /
+    +, -, *, ≈, /, sort
 import ColorTypes: ColorTypes, RGB
 import Colors
 
@@ -32,11 +33,18 @@ export Ray, AbstractCamera, Orthogonal, Perspective
 include("imagetracer.jl")
 export ImageTracer
 
+include("brdf.jl")
+export UniformPigment, CheckeredPigment, ImagePigment, DiffusiveBRDF, Material
+
 include("shapes.jl")
-export SurfacePoint, HitRecord, AbstractShape, Sphere, ray_intersection, Plane, World
+export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_intersection, Plane, World, Eval
 
 include("randgen.jl")
 export PCG, rand_pcg, rand_uniform, rand_unif_hemisphere
 
+include("csg.jl")
+export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal
 
+include("renderer.jl")
+export OnOff, Flat
 end # module jujutracer
