@@ -403,104 +403,192 @@ end
     color = RGB(1.0, 2.0, 3.0)
     pigment = UniformPigment(color)
     Mat = Material(pigment, DiffusiveBRDF(pigment, 0.5))
-    S = Sphere(Transformation(), Mat)
     êz = Vec(0.0, 0.0, 1.0)
     êx = Vec(1.0, 0.0, 0.0)
+    êy = Vec(0.0, 1.0, 0.0)
 
-    O1 = Point(0.0, 0.0, 2.0)
-    ray1 = Ray(origin=O1, dir=-êz)
-    HR1 = ray_intersection(S, ray1)
-    @test HR1 ≈ Point(0.0, 0.0, 1.0)
-    @test HR1.t ≈ 1.0
-    @test HR1 ≈ SurfacePoint(0.0, 0.0)
-    @test HR1.normal ≈ Normal(êz)
+    @testset "Sphere" begin
+        S = Sphere(Transformation(), Mat)
 
-    O2 = Point(3.0, 0.0, 0.0)
-    ray2 = Ray(origin=O2, dir=-êx)
-    HR2 = ray_intersection(S, ray2)
-    @test HR2 ≈ Point(1.0, 0.0, 0.0)
-    @test HR2.t ≈ 2.0
-    @test HR2 ≈ SurfacePoint(0.0, 0.5)
-    @test HR2.normal ≈ Normal(êx)
+        O1 = Point(0.0, 0.0, 2.0)
+        ray1 = Ray(origin=O1, dir=-êz)
+        HR1 = ray_intersection(S, ray1)
+        @test HR1 ≈ Point(0.0, 0.0, 1.0)
+        @test HR1.t ≈ 1.0
+        @test HR1 ≈ SurfacePoint(0.0, 0.0)
+        @test HR1.normal ≈ Normal(êz)
 
-    O3 = Point(0.0, 0.0, 0.0)
-    ray3 = Ray(origin=O3, dir=êx)
-    HR3 = ray_intersection(S, ray3)
-    @test HR3 ≈ Point(1.0, 0.0, 0.0)
-    @test HR3.t ≈ 1.0
-    @test HR3 ≈ SurfacePoint(0.0, 0.5)
-    @test HR3.normal ≈ -Normal(êx)
+        O2 = Point(3.0, 0.0, 0.0)
+        ray2 = Ray(origin=O2, dir=-êx)
+        HR2 = ray_intersection(S, ray2)
+        @test HR2 ≈ Point(1.0, 0.0, 0.0)
+        @test HR2.t ≈ 2.0
+        @test HR2 ≈ SurfacePoint(0.0, 0.5)
+        @test HR2.normal ≈ Normal(êx)
 
-    Tr = Translation(10.0, 0.0, 0.0)
-    S = Sphere(Tr, Mat)
-    
-    O4 = Tr(O1)
-    ray4 = Ray(origin=O4, dir=-êz)
-    HR4 = ray_intersection(S, ray4)
-    @test HR4 ≈ Point(10.0, 0.0, 1.0)
-    @test HR4.t ≈ 1.0
-    @test HR4 ≈ SurfacePoint(0.0, 0.0)
-    @test HR4.normal ≈ Normal(êz)
+        O3 = Point(0.0, 0.0, 0.0)
+        ray3 = Ray(origin=O3, dir=êx)
+        HR3 = ray_intersection(S, ray3)
+        @test HR3 ≈ Point(1.0, 0.0, 0.0)
+        @test HR3.t ≈ 1.0
+        @test HR3 ≈ SurfacePoint(0.0, 0.5)
+        @test HR3.normal ≈ -Normal(êx)
 
-    ray5 = Tr(ray2)
-    HR5 = ray_intersection(S, ray5)
-    @test HR5 ≈ Point(11.0, 0.0, 0.0)
-    @test HR5.t ≈ 2.0
-    @test HR5 ≈ SurfacePoint(0.0, 0.5)
-    @test HR5.normal ≈ Normal(êx)
+        Tr = Translation(10.0, 0.0, 0.0)
+        S = Sphere(Tr, Mat)
+        
+        O4 = Tr(O1)
+        ray4 = Ray(origin=O4, dir=-êz)
+        HR4 = ray_intersection(S, ray4)
+        @test HR4 ≈ Point(10.0, 0.0, 1.0)
+        @test HR4.t ≈ 1.0
+        @test HR4 ≈ SurfacePoint(0.0, 0.0)
+        @test HR4.normal ≈ Normal(êz)
 
-    O6 = inverse(Tr)(O3)
-    ray6 = Ray(origin=O6, dir=-êz)
-    HR6 = ray_intersection(S, ray6)
-    @test HR6 === nothing
+        ray5 = Tr(ray2)
+        HR5 = ray_intersection(S, ray5)
+        @test HR5 ≈ Point(11.0, 0.0, 0.0)
+        @test HR5.t ≈ 2.0
+        @test HR5 ≈ SurfacePoint(0.0, 0.5)
+        @test HR5.normal ≈ Normal(êx)
 
-    HR7 = ray_intersection(S, ray1)
-    @test HR7 === nothing
+        O6 = inverse(Tr)(O3)
+        ray6 = Ray(origin=O6, dir=-êz)
+        HR6 = ray_intersection(S, ray6)
+        @test HR6 === nothing
 
+        HR7 = ray_intersection(S, ray1)
+        @test HR7 === nothing
+    end
     # test for plane
-    P = Plane(Transformation(), Mat)
+    @testset "Plane" begin
+        P = Plane(Transformation(), Mat)
 
-    O8 = Point(0.5, 0.5, 1.0)
-    ray8 = Ray(origin=O8, dir=-êz)
-    HR8 = ray_intersection(P, ray8)
-    @test HR8 ≈ Point(0.5, 0.5, 0.0)
-    @test HR8.t ≈ 1.0
-    @test HR8 ≈ SurfacePoint(0.5, 0.5)
-    @test HR8.normal ≈ Normal(êz)
+        O8 = Point(0.5, 0.5, 1.0)
+        ray8 = Ray(origin=O8, dir=-êz)
+        HR8 = ray_intersection(P, ray8)
+        @test HR8 ≈ Point(0.5, 0.5, 0.0)
+        @test HR8.t ≈ 1.0
+        @test HR8 ≈ SurfacePoint(0.5, 0.5)
+        @test HR8.normal ≈ Normal(êz)
 
-    O9 = Point(0.2, 0.3, -2.0)
-    ray9 = Ray(origin=O9, dir=êz)
-    HR9 = ray_intersection(P, ray9)
-    @test HR9 ≈ Point(0.2, 0.3, 0.0)
-    @test HR9.t ≈ 2.0
-    @test HR9 ≈ SurfacePoint(0.2, 0.3)
-    @test HR9.normal ≈ -Normal(êz)
+        O9 = Point(0.2, 0.3, -2.0)
+        ray9 = Ray(origin=O9, dir=êz)
+        HR9 = ray_intersection(P, ray9)
+        @test HR9 ≈ Point(0.2, 0.3, 0.0)
+        @test HR9.t ≈ 2.0
+        @test HR9 ≈ SurfacePoint(0.2, 0.3)
+        @test HR9.normal ≈ -Normal(êz)
 
-    O10 = Point(1.0, 1.0, 1.0)
-    ray10 = Ray(origin=O10, dir=êx)
-    HR10 = ray_intersection(P, ray10)
-    @test HR10 === nothing
+        O10 = Point(1.0, 1.0, 1.0)
+        ray10 = Ray(origin=O10, dir=êx)
+        HR10 = ray_intersection(P, ray10)
+        @test HR10 === nothing
 
-    O11 = Point(0.0, 0.0, 0.0)
-    ray11 = Ray(origin=O11, dir=êx)
-    HR11 = ray_intersection(P, ray11)
-    @test HR11 === nothing
+        O11 = Point(0.0, 0.0, 0.0)
+        ray11 = Ray(origin=O11, dir=êx)
+        HR11 = ray_intersection(P, ray11)
+        @test HR11 === nothing
 
-    Tr2 = Translation(0.0, 0.0, 2.0)
-    P2 = Plane(Tr2, Mat)
+        Tr2 = Translation(0.0, 0.0, 2.0)
+        P2 = Plane(Tr2, Mat)
 
-    ray12 = Ray(origin=O8, dir=êz)
-    HR12 = ray_intersection(P2, ray12)
-    @test HR12 ≈ Point(0.5, 0.5, 2.0)
-    @test HR12.t ≈ 1.0
-    @test HR12 ≈ SurfacePoint(0.5, 0.5)
-    @test HR12.normal ≈ Normal(-êz)
+        ray12 = Ray(origin=O8, dir=êz)
+        HR12 = ray_intersection(P2, ray12)
+        @test HR12 ≈ Point(0.5, 0.5, 2.0)
+        @test HR12.t ≈ 1.0
+        @test HR12 ≈ SurfacePoint(0.5, 0.5)
+        @test HR12.normal ≈ Normal(-êz)
 
-    O13 = Point(0.0, 0.0, 1.0)
-    ray13 = Ray(origin=O13, dir=-êz)
-    HR13 = ray_intersection(P2, ray13)
-    @test HR13 === nothing
-end
+        O13 = Point(0.0, 0.0, 1.0)
+        ray13 = Ray(origin=O13, dir=-êz)
+        HR13 = ray_intersection(P2, ray13)
+        @test HR13 === nothing
+    end
+
+    # test for rectangle
+    @testset "Rectangle" begin
+        R = Rectangle(Transformation(), Mat)
+
+        O14 = Point(0.0, 0.0, 1.0)
+        ray14 = Ray(origin=O14, dir=-êz)
+        HR14 = ray_intersection(R, ray14)
+        @test HR14 ≈ Point(0.0, 0.0, 0.0)
+        @test HR14.t ≈ 1.0
+        @test HR14 ≈ SurfacePoint(0.5, 0.5)
+        @test HR14.normal ≈ Normal(êz)
+
+        O15 = Point(0.2, 0.3, -2.0)
+        ray15 = Ray(origin=O15, dir=êz)
+        HR15 = ray_intersection(R, ray15)
+        @test HR15 ≈ Point(0.2, 0.3, 0.0)
+        @test HR15.t ≈ 2.0
+        @test HR15 ≈ SurfacePoint(0.7, 0.8)
+        @test HR15.normal ≈ -Normal(êz)
+
+        O16 = Point(1.0, 1.0, 1.0)
+        ray16 = Ray(origin=O16, dir=êx)
+        HR16 = ray_intersection(R, ray16)
+        @test HR16 === nothing
+
+        O17 = Point(1.5, 1.5, 1.0)
+        ray17 = Ray(origin=O17, dir=-êz)
+        HR17 = ray_intersection(R, ray17)
+        @test HR17 === nothing
+
+    end
+
+    # test for triangle
+    @testset "Triangle" begin
+        T = Triangle(Transformation(), Mat)
+
+        O18 = Point(0.5, 0.5, 1.0)
+        ray18 = Ray(origin=O18, dir=-êz)
+        HR18 = ray_intersection(T, ray18)
+        @test HR18 ≈ Point(0.5, 0.5, 0.0)
+        @test HR18.t ≈ 1.0
+        @test HR18 ≈ SurfacePoint(0.5, 0.5)
+        @test HR18.normal ≈ Normal(êz)
+
+        O19 = Point(0.2, 0.3, -2.0)
+        ray19 = Ray(origin=O19, dir=êz)
+        HR19 = ray_intersection(T, ray19)
+        @test HR19 ≈ Point(0.2, 0.3, 0.0)
+        @test HR19.t ≈ 2.0
+        @test HR19 ≈ SurfacePoint(0.2, 0.3)
+        @test HR19.normal ≈ -Normal(êz)
+
+        O20 = Point(1.0, 1.0, 1.0)
+        ray20 = Ray(origin=O20, dir=êx)
+        HR20 = ray_intersection(T, ray20)
+        @test HR20 === nothing
+    end
+
+    # test for Quadrilateral
+    @testset "Quadrilateral" begin
+        Q = Quadrilateral(Transformation(), Mat)
+
+        O21 = Point(0.5, 0.5, 1.0)
+        ray21 = Ray(origin=O21, dir=-êz)
+        HR21 = ray_intersection(Q, ray21)
+        @test HR21 ≈ Point(0.5, 0.5, 0.0)
+        @test HR21.t ≈ 1.0
+        @test HR21 ≈ SurfacePoint(0.5, 0.5)
+        @test HR21.normal ≈ Normal(êz)
+
+        O22 = Point(0.2, 0.3, -2.0)
+        ray22 = Ray(origin=O22, dir=êz)
+        HR22 = ray_intersection(Q, ray22)
+        @test HR22 ≈ Point(0.2, 0.3, 0.0)
+        @test HR22.t ≈ 2.0
+        @test HR22 ≈ SurfacePoint(0.2, 0.3)
+        @test HR22.normal ≈ -Normal(êz)
+
+        O23 = Point(1.0, 1.0, 1.0)
+        ray23 = Ray(origin=O23, dir=êx)
+        HR23 = ray_intersection(Q, ray23)
+        @test HR23 === nothing
+    endend
 
 @testset "Random Generator" begin
     pcg = PCG()
