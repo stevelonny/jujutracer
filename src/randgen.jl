@@ -1,6 +1,17 @@
 #--------------------------------------------------------------
 # PCG definition
 #--------------------------------------------------------------
+"""
+    mutable struct PCG
+
+A Pseudo-Random Number Generator (PRNG) based on the PCG algorithm.
+# Fields
+- `state::UInt64`: The current state of the PCG.
+- `inc::UInt64`: The increment value used in the PCG algorithm.
+# Constructor
+- `PCG(init_state::UInt64, init_seq::UInt64)`: Creates a new PCG instance with the given initial state and sequence. Defaults are `42` and `54` respectively.
+"""
+
 mutable struct PCG
     state::UInt64
     inc::UInt64
@@ -32,8 +43,10 @@ end
     rand_pcg(pcg::PCG)::UInt32
 
 Generate a random 32-bit unsigned integer using the PCG algorithm.
-pcg::PCG: The PCG instance to use for random number generation.
-Returns a random 32-bit unsigned integer.
+# Arguments
+- pcg::PCG: The PCG instance to use for random number generation.
+# Returns
+Random `::UInt32` unsigned integer.
 """
 function rand_pcg(pcg::PCG)::UInt32
     oldstate = pcg.state
@@ -52,8 +65,10 @@ end
     rand_uniform(pcg::PCG)::Float64
     
 Generate a random floating-point number in the range [0, 1) using the PCG algorithm.
-pcg::PCG: The PCG instance to use for random number generation.
-Returns a random floating-point number in the range [0, 1).
+# Arguments
+- `pcg::PCG`: The PCG instance to use for random number generation.
+# Returns
+Random floating-point number in the range [0, 1).
 """
 function rand_uniform(pcg::PCG)::Float64
     return Float32(rand_pcg(pcg)) / UInt32(0xffffffff)
@@ -66,8 +81,10 @@ end
     rand_uniform_hemisphere(pcg::PCG)::Float64
 
 Generate a random point (x,y,z) on the unit hemisphere using the PCG algorithm.
-pcg::PCG: The PCG instance to use for random number generation.
-Returns a tuple (x, y, z) representing the coordinates of the random point on the hemisphere.
+# Arguments
+- `pcg::PCG`: The PCG instance to use for random number generation.
+# Returns
+A tuple (x, y, z) representing the coordinates of the random point on the hemisphere.
 """
 function rand_unif_hemisphere(pcg::PCG)
 
