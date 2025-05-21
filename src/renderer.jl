@@ -55,7 +55,7 @@ Flat renderer of the scene. Returns the Emition pigment of the hitten shapes
 struct PathTracer <: Function
     world::World
     backg::RGB
-    rnd::PCB
+    rnd::PCG
     n_rays::Float64
     depth::Int64
     Russian::Int64
