@@ -276,13 +276,10 @@ function _point_to_uv(box::Box, p::Point, norm::Normal)
     elseif isapprox(norm.z, 1.0; atol=1e-6)  # +Z (Front)
         u = 0.25 + nx * 0.25
         v = third + (1.0 - ny) * third
-    elseif isapprox(norm.z, -1.0; atol=1e-6) # -Z (Back)
+    else isapprox(norm.z, -1.0; atol=1e-6) # -Z (Back)
         u = 0.75 + (1.0 - nx) * 0.25
         v = third + (1.0 - ny) * third
-    else
-        error("Normal does not correspond to a box face")
     end
-
     return SurfacePoint(u, v)
 end
 
@@ -349,13 +346,14 @@ function ray_intersection(box::Box, ray::Ray)
     hit_point = inv_ray(first_hit)
     # normal
     if first_hit == t1x || first_hit == t2x
-        norm =  Normal(sign(d.x), 0.0, 0.0)
+        norm = Normal(-sign(d.x), 0.0, 0.0)
     elseif first_hit == t1y || first_hit == t2y
-        norm =  Normal(0.0, sign(d.y), 0.0)
+        norm = Normal(0.0, -sign(d.y), 0.0)
     else
-        norm =  Normal(0.0, 0.0, sign(d.z))
+        norm = Normal(0.0, 0.0, -sign(d.z))
     end
 
+    # point_to_uv needs the untransformed normal
     sur_point = _point_to_uv(box, hit_point, norm)
 
     norm = box.Tr(norm)
