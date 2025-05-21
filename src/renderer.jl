@@ -144,7 +144,7 @@ function (P::PathTracer)(ray::Ray)
 
     cum = RGB(0.0, 0.0, 0.0)
     if hit_color_lum > 0.0
-        for i in 0:P.n_rays
+        for i in 1:P.n_rays
             new_ray = hit_material.BRDF(P.rnd, ray.dir, repo.world_P, repo.normal, ray.depth + 1)
             new_rad = P(new_ray) # recursive call
             cum += hit_material.BRDF.R * new_rad # a little bit different from slides. Need to verify
