@@ -381,8 +381,93 @@ function ray_intersection_list(box::Box, ray::Ray)
     inv_ray = inverse(box.Tr)(ray)
     p1 = box.P1
     p2 = box.P2
+    O = inv_ray.origin
+    d = inv_ray.dir
 
-    # still to do...
+    # we need to make this function very fast: must be branchless
+    # precompute some values? inverse ray dir?
+    # reminder: to check if d is zero. There's no need to do it cause julia knows that 1 / 0 = Inf
+    # reminder: check ray.tmin ray.tmax
+
+    # first check x and y planes
+    t1x = (p1.x - O.x) / d.x
+    t2x = (p2.x - O.x) / d.x
+    #txmin = min(t1x, t2x)
+    #txmax = max(t1x, t2x)    
+    
+    t1y = (p1.y - O.y) / d.y
+    t2y = (p2.y - O.y) / d.y
+    #tymin = min(t1y, t2y)
+    #tymax = max(t1y, t2y)
+
+    #if txmin > tymax || tymin > txmax
+    #    return nothing
+    #end
+    #tmin = max(txmin, tymin)
+    #tmax = min(txmax, tymax)
+
+    # then check z planes
+    t1z = (p1.z - O.z) / d.z
+    t2z = (p2.z - O.z) / d.z
+    #tzmin = min(t1z, t2z)
+    #tzmax = max(t1z, t2z)
+
+    #if tmin > tzmax || tzmin > tmax
+    #    return nothing
+    #end
+
+    # more concise version but i dont really trust it
+    tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
+    tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+    if tmax < max(inv_ray.tmin, tmin)
+        return nothing
+    end
+    first_hit = tmin
+    second_hit = tmax
+
+    # still to do: _box_normal and _point_to_uv
+
+    hit_point_1 = inv_ray(first_hit)
+    hit_point_2 = inv_ray(second_hit)
+    # normal
+    if first_hit == t1x || first_hit == t2x
+        norm1 = Normal(-sign(d.x), 0.0, 0.0)
+    elseif first_hit == t1y || first_hit == t2y
+        norm1 = Normal(0.0, -sign(d.y), 0.0)
+    else
+        norm1 = Normal(0.0, 0.0, -sign(d.z))
+    end
+    if second_hit == t1x || second_hit == t2x
+        norm2 = Normal(-sign(d.x), 0.0, 0.0)
+    elseif second_hit == t1y || second_hit == t2y
+        norm2 = Normal(0.0, -sign(d.y), 0.0)
+    else
+        norm2 = Normal(0.0, 0.0, -sign(d.z))
+    end
+
+    # point_to_uv needs the untransformed normal
+    sur_point_1 = _point_to_uv(box, hit_point_1, norm1)
+    sur_point_2 = _point_to_uv(box, hit_point_2, norm2)
+    norm1 = box.Tr(norm1)
+    norm2
+
+    HR1 = HitRecord(
+        world_P = box.Tr(hit_point_1),
+        normal = norm1,
+        surface_P = sur_point_1 #= _point_to_uv(box, hit_point) =#,
+        t = first_hit,
+        ray = ray,
+        shape = box
+    )
+    HR2 = HitRecord(
+        world_P = box.Tr(hit_point_2),
+        normal = norm2,
+        surface_P = sur_point_2 #= _point_to_uv(box, hit_point) =#,
+        t = second_hit,
+        ray = ray,
+        shape = box
+    )
+    return [HR1, HR2]
 end
 
 # Solid shapes are water-tight, and can be used to create CSG shapes.
