@@ -193,20 +193,26 @@ end
 #---------------------------------------------------------
 # Box
 #---------------------------------------------------------
-"""
-Left Front Down
-"""
-function _LFD(P1::Point, P2::Point)
-    return Point(min(P1.x, P2.x), min(P1.y, P2.y), min(P1.z, P2.z))
-end
 
 """
-Right Back Up
-"""
-function _RBU(P1::Point, P2::Point)
-    return Point(max(P1.x, P2.x), max(P1.y, P2.y), max(P1.z, P2.z))
-end
+    struct Box <: AbstractSolid
 
+An axis-aligned box (rectangular cuboid) defined by two opposite corners.
+# Fields
+- `Tr::AbstractTransformation`: The transformation applied to the box.
+- `P1::Point`: One corner of the box (minimum x, y, z).
+- `P2::Point`: The opposite corner of the box (maximum x, y, z).
+- `Mat::Material`: The material of the box.
+# Constructors
+- `Box()`: Creates a new box with default transformation and material.
+- `Box(Tr::AbstractTransformation)`: Creates a new box with the specified transformation and default material.
+- `Box(P1::Point, P2::Point)`: Creates a new box with the specified corners and default transformation and material.
+- `Box(P1::Point, P2::Point, Mat::Material)`: Creates a new box with the specified corners and material.
+- `Box(Tr::AbstractTransformation, P1::Point, P2::Point)`: Creates a new box with the specified transformation and corners.
+- `Box(Tr::AbstractTransformation, P1::Point, P2::Point, Mat::Material)`: Creates a new box with the specified transformation, corners, and material.
+- `Box(Mat::Material)`: Creates a new box with the default transformation and the specified material.
+- `Box(Tr::AbstractTransformation, Mat::Material)`: Creates a new box with the specified transformation and material.
+"""
 struct Box <: AbstractSolid
     Tr::AbstractTransformation
     P1::Point
@@ -236,20 +242,47 @@ struct Box <: AbstractSolid
     end
 end
 
+"""
+    _LFD(P1::Point, P2::Point)
+
+Return the corner of the box with the minimum x, y, z coordinates (Left, Front, Down).
+"""
+function _LFD(P1::Point, P2::Point)
+    return Point(min(P1.x, P2.x), min(P1.y, P2.y), min(P1.z, P2.z))
+end
 
 """
+    _RBU(P1::Point, P2::Point)
+
+Return the corner of the box with the maximum x, y, z coordinates (Right, Back, Up).
+"""
+function _RBU(P1::Point, P2::Point)
+    return Point(max(P1.x, P2.x), max(P1.y, P2.y), max(P1.z, P2.z))
+end
+
+"""
+    _point_to_uv(box::Box, p::Point, norm::Normal)
+
+Calculate the UV coordinates of a point on the surface of a box, using the surface normal to determine which face is being mapped.
+The UV mapping follows a cube-unwrapping scheme:
 ```
-   +----+------+-----+----+
-   |xxxx| Top  |xxxxxxxxxx|
-   |xxxx| (Y+) |xxxxxxxxxx| 
-   +----+------+-----+----+2/3
-   |Left|Front |Right|Back|
-   |(X-)|(Z+)  |(X+) |(Z-)|
-   +----+------+-----+----+1/3
-   |xxxx|Bottom|xxxxxxxxxx|
-   |xxxx| (Y-) |xxxxxxxxxx|
-   +----+------+-----+----+
+    +----+------+-----+----+
+    |xxxx| Top  |xxxxxxxxxx|
+    |xxxx| (Y+) |xxxxxxxxxx| 
+2/3 +----+------+-----+----+
+    |Left|Front |Right|Back|
+    |(X-)|(Z+)  |(X+) |(Z-)|
+1/3 +----+------+-----+----+
+    |xxxx|Bottom|xxxxxxxxxx|
+    |xxxx| (Y-) |xxxxxxxxxx|
+    +----+------+-----+----+
 ```
+# Arguments
+- `box::Box`: The box shape.
+- `p::Point`: The point on the box surface (in local box coordinates).
+- `norm::Normal`: The untransformed normal at the point, used to determine which face is being mapped.
+# Returns
+- `SurfacePoint`: The UV coordinates `(u, v)` of the point on the box surface.
 """
 function _point_to_uv(box::Box, p::Point, norm::Normal)
     # Transform point to box local space
@@ -283,6 +316,17 @@ function _point_to_uv(box::Box, p::Point, norm::Normal)
     return SurfacePoint(u, v)
 end
 
+"""
+    ray_intersection(box::Box, ray::Ray)
+
+Calculate the intersection of a ray and a box.
+# Arguments
+- `box::Box`: The box to be intersected.
+- `ray::Ray`: The ray to intersect with the box.
+# Returns
+- `HitRecord`: The hit record of the first intersection, if any.
+- `nothing`: If no intersection occurs.
+"""
 function ray_intersection(box::Box, ray::Ray)
     inv_ray = inverse(box.Tr)(ray)
     p1 = box.P1
@@ -368,6 +412,16 @@ function ray_intersection(box::Box, ray::Ray)
     )
 end
 
+"""
+    internal(box::Box, P::Point)
+
+Check if a point is inside the box.
+# Arguments
+- `box::Box`: The box to check.
+- `P::Point`: The point to check.
+# Returns
+- `Bool`: `true` if the point is inside the box, `false` otherwise.
+"""
 function internal(box::Box, P::Point)
     p = inverse(box.Tr)(P)
     cond_x = p.x <= box.P2.x && p.x >= box.P1.x
@@ -377,6 +431,17 @@ function internal(box::Box, P::Point)
     return (cond_x && cond_y && cond_z) ? true : false
 end
 
+"""
+    ray_intersection_list(box::Box, ray::Ray)
+
+Calculate all intersections of a ray with a box.
+# Arguments
+- `box::Box`: The box to be intersected.
+- `ray::Ray`: The ray to intersect with the box.
+# Returns
+- `Vector{HitRecord}`: A list of hit records for the two intersections, ordered by distance.
+- `nothing`: If no intersections occur.
+"""
 function ray_intersection_list(box::Box, ray::Ray)
     inv_ray = inverse(box.Tr)(ray)
     p1 = box.P1
