@@ -404,7 +404,7 @@ end
     # test for sphere
     color = RGB(1.0, 2.0, 3.0)
     pigment = UniformPigment(color)
-    Mat = Material(pigment, DiffusiveBRDF(pigment, 0.5))
+    Mat = Material(pigment, DiffusiveBRDF(pigment))
     êz = Vec(0.0, 0.0, 1.0)
     êx = Vec(1.0, 0.0, 0.0)
     êy = Vec(0.0, 1.0, 0.0)
@@ -693,5 +693,31 @@ end
         @test e1 × e2 ≈ e3
         @test e2 × e3 ≈ e1
         @test e3 × e1 ≈ e2 
+    end
+end
+
+@testset "Fornace" begin
+    pcg = PCG()
+    white = RGB(1.0, 1.0, 1.0)
+    for i in 1:1000
+        emitted_r = rand_uniform(pcg)
+        reflect = rand_uniform(pcg) * 0.9
+        mat = Material(UniformPigment(white * emitted_r), DiffusiveBRDF(UniformPigment(white * reflect)))
+
+        S = Vector{AbstractShape}(undef, 1)
+        S[1] = Sphere(mat)
+        world = World(S)
+
+        path = PathTracer(world, white * 0.5, pcg, 1, 1000, 1001)
+
+        O = Point(rand_uniform(pcg) * 0.5, rand_uniform(pcg) * 0.5, rand_uniform(pcg) * 0.5)
+        v = Vec(rand_uniform(pcg), rand_uniform(pcg), rand_uniform(pcg))
+        ray = Ray(origin = O, dir = v)
+        color = path(ray)
+
+        exp = emitted_r / (1.0 - reflect)
+        @test color.r ≈ exp atol = 10e-5
+        @test color.g ≈ exp atol = 10e-5
+        @test color.b ≈ exp atol = 10e-5
     end
 end

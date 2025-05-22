@@ -112,7 +112,7 @@ struct Material
     function Material()
         new(
             UniformPigment(RGB(1.0, 1.0, 1.0)),
-            DiffusiveBRDF(UniformPigment(RGB(1.0, 1.0, 1.0)), 0.5)
+            DiffusiveBRDF(UniformPigment(RGB(1.0, 1.0, 1.0)))
         )
     end
     function Material(Emition::AbstractPigment, BRDF::AbstractBRDF)
