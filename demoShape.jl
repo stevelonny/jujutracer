@@ -26,10 +26,11 @@ function demo3()
     Mat1 = Material(CheckeredPigment(32, 32, green, red), DiffusiveBRDF(UniformPigment(gray), 0.5))
     Mat2 = Material(CheckeredPigment(32, 32, blue, yellow), DiffusiveBRDF(UniformPigment(gray), 0.5))
     Mat3 = Material(CheckeredPigment(32, 32, cyan, magenta), DiffusiveBRDF(UniformPigment(gray), 0.5))
-    S = Vector{AbstractShape}(undef, 2)
+    S = Vector{AbstractShape}(undef, 3)
     
     S[1] = Triangle(Point(0.0, 0.5, 0.0), Point(0.0, -0.5, 0.0), Point(0.0, 0.0, 0.7), Mat1)
-    S[2] = Rectangle(Mat2)
+    S[2] = Sphere(Translation(0.0, 1.0, 0.0), Mat3)
+    S[3] = Plane(Mat2)
 
 
     R_cam = Rz(cam_angle)
