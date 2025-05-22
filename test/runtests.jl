@@ -589,6 +589,75 @@ end
         HR23 = ray_intersection(Q, ray23)
         @test HR23 === nothing
     end
+
+    # Box shape tests
+    @testset "Box" begin
+        B = Box(Transformation(), Mat)
+        # Centered unit box, default transformation
+
+        # Ray from +z, should hit top face at (0,0,0.5)
+        O1 = Point(0.0, 0.0, 2.0)
+        ray1 = Ray(origin=O1, dir=Vec(0.0, 0.0, -1.0))
+        HR1 = ray_intersection(B, ray1)
+        @test HR1 ≈ Point(0.0, 0.0, 0.5)
+        @test HR1.t ≈ 1.5
+        @test HR1.normal ≈ Normal(0.0, 0.0, 1.0)
+
+        # Ray from -z, should hit bottom face at (0,0,-0.5)
+        O2 = Point(0.0, 0.0, -2.0)
+        ray2 = Ray(origin=O2, dir=Vec(0.0, 0.0, 1.0))
+        HR2 = ray_intersection(B, ray2)
+        @test HR2 ≈ Point(0.0, 0.0, -0.5)
+        @test HR2.t ≈ 1.5
+        @test HR2.normal ≈ Normal(0.0, 0.0, -1.0)
+
+        # Ray from +x, should hit right face at (0.5,0,0)
+        O3 = Point(2.0, 0.0, 0.0)
+        ray3 = Ray(origin=O3, dir=Vec(-1.0, 0.0, 0.0))
+        HR3 = ray_intersection(B, ray3)
+        @test HR3 ≈ Point(0.5, 0.0, 0.0)
+        @test HR3.t ≈ 1.5
+        @test HR3.normal ≈ Normal(1.0, 0.0, 0.0)
+
+        # Ray from -x, should hit left face at (-0.5,0,0)
+        O4 = Point(-2.0, 0.0, 0.0)
+        ray4 = Ray(origin=O4, dir=Vec(1.0, 0.0, 0.0))
+        HR4 = ray_intersection(B, ray4)
+        @test HR4 ≈ Point(-0.5, 0.0, 0.0)
+        @test HR4.t ≈ 1.5
+        @test HR4.normal ≈ Normal(-1.0, 0.0, 0.0)
+
+        # Ray from +y, should hit back face at (0,0.5,0)
+        O5 = Point(0.0, 2.0, 0.0)
+        ray5 = Ray(origin=O5, dir=Vec(0.0, -1.0, 0.0))
+        HR5 = ray_intersection(B, ray5)
+        @test HR5 ≈ Point(0.0, 0.5, 0.0)
+        @test HR5.t ≈ 1.5
+        @test HR5.normal ≈ Normal(0.0, 1.0, 0.0)
+
+        # Ray from -y, should hit front face at (0,-0.5,0)
+        O6 = Point(0.0, -2.0, 0.0)
+        ray6 = Ray(origin=O6, dir=Vec(0.0, 1.0, 0.0))
+        HR6 = ray_intersection(B, ray6)
+        @test HR6 ≈ Point(0.0, -0.5, 0.0)
+        @test HR6.t ≈ 1.5
+        @test HR6.normal ≈ Normal(0.0, -1.0, 0.0)
+
+        # Ray missing the box
+        O7 = Point(2.0, 2.0, 2.0)
+        ray7 = Ray(origin=O7, dir=Vec(1.0, 1.0, 1.0))
+        HR7 = ray_intersection(B, ray7)
+        @test HR7 === nothing
+
+        # Internal point test
+        @test internal(B, Point(0.0, 0.0, 0.0)) == true
+        @test internal(B, Point(0.6, 0.0, 0.0)) == false
+
+        # Box with custom corners
+        B2 = Box(Point(1.0, 2.0, 3.0), Point(2.0, 4.0, 5.0), Mat)
+        @test internal(B2, Point(1.5, 3.0, 4.0)) == true
+        @test internal(B2, Point(0.0, 0.0, 0.0)) == false
+    end
 end
 
 @testset "CSG" begin
