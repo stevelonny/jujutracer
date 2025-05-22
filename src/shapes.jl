@@ -190,6 +190,350 @@ function internal(S::Sphere, P::Point)
     return (squared_norm(Vec(inverse(S.Tr)(P))) <= 1.0) ? true : false
 end
 
+#---------------------------------------------------------
+# Box
+#---------------------------------------------------------
+
+"""
+    struct Box <: AbstractSolid
+
+An axis-aligned box (rectangular cuboid) defined by two opposite corners.
+# Fields
+- `Tr::AbstractTransformation`: The transformation applied to the box.
+- `P1::Point`: One corner of the box (minimum x, y, z).
+- `P2::Point`: The opposite corner of the box (maximum x, y, z).
+- `Mat::Material`: The material of the box.
+# Constructors
+- `Box()`: Creates a new box with default transformation and material.
+- `Box(Tr::AbstractTransformation)`: Creates a new box with the specified transformation and default material.
+- `Box(P1::Point, P2::Point)`: Creates a new box with the specified corners and default transformation and material.
+- `Box(P1::Point, P2::Point, Mat::Material)`: Creates a new box with the specified corners and material.
+- `Box(Tr::AbstractTransformation, P1::Point, P2::Point)`: Creates a new box with the specified transformation and corners.
+- `Box(Tr::AbstractTransformation, P1::Point, P2::Point, Mat::Material)`: Creates a new box with the specified transformation, corners, and material.
+- `Box(Mat::Material)`: Creates a new box with the default transformation and the specified material.
+- `Box(Tr::AbstractTransformation, Mat::Material)`: Creates a new box with the specified transformation and material.
+"""
+struct Box <: AbstractSolid
+    Tr::AbstractTransformation
+    P1::Point
+    P2::Point
+    Mat::Material
+
+    function Box(P1::Point, P2::Point)
+        new(Transformation(), _LFD(P1, P2), _RBU(P1, P2), Material())
+    end
+    function Box(Tr::AbstractTransformation)
+        new(Tr, Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 0.5), Material())
+    end
+    function Box(Tr::AbstractTransformation, P1::Point, P2::Point)
+        new(Tr, _LFD(P1, P2), _RBU(P1, P2), Material())
+    end
+    function Box(Tr::AbstractTransformation, P1::Point, P2::Point, Mat::Material)
+        new(Tr, _LFD(P1, P2), _RBU(P1, P2), Mat)
+    end
+    function Box(P1::Point, P2::Point, Mat::Material)
+        new(Transformation(), _LFD(P1, P2), _RBU(P1, P2), Mat)
+    end
+    function Box(Mat::Material)
+        new(Transformation(), Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 0.5), Mat)
+    end
+    function Box(Tr::AbstractTransformation, Mat::Material)
+        new(Tr, Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 0.5), Mat)
+    end
+end
+
+"""
+    _LFD(P1::Point, P2::Point)
+
+Return the corner of the box with the minimum x, y, z coordinates (Left, Front, Down).
+"""
+function _LFD(P1::Point, P2::Point)
+    return Point(min(P1.x, P2.x), min(P1.y, P2.y), min(P1.z, P2.z))
+end
+
+"""
+    _RBU(P1::Point, P2::Point)
+
+Return the corner of the box with the maximum x, y, z coordinates (Right, Back, Up).
+"""
+function _RBU(P1::Point, P2::Point)
+    return Point(max(P1.x, P2.x), max(P1.y, P2.y), max(P1.z, P2.z))
+end
+
+"""
+    _point_to_uv(box::Box, p::Point, norm::Normal)
+
+Calculate the UV coordinates of a point on the surface of a box, using the surface normal to determine which face is being mapped.
+The UV mapping follows a cube-unwrapping scheme:
+```
+    +----+------+-----+----+
+    |xxxx| Top  |xxxxxxxxxx|
+    |xxxx| (Y+) |xxxxxxxxxx| 
+2/3 +----+------+-----+----+
+    |Left|Front |Right|Back|
+    |(X-)|(Z+)  |(X+) |(Z-)|
+1/3 +----+------+-----+----+
+    |xxxx|Bottom|xxxxxxxxxx|
+    |xxxx| (Y-) |xxxxxxxxxx|
+    +----+------+-----+----+
+```
+# Arguments
+- `box::Box`: The box shape.
+- `p::Point`: The point on the box surface (in local box coordinates).
+- `norm::Normal`: The untransformed normal at the point, used to determine which face is being mapped.
+# Returns
+- `SurfacePoint`: The UV coordinates `(u, v)` of the point on the box surface.
+"""
+function _point_to_uv(box::Box, p::Point, norm::Normal)
+    # Transform point to box local space
+    # Get box bounds
+    p1, p2 = box.P1, box.P2
+
+    # Normalize coordinates to [0,1] on each axis
+    nx = (p.x - p1.x) / (p2.x - p1.x)
+    ny = (p.y - p1.y) / (p2.y - p1.y)
+    nz = (p.z - p1.z) / (p2.z - p1.z)
+    third = 1.0 / 3.0
+    if isapprox(norm.x, 1.0; atol=1e-6)      # +X (Right)
+        u = 0.5 + nz * 0.25
+        v = third + (1.0 - ny) * third
+    elseif isapprox(norm.x, -1.0; atol=1e-6) # -X (Left)
+        u = 0.0 + nz * 0.25
+        v = third + (1.0 - ny) * third
+    elseif isapprox(norm.y, 1.0; atol=1e-6)  # +Y (Top)
+        u = 0.25 + nx * 0.25
+        v = 2.0*third + (1.0 - nz) * third
+    elseif isapprox(norm.y, -1.0; atol=1e-6) # -Y (Bottom)
+        u = 0.25 + nx * 0.25
+        v = 0.0 + nz * third
+    elseif isapprox(norm.z, 1.0; atol=1e-6)  # +Z (Front)
+        u = 0.25 + nx * 0.25
+        v = third + (1.0 - ny) * third
+    else isapprox(norm.z, -1.0; atol=1e-6) # -Z (Back)
+        u = 0.75 + (1.0 - nx) * 0.25
+        v = third + (1.0 - ny) * third
+    end
+    return SurfacePoint(u, v)
+end
+
+"""
+    ray_intersection(box::Box, ray::Ray)
+
+Calculate the intersection of a ray and a box.
+# Arguments
+- `box::Box`: The box to be intersected.
+- `ray::Ray`: The ray to intersect with the box.
+# Returns
+- `HitRecord`: The hit record of the first intersection, if any.
+- `nothing`: If no intersection occurs.
+"""
+function ray_intersection(box::Box, ray::Ray)
+    inv_ray = inverse(box.Tr)(ray)
+    p1 = box.P1
+    p2 = box.P2
+    O = inv_ray.origin
+    d = inv_ray.dir
+
+    # we need to make this function very fast: must be branchless
+    # precompute some values? inverse ray dir?
+    # reminder: to check if d is zero. There's no need to do it cause julia knows that 1 / 0 = Inf
+    # reminder: check ray.tmin ray.tmax
+
+    # first check x and y planes
+    t1x = (p1.x - O.x) / d.x
+    t2x = (p2.x - O.x) / d.x
+    #txmin = min(t1x, t2x)
+    #txmax = max(t1x, t2x)    
+    
+    t1y = (p1.y - O.y) / d.y
+    t2y = (p2.y - O.y) / d.y
+    #tymin = min(t1y, t2y)
+    #tymax = max(t1y, t2y)
+
+    #if txmin > tymax || tymin > txmax
+    #    return nothing
+    #end
+    #tmin = max(txmin, tymin)
+    #tmax = min(txmax, tymax)
+
+    # then check z planes
+    t1z = (p1.z - O.z) / d.z
+    t2z = (p2.z - O.z) / d.z
+    #tzmin = min(t1z, t2z)
+    #tzmax = max(t1z, t2z)
+
+    #if tmin > tzmax || tzmin > tmax
+    #    return nothing
+    #end
+
+    # more concise version but i dont really trust it
+    tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
+    tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+    if tmax < max(inv_ray.tmin, tmin)
+        return nothing
+    end
+    first_hit = tmin > inv_ray.tmin ? tmin : tmax
+    
+    #tmin = max(tmin, tzmin)
+    #tmax = min(tmax, tzmax)
+
+    #if tmin > inv_ray.tmin && tmax < inv_ray.tmax
+    #    first_hit = tmin
+    #elseif tmax > inv_ray.tmin && tmax < inv_ray.tmax
+    #    first_hit = tmax
+    #else
+    #    return nothing
+    #end
+
+    # still to do: _box_normal and _point_to_uv
+
+    hit_point = inv_ray(first_hit)
+    # normal
+    if first_hit == t1x || first_hit == t2x
+        norm = Normal(-sign(d.x), 0.0, 0.0)
+    elseif first_hit == t1y || first_hit == t2y
+        norm = Normal(0.0, -sign(d.y), 0.0)
+    else
+        norm = Normal(0.0, 0.0, -sign(d.z))
+    end
+
+    # point_to_uv needs the untransformed normal
+    sur_point = _point_to_uv(box, hit_point, norm)
+
+    norm = box.Tr(norm)
+
+    return HitRecord(
+        world_P = box.Tr(hit_point),
+        normal = norm ,
+        surface_P = sur_point #= _point_to_uv(box, hit_point) =#,
+        t = first_hit,
+        ray = ray,
+        shape = box
+    )
+end
+
+"""
+    internal(box::Box, P::Point)
+
+Check if a point is inside the box.
+# Arguments
+- `box::Box`: The box to check.
+- `P::Point`: The point to check.
+# Returns
+- `Bool`: `true` if the point is inside the box, `false` otherwise.
+"""
+function internal(box::Box, P::Point)
+    p = inverse(box.Tr)(P)
+    cond_x = p.x <= box.P2.x && p.x >= box.P1.x
+    cond_y = p.y <= box.P2.y && p.y >= box.P1.y
+    cond_z = p.z <= box.P2.z && p.z >= box.P1.z
+
+    return (cond_x && cond_y && cond_z) ? true : false
+end
+
+"""
+    ray_intersection_list(box::Box, ray::Ray)
+
+Calculate all intersections of a ray with a box.
+# Arguments
+- `box::Box`: The box to be intersected.
+- `ray::Ray`: The ray to intersect with the box.
+# Returns
+- `Vector{HitRecord}`: A list of hit records for the two intersections, ordered by distance.
+- `nothing`: If no intersections occur.
+"""
+function ray_intersection_list(box::Box, ray::Ray)
+    inv_ray = inverse(box.Tr)(ray)
+    p1 = box.P1
+    p2 = box.P2
+    O = inv_ray.origin
+    d = inv_ray.dir
+
+    # we need to make this function very fast: must be branchless
+    # precompute some values? inverse ray dir?
+    # reminder: to check if d is zero. There's no need to do it cause julia knows that 1 / 0 = Inf
+    # reminder: check ray.tmin ray.tmax
+
+    # first check x and y planes
+    t1x = (p1.x - O.x) / d.x
+    t2x = (p2.x - O.x) / d.x
+    #txmin = min(t1x, t2x)
+    #txmax = max(t1x, t2x)    
+    
+    t1y = (p1.y - O.y) / d.y
+    t2y = (p2.y - O.y) / d.y
+    #tymin = min(t1y, t2y)
+    #tymax = max(t1y, t2y)
+
+    #if txmin > tymax || tymin > txmax
+    #    return nothing
+    #end
+    #tmin = max(txmin, tymin)
+    #tmax = min(txmax, tymax)
+
+    # then check z planes
+    t1z = (p1.z - O.z) / d.z
+    t2z = (p2.z - O.z) / d.z
+    #tzmin = min(t1z, t2z)
+    #tzmax = max(t1z, t2z)
+
+    #if tmin > tzmax || tzmin > tmax
+    #    return nothing
+    #end
+
+    # more concise version but i dont really trust it
+    tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
+    tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+    if tmax < max(inv_ray.tmin, tmin)
+        return nothing
+    end
+    first_hit = tmin
+    second_hit = tmax
+
+    # still to do: _box_normal and _point_to_uv
+
+    hit_point_1 = inv_ray(first_hit)
+    hit_point_2 = inv_ray(second_hit)
+    # normal
+    if first_hit == t1x || first_hit == t2x
+        norm1 = Normal(-sign(d.x), 0.0, 0.0)
+    elseif first_hit == t1y || first_hit == t2y
+        norm1 = Normal(0.0, -sign(d.y), 0.0)
+    else
+        norm1 = Normal(0.0, 0.0, -sign(d.z))
+    end
+    if second_hit == t1x || second_hit == t2x
+        norm2 = Normal(-sign(d.x), 0.0, 0.0)
+    elseif second_hit == t1y || second_hit == t2y
+        norm2 = Normal(0.0, -sign(d.y), 0.0)
+    else
+        norm2 = Normal(0.0, 0.0, -sign(d.z))
+    end
+
+    # point_to_uv needs the untransformed normal
+    sur_point_1 = _point_to_uv(box, hit_point_1, norm1)
+    sur_point_2 = _point_to_uv(box, hit_point_2, norm2)
+    norm1 = box.Tr(norm1)
+    norm2
+
+    HR1 = HitRecord(
+        world_P = box.Tr(hit_point_1),
+        normal = norm1,
+        surface_P = sur_point_1 #= _point_to_uv(box, hit_point) =#,
+        t = first_hit,
+        ray = ray,
+        shape = box
+    )
+    HR2 = HitRecord(
+        world_P = box.Tr(hit_point_2),
+        normal = norm2,
+        surface_P = sur_point_2 #= _point_to_uv(box, hit_point) =#,
+        t = second_hit,
+        ray = ray,
+        shape = box
+    )
+    return [HR1, HR2]
+end
 
 # Solid shapes are water-tight, and can be used to create CSG shapes.
 
@@ -300,16 +644,14 @@ function ray_intersection(pl::Plane, ray::Ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
 
-    if d != 0
-        t = -Oz / d.z
-        if t > inv_ray.tmin && t < inv_ray.tmax
-            first_hit = t
-        else
-            return nothing
-        end
+    
+    t = -Oz / d.z
+    if t > inv_ray.tmin && t < inv_ray.tmax
+        first_hit = t
     else
         return nothing
     end
+    
 
     hit_point = inv_ray(first_hit)
     norm = pl.Tr(_plane_normal(hit_point, ray.dir))
@@ -404,16 +746,14 @@ function ray_intersection(S::Rectangle, ray::Ray)
     O = inv_ray.origin
     d = inv_ray.dir
 
-    if d != 0
-        t = -O.z / d.z
-        if t > inv_ray.tmin && t < inv_ray.tmax && abs(inv_ray(t).x) <= 0.5 && abs(inv_ray(t).y) <= 0.5 
-            first_hit = t
-        else
-            return nothing
-        end
+    
+    t = -O.z / d.z
+    if t > inv_ray.tmin && t < inv_ray.tmax && abs(inv_ray(t).x) <= 0.5 && abs(inv_ray(t).y) <= 0.5 
+        first_hit = t
     else
         return nothing
     end
+    
 
     hit_point = inv_ray(first_hit)
     norm = S.Tr(_rectangle_normal(hit_point, ray.dir))
@@ -426,6 +766,7 @@ function ray_intersection(S::Rectangle, ray::Ray)
         shape = S
     )
 end
+
 
 # AbstractShape is not guaranteed to be water-tight, and cannot be used to create CSG shapes. (for now)
 # For example, a plane is not water-tight.
