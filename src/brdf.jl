@@ -86,7 +86,7 @@ end
 """
     SpecularBRDF(Pigment::AbstractPigment, R::Float64)
 
-Specular BRDF with reflective pigment `Pigment` and refelectance `R`
+Specular BRDF with reflective pigment `Pigment` and reflectance `R`
 Methods in [`renderer.jl`](@ref)
 """
 struct SpecularBRDF <: AbstractBRDF

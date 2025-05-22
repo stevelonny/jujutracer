@@ -6,7 +6,7 @@ using Base.Threads
 
 # import
 import Base:
-    +, -, *, ≈, /, sort
+    +, -, *, ≈, /, sort, sign
 import ColorTypes: ColorTypes, RGB
 import Colors
 

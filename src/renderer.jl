@@ -87,7 +87,7 @@ end
 
 function (F::Flat)(ray::Ray)
     repo = ray_intersection(F.world, ray)
-    return (isnothing(repo)) ? RGB(0.0, 0.0, 0.0) : repo.shape.Mat.Emition(repo.surface_P)
+    return (isnothing(repo)) ? RGB(0.0, 0.0, 0.0) : repo.shape.Mat.Emition(repo.surface_P) + repo.shape.Mat.BRDF.Pigment(repo.surface_P)
 end
 
 #---------------------------------------------------------
@@ -147,7 +147,7 @@ function (P::PathTracer)(ray::Ray)
         for i in 1:P.n_rays
             new_ray = hit_material.BRDF(P.rnd, ray.dir, repo.world_P, repo.normal, ray.depth + 1)
             new_rad = P(new_ray) # recursive call
-            cum += hit_material.BRDF.R * new_rad # a little bit different from slides. Need to verify
+            cum += hit_color * new_rad # a little bit different from slides. Need to verify
         end
     end
 

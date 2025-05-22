@@ -93,23 +93,31 @@ function ray_intersection(S::Sphere, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
-    Δrid = (O ⋅ d)^2 - squared_norm(d) * (squared_norm(O) - 1)
+    # precompute common values, probably not needed as the compiler is already smart enough
+    O_dot_d = O ⋅ d # its sign tells wheter the ray is moving towards or away from ray's origin
+    d_squared = squared_norm(d)
+    O_squared = squared_norm(O) # position of the ray's origin
+    
+    if O_squared > 1.0 && O_dot_d > 0.0
+       return nothing
+    end
 
-    if Δrid > 0
-        sqrot = sqrt(Δrid)
-        t1 = (-O ⋅ d - sqrot) / squared_norm(d)
-        t2 = (-O ⋅ d + sqrot) / squared_norm(d)
-        if t1 > inv_ray.tmin && t1 < inv_ray.tmax
-            first_hit = t1
-        elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
-            first_hit = t2
-        else
-            return nothing
-        end
+    Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
+    
+    Δrid <= 0.0 && return nothing
+
+    sqrot = sqrt(Δrid)
+    t1 = (-O_dot_d - sqrot) / d_squared
+    t2 = (-O_dot_d + sqrot) / d_squared
+    first_hit = if t1 > inv_ray.tmin && t1 < inv_ray.tmax
+        t1
+    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
+        t2
     else
         return nothing
     end
 
+    # point in the sphere's local coordinates
     hit_point = inv_ray(first_hit)
     return HitRecord(
         world_P = S.Tr(hit_point),
@@ -300,13 +308,9 @@ function ray_intersection(pl::Plane, ray::Ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
 
-    if d != 0
-        t = -Oz / d.z
-        if t > inv_ray.tmin && t < inv_ray.tmax
-            first_hit = t
-        else
-            return nothing
-        end
+    t = -Oz / d.z
+    if t > inv_ray.tmin && t < inv_ray.tmax
+        first_hit = t
     else
         return nothing
     end

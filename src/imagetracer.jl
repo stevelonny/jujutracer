@@ -49,7 +49,7 @@ Apply a function to each pixel in the image. Leverage parallel processing for pe
 """
 function (it::ImageTracer)(fun::Function)
     # remember: julia is column-major order
-    @threads for i in eachindex(IndexCartesian(), it.img.img)
+    #= @threads  =#for i in eachindex(IndexCartesian(), it.img.img)
         col_pixel = i[2] - 1
         row_pixel = i[1] - 1
         ray = it(col_pixel, row_pixel)

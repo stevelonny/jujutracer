@@ -470,9 +470,11 @@ Creates an orthonormal basis (ONB) from a given normal vector.
 - A tuple of three `Vec` objects representing the orthonormal basis vectors.
   - `e1`: The first basis vector.
   - `e2`: The second basis vector.
-  - `normal`: The normal vector itself."""
+  - `normal`: The normal vector itself.
+"""
 function create_onb_from_z(normal::Union{Vec, Normal}) 
-    sign = copysign(1.0, normal.z)
+    #sign = copysign(1.0, normal.z)
+    sign = Base.sign(normal.z)
     a = -1.0 / (sign + normal.z)
     b = normal.x * normal.y * a
 
