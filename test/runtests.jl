@@ -417,7 +417,7 @@ end
         HR1 = ray_intersection(S, ray1)
         @test HR1 ≈ Point(0.0, 0.0, 1.0)
         @test HR1.t ≈ 1.0
-        @test HR1 ≈ SurfacePoint(0.0, 0.0)
+        @test HR1 ≈ SurfacePoint(0.5, 0.0)
         @test HR1.normal ≈ Normal(êz)
 
         O2 = Point(3.0, 0.0, 0.0)
@@ -425,7 +425,7 @@ end
         HR2 = ray_intersection(S, ray2)
         @test HR2 ≈ Point(1.0, 0.0, 0.0)
         @test HR2.t ≈ 2.0
-        @test HR2 ≈ SurfacePoint(0.0, 0.5)
+        @test HR2 ≈ SurfacePoint(0.5, 0.5)
         @test HR2.normal ≈ Normal(êx)
 
         O3 = Point(0.0, 0.0, 0.0)
@@ -433,7 +433,7 @@ end
         HR3 = ray_intersection(S, ray3)
         @test HR3 ≈ Point(1.0, 0.0, 0.0)
         @test HR3.t ≈ 1.0
-        @test HR3 ≈ SurfacePoint(0.0, 0.5)
+        @test HR3 ≈ SurfacePoint(0.5, 0.5)
         @test HR3.normal ≈ -Normal(êx)
 
         Tr = Translation(10.0, 0.0, 0.0)
@@ -444,14 +444,14 @@ end
         HR4 = ray_intersection(S, ray4)
         @test HR4 ≈ Point(10.0, 0.0, 1.0)
         @test HR4.t ≈ 1.0
-        @test HR4 ≈ SurfacePoint(0.0, 0.0)
+        @test HR4 ≈ SurfacePoint(0.5, 0.0)
         @test HR4.normal ≈ Normal(êz)
 
         ray5 = Tr(ray2)
         HR5 = ray_intersection(S, ray5)
         @test HR5 ≈ Point(11.0, 0.0, 0.0)
         @test HR5.t ≈ 2.0
-        @test HR5 ≈ SurfacePoint(0.0, 0.5)
+        @test HR5 ≈ SurfacePoint(0.5, 0.5)
         @test HR5.normal ≈ Normal(êx)
 
         O6 = inverse(Tr)(O3)
