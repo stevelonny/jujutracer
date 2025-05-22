@@ -261,8 +261,8 @@ end
         @test_throws ArgumentError Normal(0.0, 0.0, 0.0)
         normal = Normal(1.0, 2.0, 3.0)
         @test -normal ≈ Normal(-1.0, -2.0, -3.0)
-        @test normal * 2 ≈ Normal(2.0, 4.0, 6.0)
-        @test normal / 2 ≈ Normal(0.5, 1.0, 1.5)
+        @test normal * 2 ≈ Vec(2.0, 4.0, 6.0) / sqrt(14.0)
+        @test normal / 2 ≈ Vec(0.5, 1.0, 1.5) / sqrt(14.0)
         n2 = Normal(1.0, 2.0, 3.0)
         @test normal ≈ n2
         p1 = Point(1.0, 2.0, 3.0)
