@@ -76,7 +76,7 @@ Calculate the UV coordinates of a point on the sphere.
 - `SurfacePoint`: the UV coordinates of the point on the sphere
 """
 function _point_to_uv(S::Sphere, p::Point)
-    return SurfacePoint(atan(p.y, p.x) / (2.0 * π), acos(p.z) / π)
+    return SurfacePoint(0.5 + atan(p.y, p.x) / (2.0 * π), acos(p.z) / π)
 end
 
 """
