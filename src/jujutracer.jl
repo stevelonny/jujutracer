@@ -18,6 +18,9 @@ greet() = println("Hello World!")
 # includes
 include("color.jl")
 
+include("randgen.jl")
+export PCG, rand_pcg, rand_uniform, rand_unif_hemisphere
+
 include("hdrimg.jl")
 export hdrimg, valid_coordinates, average_luminosity, tone_mapping
 
@@ -41,9 +44,6 @@ export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, ray_inters
 
 include("meshes.jl")
 export Mat, Sarrus, Triangle, Parallelogram, ray_intersection
-
-include("randgen.jl")
-export PCG, rand_pcg, rand_uniform, rand_unif_hemisphere
 
 include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, internal
