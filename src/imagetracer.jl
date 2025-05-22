@@ -14,6 +14,10 @@ Convenient struct to hold the hdrimage and the camera.
 # Constructor
 - `ImageTracer()`: Creates a new `ImageTracer` with a default HDR image and an orthogonal camera.
 - `ImageTracer(img::hdrimg, camera::AbstractCamera)`: Creates a new `ImageTracer` with the specified HDR image and camera.
+
+# Functional Usage
+- `ImageTracer(fun::Function)`: tracing the image with `fun` renderer.
+- `ImageTracer(fun::Function, AA::Int64, pcg::PCG)`: tracing the image with `fun` renderer and Anti-Aliasing method with AA^2 subdivision in the pixel.
 """
 struct ImageTracer
     img::hdrimg
@@ -49,12 +53,30 @@ Apply a function to each pixel in the image. Leverage parallel processing for pe
 """
 function (it::ImageTracer)(fun::Function)
     # remember: julia is column-major order
-    @threads for i in eachindex(IndexCartesian(), it.img.img)
+    #= @threads  =#for i in eachindex(IndexCartesian(), it.img.img)
         col_pixel = i[2] - 1
         row_pixel = i[1] - 1
         ray = it(col_pixel, row_pixel)
         color = fun(ray)
         # we could remove boundary checks with @inbounds
         it.img[col_pixel, row_pixel] = color
+    end
+end
+
+function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
+    for i in eachindex(IndexCartesian(), it.img.img)
+        col_pixel = i[2] - 1
+        row_pixel = i[1] - 1
+        color = RGB(0.0, 0.0, 0.0)
+        for j in 1:AA
+            for k in 1:AA
+                ray = it(col_pixel, 
+                        row_pixel, 
+                        u_pixel = (j - 1 + rand_uniform(pcg)) / AA, 
+                        v_pixel = (k - 1 + rand_uniform(pcg)) / AA)
+                color += fun(ray)
+            end
+        end
+        it.img[col_pixel, row_pixel] = color / (AA^2)
     end
 end

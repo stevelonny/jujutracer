@@ -235,64 +235,66 @@ end
 end
 
 @testset "Geometry" begin
-    v1 = Vec(1.0, 2.0, 3.0)
-    v2 = Vec(1.0, 2.0, 3.0)
-    v3 = Vec(2.0, 4.0, 6.0)
-    @test v1 ≈ v2
-    @test !(v1 ≈ v3)
-    @test v1 * 2 ≈ Vec(2.0, 4.0, 6.0)
-    @test v1 / 2 ≈ Vec(0.5, 1.0, 1.5)
-    @test v1 + v2 ≈ Vec(2.0, 4.0, 6.0)
-    @test v1 - v2 ≈ Vec(0, 0, 0)
-    @test v1 ⋅ v2 ≈ 14
-    @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
-    a = Vec(1.0, 0.0, 0.0)
-    b = Vec(0.0, 1.0, 0.0)
-    c = Vec(0.0, 0.0, 1.0)
-    @test a × b ≈ c
-    @test b × c ≈ a
-    @test c × a ≈ b
-    @test c × b ≈ -a
-    point = Point(1.0, 2.0, 3.0)
-    @test_throws MethodError v1 ≈ point
-    @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
-    @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
-    @test_throws ArgumentError Normal(0.0, 0.0, 0.0)
-    normal = Normal(1.0, 2.0, 3.0)
-    @test -normal ≈ Normal(-1.0, -2.0, -3.0)
-    @test_throws MethodError v1 ≈ normal
-    @test normal * 2 ≈ Normal(2.0, 4.0, 6.0)
-    @test normal / 2 ≈ Normal(0.5, 1.0, 1.5)
-    n2 = Normal(1.0, 2.0, 3.0)
-    @test normal ≈ n2
-    p1 = Point(1.0, 2.0, 3.0)
-    p2 = Point(1.0, 2.0, 3.0)
-    @test p1 ≈ p2
-    @test_throws MethodError p1 * 2
-    @test_throws MethodError p1 / 2
+    @testset "Vectors/Point/Normal" begin
+        v1 = Vec(1.0, 2.0, 3.0)
+        v2 = Vec(1.0, 2.0, 3.0)
+        v3 = Vec(2.0, 4.0, 6.0)
+        @test v1 ≈ v2
+        @test !(v1 ≈ v3)
+        @test v1 * 2 ≈ Vec(2.0, 4.0, 6.0)
+        @test v1 / 2 ≈ Vec(0.5, 1.0, 1.5)
+        @test v1 + v2 ≈ Vec(2.0, 4.0, 6.0)
+        @test v1 - v2 ≈ Vec(0, 0, 0)
+        @test v1 ⋅ v2 ≈ 14
+        @test -v1 ≈ Vec(-1.0, -2.0, -3.0)
+        a = Vec(1.0, 0.0, 0.0)
+        b = Vec(0.0, 1.0, 0.0)
+        c = Vec(0.0, 0.0, 1.0)
+        @test a × b ≈ c
+        @test b × c ≈ a
+        @test c × a ≈ b
+        @test c × b ≈ -a
+        point = Point(1.0, 2.0, 3.0)
+        @test_throws MethodError v1 ≈ point
+        @test_throws MethodError v1 * 2 ≈ Point(2.0, 4.0, 6.0)
+        @test_throws MethodError v1 / 2 ≈ Point(0.5, 1.0, 1.5)
+        @test_throws ArgumentError Normal(0.0, 0.0, 0.0)
+        normal = Normal(1.0, 2.0, 3.0)
+        @test -normal ≈ Normal(-1.0, -2.0, -3.0)
+        @test normal * 2 ≈ Vec(2.0, 4.0, 6.0) / sqrt(14.0)
+        @test normal / 2 ≈ Vec(0.5, 1.0, 1.5) / sqrt(14.0)
+        n2 = Normal(1.0, 2.0, 3.0)
+        @test normal ≈ n2
+        p1 = Point(1.0, 2.0, 3.0)
+        p2 = Point(1.0, 2.0, 3.0)
+        @test p1 ≈ p2
+        @test_throws MethodError p1 * 2
+        @test_throws MethodError p1 / 2
+    end
 
-    #Test for Norm 
-    v = Vec(1.0, 2.0, 3.0)
-    n = Normal(10.0, 20.0, 30.0)
-    p = Point(1.0, 2.0, 3.0)
-    @test squared_norm(v) ≈ 14
-    @test norm(v) ≈ sqrt(14)
-    @test squared_norm(n) ≈ 1
-    @test norm(n) ≈ 1
+    @testset "Norm" begin 
+        v = Vec(1.0, 2.0, 3.0)
+        n = Normal(10.0, 20.0, 30.0)
+        p = Point(1.0, 2.0, 3.0)
+        @test squared_norm(v) ≈ 14
+        @test norm(v) ≈ sqrt(14)
+        @test squared_norm(n) ≈ 1
+        @test norm(n) ≈ 1
 
-    @test_throws MethodError squared_norm(p)
-    @test_throws MethodError norm(p)
+        @test_throws MethodError squared_norm(p)
+        @test_throws MethodError norm(p)
 
-    #Test for normalize
-    v = Vec(3.0, 4.0, 0.0)
-    n = Normal(3.0, 4.0, 0.0)
-    v0 = normalize(v)
-    @test v0 ≈ Vec(0.6, 0.8, 0.0)
-    @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
-    n = Normal(v)
-    @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
-    v0 = Vec(0.0, 0.0, 0.0)
-    @test normalize(v0) ≈ v0
+        #Test for normalize
+        v = Vec(3.0, 4.0, 0.0)
+        n = Normal(3.0, 4.0, 0.0)
+        v0 = normalize(v)
+        @test v0 ≈ Vec(0.6, 0.8, 0.0)
+        @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
+        n = Normal(v)
+        @test n.x ≈ 0.6 && n.y ≈ 0.8 && n.z ≈ 0.0
+        v0 = Vec(0.0, 0.0, 0.0)
+        @test normalize(v0) ≈ v0
+    end
 end
 
 @testset "Transformations" begin
@@ -402,7 +404,7 @@ end
     # test for sphere
     color = RGB(1.0, 2.0, 3.0)
     pigment = UniformPigment(color)
-    Mat = Material(pigment, DiffusiveBRDF(pigment, 0.5))
+    Mat = Material(pigment, DiffusiveBRDF(pigment))
     êz = Vec(0.0, 0.0, 1.0)
     êx = Vec(1.0, 0.0, 0.0)
     êy = Vec(0.0, 1.0, 0.0)
@@ -415,7 +417,7 @@ end
         HR1 = ray_intersection(S, ray1)
         @test HR1 ≈ Point(0.0, 0.0, 1.0)
         @test HR1.t ≈ 1.0
-        @test HR1 ≈ SurfacePoint(0.0, 0.0)
+        @test HR1 ≈ SurfacePoint(0.5, 0.0)
         @test HR1.normal ≈ Normal(êz)
 
         O2 = Point(3.0, 0.0, 0.0)
@@ -423,7 +425,7 @@ end
         HR2 = ray_intersection(S, ray2)
         @test HR2 ≈ Point(1.0, 0.0, 0.0)
         @test HR2.t ≈ 2.0
-        @test HR2 ≈ SurfacePoint(0.0, 0.5)
+        @test HR2 ≈ SurfacePoint(0.5, 0.5)
         @test HR2.normal ≈ Normal(êx)
 
         O3 = Point(0.0, 0.0, 0.0)
@@ -431,7 +433,7 @@ end
         HR3 = ray_intersection(S, ray3)
         @test HR3 ≈ Point(1.0, 0.0, 0.0)
         @test HR3.t ≈ 1.0
-        @test HR3 ≈ SurfacePoint(0.0, 0.5)
+        @test HR3 ≈ SurfacePoint(0.5, 0.5)
         @test HR3.normal ≈ -Normal(êx)
 
         Tr = Translation(10.0, 0.0, 0.0)
@@ -442,14 +444,14 @@ end
         HR4 = ray_intersection(S, ray4)
         @test HR4 ≈ Point(10.0, 0.0, 1.0)
         @test HR4.t ≈ 1.0
-        @test HR4 ≈ SurfacePoint(0.0, 0.0)
+        @test HR4 ≈ SurfacePoint(0.5, 0.0)
         @test HR4.normal ≈ Normal(êz)
 
         ray5 = Tr(ray2)
         HR5 = ray_intersection(S, ray5)
         @test HR5 ≈ Point(11.0, 0.0, 0.0)
         @test HR5.t ≈ 2.0
-        @test HR5 ≈ SurfacePoint(0.0, 0.5)
+        @test HR5 ≈ SurfacePoint(0.5, 0.5)
         @test HR5.normal ≈ Normal(êx)
 
         O6 = inverse(Tr)(O3)
@@ -744,4 +746,47 @@ end
     @test pigment(SurfacePoint(0.75, 0.25)) ≈ color2
     @test pigment(SurfacePoint(0.25, 0.75)) ≈ color2
     @test pigment(SurfacePoint(0.75, 0.75)) ≈ color1
+end
+
+@testset "ONB" begin
+    pcg=PCG()
+    for i in 1:10^4
+        normal = Normal(rand_uniform(pcg), rand_uniform(pcg), rand_uniform(pcg))
+
+        e1, e2, e3 = create_onb_from_z(normal)
+        @test e3 ≈ normal
+        @test e3 ⋅ e1 ≈ 0.0 atol=1e-15
+        @test e3 ⋅ e2 ≈ 0.0 atol=1e-15
+        @test e1 ⋅ e2 ≈ 0.0 atol=1e-15
+
+        @test e1 × e2 ≈ e3
+        @test e2 × e3 ≈ e1
+        @test e3 × e1 ≈ e2 
+    end
+end
+
+@testset "Fornace" begin
+    pcg = PCG()
+    white = RGB(1.0, 1.0, 1.0)
+    for i in 1:1000
+        emitted_r = rand_uniform(pcg)
+        reflect = rand_uniform(pcg) * 0.9
+        mat = Material(UniformPigment(white * emitted_r), DiffusiveBRDF(UniformPigment(white * reflect)))
+
+        S = Vector{AbstractShape}(undef, 1)
+        S[1] = Sphere(mat)
+        world = World(S)
+
+        path = PathTracer(world, white * 0.5, pcg, 1, 1000, 1001)
+
+        O = Point(rand_uniform(pcg) * 0.5, rand_uniform(pcg) * 0.5, rand_uniform(pcg) * 0.5)
+        v = Vec(rand_uniform(pcg), rand_uniform(pcg), rand_uniform(pcg))
+        ray = Ray(origin = O, dir = v)
+        color = path(ray)
+
+        exp = emitted_r / (1.0 - reflect)
+        @test color.r ≈ exp atol = 10e-5
+        @test color.g ≈ exp atol = 10e-5
+        @test color.b ≈ exp atol = 10e-5
+    end
 end

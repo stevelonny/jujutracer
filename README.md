@@ -37,13 +37,29 @@ julia demo.jl <output_file> <width> <height> <cam_angle>
 ```
 
 #### CSG Showacase
-A demo scene is provided for showcasing Constructive Solid Geometry capabilities. `demoCSG.jl` provides a perspective view of a few operations between 3 identical spheres translated along the three axis: union between 3 spheres, union of 2 spheres from which is substracted a 3rd one, and finally the intersection of all 3 spheres. Rotations are applied to the CSG shapes. Usage of the script is similar to `demo.jl`.
+A demo scene is provided for showcasing Constructive Solid Geometry capabilities. `demoCSG.jl` provides a perspective view of a few operations between 3 identical spheres translated along the three axis: union between 3 spheres, union of 2 spheres from which is substracted a 3rd one, and finally the intersection of all 3 spheres. Rotations are applied to the CSG shapes.
+
+Usage of the script is similar to `demo.jl`:
 ```bash
 julia demoCSG.jl <output_file> <width> <height> <cam_angle>
 ```
 
-### Multi-thread support
-The code leverages multi-threading in a clean way simply by parallelizing each ray fired using the `@threads` keyword. The following results have been obtained on a Windows 10 machine powered by an i5-10300H using julia 1.11.4, running both demo scenes illustrated previously at a resolution of `1920x1080`.
+### Demo Path
+A demo scene is provided for showcasing the path-tracer algorithm implemented. The scene is composed by a checkered diffusive plane used as a floor, which cut in half a reflective red sphere. Hovering the floor there is a checkered diffusive sphere, and a bright sky is provided.
+
+Usage of the script is the same:
+```bash
+julia demoPath.jl <output_file> <width> <height> <cam_angle>
+```
+<div align="center">
+
+![Reflective](path.png)
+
+</div>
+
+### ~~Multi-thread support~~
+See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)
+<!-- The code leverages multi-threading in a clean way simply by parallelizing each ray fired using the `@threads` keyword. The following results have been obtained on a Windows 10 machine powered by an i5-10300H using julia 1.11.4, running both demo scenes illustrated previously at a resolution of `1920x1080`.
 ```powershell
 C:\Users\steve\projects\jujutracer> julia -t 1 bench.jl
   Activating project at `C:\Users\steve\projects\jujutracer`
@@ -67,10 +83,10 @@ To leverage multi-thread, launch `julia` with the correct flag `t` and the numbe
 julia -t auto demo.jl <output_file> <width> <height> <cam_angle>
 julia -t auto demoCSG.jl <output_file> <width> <height> <cam_angle>
 ```
-
+ -->
 #### Animation
-`demogif.jl` creates 360 png images of the [`demo.jl`](#demo-version) scene by rotating the camera around the z-axis. The images can then be used as frames to generate a GIF. This script leverages multi-threading by paralallelizing the frame generation again with the `@threads` macro. It will save into the `demo` folder, and won't overwrite existing frames, so that the process can be interrupted and recovered at a later moment. With the parallalization the generated frames won't be in order.
-To launche execute:
+`demogif.jl` creates 360 png images of the [`demo.jl`](#demo-version) scene by rotating the camera around the z-axis. The images can then be used as frames to generate a GIF. This script leverages multi-threading by paralallelizing the frame generation with the `@threads` macro. It will save into the `demo` folder, and won't overwrite existing frames, so that the process can be interrupted and recovered at a later moment. With the parallalization the generated frames won't be in order.
+To launch execute:
 ```bash
 julia -t auto demogif.jl
 ```

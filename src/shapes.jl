@@ -76,7 +76,7 @@ Calculate the UV coordinates of a point on the sphere.
 - `SurfacePoint`: the UV coordinates of the point on the sphere
 """
 function _point_to_uv(S::Sphere, p::Point)
-    return SurfacePoint(atan(p.y, p.x) / (2.0 * π), acos(p.z) / π)
+    return SurfacePoint(0.5 + atan(p.y, p.x) / (2.0 * π), acos(p.z) / π)
 end
 
 """
@@ -93,23 +93,31 @@ function ray_intersection(S::Sphere, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
-    Δrid = (O ⋅ d)^2 - squared_norm(d) * (squared_norm(O) - 1)
+    # precompute common values, probably not needed as the compiler is already smart enough
+    O_dot_d = O ⋅ d # its sign tells wheter the ray is moving towards or away from ray's origin
+    d_squared = squared_norm(d)
+    O_squared = squared_norm(O) # position of the ray's origin
+    
+    if O_squared > 1.0 && O_dot_d > 0.0
+       return nothing
+    end
 
-    if Δrid > 0
-        sqrot = sqrt(Δrid)
-        t1 = (-O ⋅ d - sqrot) / squared_norm(d)
-        t2 = (-O ⋅ d + sqrot) / squared_norm(d)
-        if t1 > inv_ray.tmin && t1 < inv_ray.tmax
-            first_hit = t1
-        elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
-            first_hit = t2
-        else
-            return nothing
-        end
+    Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
+    
+    Δrid <= 0.0 && return nothing
+
+    sqrot = sqrt(Δrid)
+    t1 = (-O_dot_d - sqrot) / d_squared
+    t2 = (-O_dot_d + sqrot) / d_squared
+    first_hit = if t1 > inv_ray.tmin && t1 < inv_ray.tmax
+        t1
+    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
+        t2
     else
         return nothing
     end
 
+    # point in the sphere's local coordinates
     hit_point = inv_ray(first_hit)
     return HitRecord(
         world_P = S.Tr(hit_point),
@@ -644,7 +652,6 @@ function ray_intersection(pl::Plane, ray::Ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
 
-    
     t = -Oz / d.z
     if t > inv_ray.tmin && t < inv_ray.tmax
         first_hit = t
@@ -901,40 +908,3 @@ Base.:≈(h::HitRecord, p::Point) = h.world_P ≈ p
 Base.:≈(h::HitRecord, s::SurfacePoint) = h.surface_P ≈ s
 Base.:≈(h::HitRecord, r::Ray) = h.ray ≈ r
 Base.:≈(s1::SurfacePoint, s2::SurfacePoint) = s1.u ≈ s2.u && s1.v ≈ s2.v
-
-#---------------------------------------------------------
-# BRDF Methods
-#---------------------------------------------------------
-
-"""
-    Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
-
-Return color of the diffused ray regarldless its icoming or outcoming direction.
-"""
-function Eval(BRDF::DiffusiveBRDF, normal::Normal, in_dir::Vec, out_dir::Vec, p::SurfacePoint)
-    return BRDF.Pigment(p) * BRDF.R / π
-end 
-
-function (U::UniformPigment)(p::SurfacePoint)
-    return U.color
-end
-
-function (C::CheckeredPigment)(p::SurfacePoint)
-    x = floor(Int, p.u * C.col)
-    y = floor(Int, p.v * C.row)
-
-    x = (x < C.col) ? x : C.col - 1
-    y = (y < C.row) ? y : C.row - 1
-
-    return ((x + y) % 2 == 0) ? C.dark : C.bright
-end
-
-function (I::ImagePigment)(p::SurfacePoint)
-    x = floor(Int, p.u * I.img.w)
-    y = floor(Int, p.v * I.img.h)
-
-    x = (x < I.img.w) ? x : I.img.w - 1
-    y = (y < I.img.h) ? y : I.img.h - 1
-
-    return I.img[x, y]
-end

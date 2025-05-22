@@ -14,7 +14,7 @@ A struct representing a ray in 3D space.
 """
 struct Ray
     origin::Point
-    dir::Vec 
+    dir::Vec
     tmin::Float64 
     tmax::Float64
     depth::Int

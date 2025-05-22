@@ -78,7 +78,7 @@ end
 
 # Outside constructors
 function Vec(n::Normal)
-    new(n.x, n.y, n.z)
+    return Vec(n.x, n.y, n.z)
 end
 
 #--------------------------------------------------------------------------
@@ -154,10 +154,11 @@ Base.:-(a::Normal, b::Normal) = Normal(a.x - b.x, a.y - b.y, a.z - b.z)
 Base.:-(v::T) where {T<:Union{Vec, Normal}} = T(-v.x, -v.y, -v.z)
 Base.:-(a::Point,b::Point) = Vec(a.x-b.x, a.y-b.y, a.z-b.z)
 Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal}) = a.x * b.x + a.y * b.y + a.z * b.z
-Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y * scalar, v.z * scalar)
-Base.:*(scalar::Real, v::T) where {T<:Union{Vec, Normal}} = T(v.x * scalar, v.y * scalar, v.z * scalar) 
-Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = T(v.x / scalar, v.y / scalar, v.z / scalar)
-Base.:≈(v1::T, v2::T) where {T<:Union{Point, Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
+Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = Vec(v.x * scalar, v.y * scalar, v.z * scalar)
+Base.:*(scalar::Real, v::T) where {T<:Union{Vec, Normal}} = Vec(v.x * scalar, v.y * scalar, v.z * scalar) 
+Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = Vec(v.x / scalar, v.y / scalar, v.z / scalar)
+Base.:≈(v1::T, v2::D) where {T<:Union{Vec, Normal}, D<:Union{Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
+Base.:≈(v1::Point, v2::Point) = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 
 """
     a ⋅ b
@@ -455,3 +456,30 @@ Defines an approximate equality operator `≈` for geometric transformations.
 Two transformations `a` and `b` are considered approximately equal if both their transformation matrices (`M`) and their inverses (`inv`) are approximately equal.
 """
 Base.:≈(a::AbstractTransformation,b::AbstractTransformation) = a.M ≈ b.M && a.inv ≈ b.inv
+
+#--------------------------------------------------------------------------
+# ONB
+#--------------------------------------------------------------------------
+""" 
+    create_onb_from_z(normal::Union{Vec, Normal})
+
+Creates an orthonormal basis (ONB) from a given normal vector.
+# Arguments
+- `normal::Union{Vec, Normal}`: The NORMAL vector from which to create the ONB. It can be a `Vec` or `Normal`.
+# Returns
+- A tuple of three `Vec` objects representing the orthonormal basis vectors.
+  - `e1`: The first basis vector.
+  - `e2`: The second basis vector.
+  - `normal`: The normal vector itself.
+"""
+function create_onb_from_z(normal::Union{Vec, Normal}) 
+    #sign = copysign(1.0, normal.z)
+    sign = Base.sign(normal.z)
+    a = -1.0 / (sign + normal.z)
+    b = normal.x * normal.y * a
+
+    e1= Vec(1.0 + sign * normal.x * normal.x * a, sign * b, -sign * normal.x)
+    e2= Vec(b, sign + normal.y * normal.y * a, -normal.y)
+
+    return e1, e2, normal
+end

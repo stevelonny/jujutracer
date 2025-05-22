@@ -208,6 +208,30 @@ function read_pfm_image(io)
     return img
 end
 
+"""
+    read_pfm_image(filename::String)
+
+Read a PFM image from an input stream.
+# Arguments
+- `filename::String`: The filename ofthe image, expected to be .pfm.
+# Returns
+- `hdrimg`: The HDR image read from the PFM file.
+# Raises
+- `InvalidPfmFileFormat`: If the PFM file format is invalid or if there are issues reading the file.
+"""
+function read_pfm_image(filename::String)
+    # Check if the file extension is valid
+    if !(endswith(filename, ".pfm"))
+        throw(InvalidPfmFileFormat("Invalid file extension. Only .pfm is supported."))
+    end
+    io = IOBuffer()
+    open(filename, "r") do file
+        write(io, file)
+    end
+    seekstart(io)
+    return read_pfm_image(io)
+end
+
 #-------------------------------------------------------------
 # PFM file - Write
 #-------------------------------------------------------------
