@@ -3,6 +3,7 @@
   - Rectangle
   - Triangle
   - Parallelogram
+  - Box
 - Constructive Solid Geometry [#10](https://github.com/stevelonny/jujutracer/pull/10)
 - Implement `Pigment` types and rudimental `BRDF` methods
 - Implement `Flat` renderer
