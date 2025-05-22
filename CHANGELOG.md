@@ -1,18 +1,21 @@
 # HEAD
+- Implement `PathTracer` renderer [#20](https://github.com/stevelonny/jujutracer/pull/18)
 - Add new shapes [#18](https://github.com/stevelonny/jujutracer/pull/18):
   - Rectangle
   - Triangle
   - Parallelogram
 - PCG random generator implemented [#17](https://github.com/stevelonny/jujutracer/pull/17)
-- Add basic multi-threaded support [#19](https://github.com/stevelonny/jujutracer/pull/19)
+- ~~Add basic multi-threaded support [#19](https://github.com/stevelonny/jujutracer/pull/19)~~ See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)
 - Constructive Solid Geometry [#10](https://github.com/stevelonny/jujutracer/pull/10)
 - Implement `Pigment` types and rudimental `BRDF` methods
 - Implement `Flat` renderer
+## Bugfixes
+- Fix `read_pfm_file` which incorrectly would reset the reading buffer after each read line
 
 # Version 0.2.1
 
 ## Bugfixes
-- Fixed `write_pfm_file` write to file [#9](https://github.com/stevelonny/jujutracer/issues/7)
+- Fix `write_pfm_file` write to file [#9](https://github.com/stevelonny/jujutracer/issues/7)
 - Change `Shape` -> `AbstractShape`
 - Update documentation in `shapes.jl`
 - Correct typo `ray_interception` -> `ray_intersection`
