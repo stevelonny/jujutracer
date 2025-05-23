@@ -144,22 +144,34 @@ function ray_intersection_list(S::Sphere, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
-    Δrid = (O ⋅ d)^2 - squared_norm(d) * (squared_norm(O) - 1)
+    # precompute common values, probably not needed as the compiler is already smart enough
+    O_dot_d = O ⋅ d # its sign tells wheter the ray is moving towards or away from ray's origin
+    d_squared = squared_norm(d)
+    O_squared = squared_norm(O) # position of the ray's origin
+    
+    if O_squared > 1.0 && O_dot_d > 0.0
+       return nothing
+    end
 
-    if Δrid > 0
-        sqrot = sqrt(Δrid)
-        t1 = (-O ⋅ d - sqrot) / squared_norm(d)
-        t2 = (-O ⋅ d + sqrot) / squared_norm(d)
-        if t1 > inv_ray.tmin && t1 < inv_ray.tmax
-            first_hit = t1
-            second_hit = t2
-        elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
-            first_hit = t2
-            second_hit = t1
-        else
-            return nothing
-        end
+    Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
+    
+    Δrid <= 0.0 && return nothing
+
+    sqrot = sqrt(Δrid)
+    t1 = (-O_dot_d - sqrot) / d_squared
+    t2 = (-O_dot_d + sqrot) / d_squared
+    if t1 > inv_ray.tmin && t1 < inv_ray.tmax
+        first_hit = t1
+        second_hit = t2
+    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
+        first_hit = t2
+        second_hit = t1
     else
+        return nothing
+    end
+
+    # when a ray is originated inside the sphere, the equation gives also the solution of the intersection in the opposite direction
+    if signbit(first_hit) || signbit(second_hit) 
         return nothing
     end
 
@@ -505,7 +517,6 @@ function ray_intersection_list(box::Box, ray::Ray)
     first_hit = tmin
     second_hit = tmax
 
-    # still to do: _box_normal and _point_to_uv
 
     hit_point_1 = inv_ray(first_hit)
     hit_point_2 = inv_ray(second_hit)
