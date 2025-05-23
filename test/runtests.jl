@@ -660,6 +660,24 @@ end
         @test internal(B2, Point(1.5, 3.0, 4.0)) == true
         @test internal(B2, Point(0.0, 0.0, 0.0)) == false
     end
+
+    @testset "Cylinder" begin
+        C = Cylinder()
+
+        ray1 = Ray(origin = Point(2.0, 0.0, 0.0),
+                    dir = Vec(-1.0, 0.0, 0.0))
+        repo1 = ray_intersection_list(C, ray1)
+        @test !isnothing(repo1)
+        @test repo1[1].normal ≈ -ray1.dir
+        @test repo1[2].normal ≈ -ray1.dir
+
+        ray2 = Ray(origin = Point(0.0, 0.0, 3.0),
+                    dir = Vec(0.0, 0.0, -1.0))
+        repo2 = ray_intersection_list(C, ray2)
+        #@test !isnothing(repo2)
+        #@test repo2[1].normal ≈ -ray2.dir
+        #@test repo2[2].normal ≈ -ray2.dir
+    end
 end
 
 @testset "Random Generator" begin
