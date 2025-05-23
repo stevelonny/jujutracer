@@ -301,6 +301,9 @@ function _point_to_uv(box::Box, p::Point, norm::Normal)
     nx = (p.x - p1.x) / (p2.x - p1.x)
     ny = (p.y - p1.y) / (p2.y - p1.y)
     nz = (p.z - p1.z) / (p2.z - p1.z)
+    if isnan(nx) || isnan(ny) || isnan(nz)
+        return SurfacePoint(0.0, 0.0)
+    end
     third = 1.0 / 3.0
     if isapprox(norm.x, 1.0; atol=1e-6)      # +X (Right)
         u = 0.5 + nz * 0.25
@@ -380,7 +383,7 @@ function ray_intersection(box::Box, ray::Ray)
     if tmax < max(inv_ray.tmin, tmin)
         return nothing
     end
-    first_hit = tmin > inv_ray.tmin ? tmin : tmax
+    first_hit = tmin > inv_ray.tmin ? tmin : (tmax < inv_ray.tmax ? tmax : nothing)
     
     #tmin = max(tmin, tzmin)
     #tmax = min(tmax, tzmax)
@@ -492,9 +495,13 @@ function ray_intersection_list(box::Box, ray::Ray)
     # more concise version but i dont really trust it
     tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
     tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
-    if tmax < max(inv_ray.tmin, tmin)
+    if tmax < max(inv_ray.tmin, tmin) || tmax > inv_ray.tmax
         return nothing
     end
+    if tmin < inv_ray.tmin || tmin > inv_ray.tmax
+        return nothing
+    end
+    
     first_hit = tmin
     second_hit = tmax
 
@@ -522,7 +529,7 @@ function ray_intersection_list(box::Box, ray::Ray)
     sur_point_1 = _point_to_uv(box, hit_point_1, norm1)
     sur_point_2 = _point_to_uv(box, hit_point_2, norm2)
     norm1 = box.Tr(norm1)
-    norm2
+    norm2 = box.Tr(norm2)
 
     HR1 = HitRecord(
         world_P = box.Tr(hit_point_1),
