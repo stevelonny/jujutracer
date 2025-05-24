@@ -78,9 +78,8 @@ Calculates the intersection of a ray with the union of two solid shapes.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(U::CSGUnion, ray::Ray)
-    inv_ray = inverse(U.Tr)(ray) # ray in the un-transformed union system
-    HR1 = ray_intersection(U.Sh1, inv_ray)
-    HR2 = ray_intersection(U.Sh2, inv_ray)
+    HR1 = ray_intersection(U.Sh1, ray)
+    HR2 = ray_intersection(U.Sh2, ray)
 
     if isnothing(HR1)
         if isnothing(HR2)
@@ -157,8 +156,7 @@ Calculates the intersection of a ray with the difference of two solid shapes.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(D::CSGDifference, ray::Ray)
-    inv_ray = inverse(D.Tr)(ray) # ray in the un-transformed difference system
-    HR_list = ray_intersection_list(D, inv_ray)
+    HR_list = ray_intersection_list(D, ray)
     return isnothing(HR_list) ? nothing : HR_list[1]
 end
 
@@ -227,8 +225,7 @@ Calculates the intersection of a ray with the intersection of two solid shapes.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(I::CSGIntersection, ray::Ray)
-    inv_ray = inverse(I.Tr)(ray) # ray in the un-transformed intersection system
-    HR_list = ray_intersection_list(I, inv_ray)
+    HR_list = ray_intersection_list(I, ray)
     return isnothing(HR_list) ? nothing : HR_list[1]
 end
 

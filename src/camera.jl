@@ -35,7 +35,7 @@ Return the point along the ray at distance `t` from the origin.
 """
 function (r::Ray)(t::Float64)
     if t < r.tmin || t > r.tmax
-        throw(ArgumentError("t must be in the range [$(r.tmin), $(r.tmax)]"))
+        throw(ArgumentError("t (= $(t)) must be in the range [$(r.tmin), $(r.tmax)]"))
     else
         return r.origin + t * r.dir
     end
