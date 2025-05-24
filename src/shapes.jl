@@ -97,13 +97,13 @@ function ray_intersection(S::Sphere, ray::Ray)
     O_dot_d = O ⋅ d # its sign tells wheter the ray is moving towards or away from ray's origin
     d_squared = squared_norm(d)
     O_squared = squared_norm(O) # position of the ray's origin
-    
+
     if O_squared > 1.0 && O_dot_d > 0.0
-       return nothing
+        return nothing
     end
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
-    
+
     Δrid <= 0.0 && return nothing
 
     sqrot = sqrt(Δrid)
@@ -120,12 +120,12 @@ function ray_intersection(S::Sphere, ray::Ray)
     # point in the sphere's local coordinates
     hit_point = inv_ray(first_hit)
     return HitRecord(
-        world_P = S.Tr(hit_point),
-        normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
-        surface_P = _point_to_uv(S, hit_point),
-        t = first_hit,
-        ray = ray,
-        shape = S
+        world_P=S.Tr(hit_point),
+        normal=S.Tr(_sphere_normal(hit_point, ray.dir)),
+        surface_P=_point_to_uv(S, hit_point),
+        t=first_hit,
+        ray=ray,
+        shape=S
     )
 end
 
@@ -148,13 +148,13 @@ function ray_intersection_list(S::Sphere, ray::Ray)
     O_dot_d = O ⋅ d # its sign tells wheter the ray is moving towards or away from ray's origin
     d_squared = squared_norm(d)
     O_squared = squared_norm(O) # position of the ray's origin
-    
+
     if O_squared > 1.0 && O_dot_d > 0.0
-       return nothing
+        return nothing
     end
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
-    
+
     Δrid <= 0.0 && return nothing
 
     sqrot = sqrt(Δrid)
@@ -171,7 +171,7 @@ function ray_intersection_list(S::Sphere, ray::Ray)
     end
 
     # when a ray is originated inside the sphere, the equation gives also the solution of the intersection in the opposite direction
-    if signbit(first_hit) || signbit(second_hit) 
+    if signbit(first_hit) || signbit(second_hit)
         return nothing
     end
 
@@ -313,26 +313,23 @@ function _point_to_uv(box::Box, p::Point, norm::Normal)
     nx = (p.x - p1.x) / (p2.x - p1.x)
     ny = (p.y - p1.y) / (p2.y - p1.y)
     nz = (p.z - p1.z) / (p2.z - p1.z)
-    if isnan(nx) || isnan(ny) || isnan(nz)
-        return SurfacePoint(0.0, 0.0)
-    end
     third = 1.0 / 3.0
-    if isapprox(norm.x, 1.0; atol=1e-6)      # +X (Right)
+    if !signbit(norm.x) # +X (Right)
         u = 0.5 + nz * 0.25
         v = third + (1.0 - ny) * third
-    elseif isapprox(norm.x, -1.0; atol=1e-6) # -X (Left)
+    elseif signbit(norm.x) # -X (Left)
         u = 0.0 + nz * 0.25
         v = third + (1.0 - ny) * third
-    elseif isapprox(norm.y, 1.0; atol=1e-6)  # +Y (Top)
+    elseif !signbit(norm.y)  # +Y (Top)
         u = 0.25 + nx * 0.25
-        v = 2.0*third + (1.0 - nz) * third
-    elseif isapprox(norm.y, -1.0; atol=1e-6) # -Y (Bottom)
+        v = 2.0 * third + (1.0 - nz) * third
+    elseif signbit(norm.y) # -Y (Bottom)
         u = 0.25 + nx * 0.25
         v = 0.0 + nz * third
-    elseif isapprox(norm.z, 1.0; atol=1e-6)  # +Z (Front)
+    elseif !signbit(norm.z)  # +Z (Front)
         u = 0.25 + nx * 0.25
         v = third + (1.0 - ny) * third
-    else isapprox(norm.z, -1.0; atol=1e-6) # -Z (Back)
+    elseif signbit(norm.z) # -Z (Back)
         u = 0.75 + (1.0 - nx) * 0.25
         v = third + (1.0 - ny) * third
     end
@@ -366,8 +363,8 @@ function ray_intersection(box::Box, ray::Ray)
     t1x = (p1.x - O.x) / d.x
     t2x = (p2.x - O.x) / d.x
     #txmin = min(t1x, t2x)
-    #txmax = max(t1x, t2x)    
-    
+    #txmax = max(t1x, t2x)
+
     t1y = (p1.y - O.y) / d.y
     t2y = (p2.y - O.y) / d.y
     #tymin = min(t1y, t2y)
@@ -395,8 +392,9 @@ function ray_intersection(box::Box, ray::Ray)
     if tmax < max(inv_ray.tmin, tmin)
         return nothing
     end
-    first_hit = tmin > inv_ray.tmin ? tmin : (tmax < inv_ray.tmax ? tmax : nothing)
-    
+    first_hit = tmin > inv_ray.tmin ? tmin : tmax
+    first_hit > inv_ray.tmax && return nothing
+
     #tmin = max(tmin, tzmin)
     #tmax = min(tmax, tzmax)
 
@@ -426,12 +424,12 @@ function ray_intersection(box::Box, ray::Ray)
     norm = box.Tr(norm)
 
     return HitRecord(
-        world_P = box.Tr(hit_point),
-        normal = norm ,
-        surface_P = sur_point #= _point_to_uv(box, hit_point) =#,
-        t = first_hit,
-        ray = ray,
-        shape = box
+        world_P=box.Tr(hit_point),
+        normal=norm,
+        surface_P=sur_point, #= _point_to_uv(box, hit_point) =#
+        t=first_hit,
+        ray=ray,
+        shape=box
     )
 end
 
@@ -482,7 +480,7 @@ function ray_intersection_list(box::Box, ray::Ray)
     t2x = (p2.x - O.x) / d.x
     #txmin = min(t1x, t2x)
     #txmax = max(t1x, t2x)    
-    
+
     t1y = (p1.y - O.y) / d.y
     t2y = (p2.y - O.y) / d.y
     #tymin = min(t1y, t2y)
@@ -513,7 +511,7 @@ function ray_intersection_list(box::Box, ray::Ray)
     if tmin < inv_ray.tmin || tmin > inv_ray.tmax
         return nothing
     end
-    
+
     first_hit = tmin
     second_hit = tmax
 
@@ -543,20 +541,20 @@ function ray_intersection_list(box::Box, ray::Ray)
     norm2 = box.Tr(norm2)
 
     HR1 = HitRecord(
-        world_P = box.Tr(hit_point_1),
-        normal = norm1,
-        surface_P = sur_point_1 #= _point_to_uv(box, hit_point) =#,
-        t = first_hit,
-        ray = ray,
-        shape = box
+        world_P=box.Tr(hit_point_1),
+        normal=norm1,
+        surface_P=sur_point_1, #= _point_to_uv(box, hit_point) =#
+        t=first_hit,
+        ray=ray,
+        shape=box
     )
     HR2 = HitRecord(
-        world_P = box.Tr(hit_point_2),
-        normal = norm2,
-        surface_P = sur_point_2 #= _point_to_uv(box, hit_point) =#,
-        t = second_hit,
-        ray = ray,
-        shape = box
+        world_P=box.Tr(hit_point_2),
+        normal=norm2,
+        surface_P=sur_point_2, #= _point_to_uv(box, hit_point) =#
+        t=second_hit,
+        ray=ray,
+        shape=box
     )
     return [HR1, HR2]
 end
@@ -676,17 +674,17 @@ function ray_intersection(pl::Plane, ray::Ray)
     else
         return nothing
     end
-    
+
 
     hit_point = inv_ray(first_hit)
     norm = pl.Tr(_plane_normal(hit_point, ray.dir))
     return HitRecord(
-        world_P = pl.Tr(hit_point),
-        normal = norm,
-        surface_P = _point_to_uv(pl, hit_point),
-        t = first_hit,
-        ray = ray,
-        shape = pl
+        world_P=pl.Tr(hit_point),
+        normal=norm,
+        surface_P=_point_to_uv(pl, hit_point),
+        t=first_hit,
+        ray=ray,
+        shape=pl
     )
 end
 
@@ -771,24 +769,24 @@ function ray_intersection(S::Rectangle, ray::Ray)
     O = inv_ray.origin
     d = inv_ray.dir
 
-    
+
     t = -O.z / d.z
-    if t > inv_ray.tmin && t < inv_ray.tmax && abs(inv_ray(t).x) <= 0.5 && abs(inv_ray(t).y) <= 0.5 
+    if t > inv_ray.tmin && t < inv_ray.tmax && abs(inv_ray(t).x) <= 0.5 && abs(inv_ray(t).y) <= 0.5
         first_hit = t
     else
         return nothing
     end
-    
+
 
     hit_point = inv_ray(first_hit)
     norm = S.Tr(_rectangle_normal(hit_point, ray.dir))
     return HitRecord(
-        world_P = S.Tr(hit_point),
-        normal = norm,
-        surface_P = _point_to_uv(S, hit_point),
-        t = first_hit,
-        ray = ray,
-        shape = S
+        world_P=S.Tr(hit_point),
+        normal=norm,
+        surface_P=_point_to_uv(S, hit_point),
+        t=first_hit,
+        ray=ray,
+        shape=S
     )
 end
 
@@ -908,7 +906,7 @@ Information about an intersection
 - `ray::Ray` the ray that hit the surface
 """
 struct HitRecord
-    world_P::Point    
+    world_P::Point
     normal::Normal
     surface_P::SurfacePoint
     t::Float64
