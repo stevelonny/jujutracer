@@ -60,7 +60,6 @@ Print the image `img` as pigment of the surface
 # Functional Usage
 `ImagePigment(p::SurfacePoint)` return the `RGB` of to the `(u, v)` coordinates of the `SurfacePoint` associated to the corresponding element of `img`
 
-Methods in [`renderer.jl`](@ref)
 """
 struct ImagePigment <: AbstractPigment
     img::hdrimg
@@ -76,7 +75,11 @@ abstract type AbstractBRDF end
     DiffusiveBRDF(Pigment::AbstractPigment, R::Float64)
 
 Diffusive BRDF with reflective pigment `Pigment`.
+<<<<<<< HEAD
 Methods in [`renderer.jl`](@ref)
+=======
+
+>>>>>>> main
 """
 struct DiffusiveBRDF <: AbstractBRDF
     Pigment::AbstractPigment
@@ -86,7 +89,11 @@ end
     SpecularBRDF(Pigment::AbstractPigment, R::Float64)
 
 Specular BRDF with reflective pigment `Pigment`.
+<<<<<<< HEAD
 Methods in [`renderer.jl`](@ref)
+=======
+
+>>>>>>> main
 """
 struct SpecularBRDF <: AbstractBRDF
     Pigment::AbstractPigment

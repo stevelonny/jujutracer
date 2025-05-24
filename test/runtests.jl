@@ -419,6 +419,9 @@ end
         @test HR1.t ≈ 1.0
         @test HR1 ≈ SurfacePoint(0.5, 0.0)
         @test HR1.normal ≈ Normal(êz)
+        HRlist = ray_intersection_list(S, ray1)
+        @test HRlist[1] ≈ HR1
+        @test HRlist[2].normal ≈ HR1.normal
 
         O2 = Point(3.0, 0.0, 0.0)
         ray2 = Ray(origin=O2, dir=-êx)
@@ -427,6 +430,9 @@ end
         @test HR2.t ≈ 2.0
         @test HR2 ≈ SurfacePoint(0.5, 0.5)
         @test HR2.normal ≈ Normal(êx)
+        HRlist = ray_intersection_list(S, ray2)
+        @test HRlist[1] ≈ HR2
+        @test HRlist[2].normal ≈ HR2.normal
 
         O3 = Point(0.0, 0.0, 0.0)
         ray3 = Ray(origin=O3, dir=êx)
@@ -435,6 +441,8 @@ end
         @test HR3.t ≈ 1.0
         @test HR3 ≈ SurfacePoint(0.5, 0.5)
         @test HR3.normal ≈ -Normal(êx)
+        HRlist = ray_intersection_list(S, ray3)
+        @test isnothing(HRlist)
 
         Tr = Translation(10.0, 0.0, 0.0)
         S = Sphere(Tr, Mat)
@@ -446,6 +454,9 @@ end
         @test HR4.t ≈ 1.0
         @test HR4 ≈ SurfacePoint(0.5, 0.0)
         @test HR4.normal ≈ Normal(êz)
+        HRlist = ray_intersection_list(S, ray4)
+        @test HRlist[1] ≈ HR4
+        @test HRlist[2].normal ≈ HR4.normal
 
         ray5 = Tr(ray2)
         HR5 = ray_intersection(S, ray5)
@@ -453,11 +464,16 @@ end
         @test HR5.t ≈ 2.0
         @test HR5 ≈ SurfacePoint(0.5, 0.5)
         @test HR5.normal ≈ Normal(êx)
+        HRlist = ray_intersection_list(S, ray5)
+        @test HRlist[1] ≈ HR5
+        @test HRlist[2].normal ≈ HR5.normal
 
         O6 = inverse(Tr)(O3)
         ray6 = Ray(origin=O6, dir=-êz)
         HR6 = ray_intersection(S, ray6)
         @test HR6 === nothing
+        HRlist = ray_intersection_list(S, ray6)
+        @test isnothing(HRlist)
 
         HR7 = ray_intersection(S, ray1)
         @test HR7 === nothing
@@ -604,6 +620,15 @@ end
         @test HR1 ≈ Point(0.0, 0.0, 0.5)
         @test HR1.t ≈ 1.5
         @test HR1.normal ≈ Normal(0.0, 0.0, 1.0)
+        HRlist = ray_intersection_list(B, ray1)
+        @test length(HRlist) == 2
+        @test HRlist[1] ≈ Point(0.0, 0.0, 0.5)
+        @test HRlist[1].t ≈ 1.5
+        @test HRlist[1].normal ≈ Normal(0.0, 0.0, 1.0)
+        @test HRlist[2] ≈ Point(0.0, 0.0, -0.5)
+        @test HRlist[2].t ≈ 2.5
+        @test HRlist[2].normal ≈ Normal(0.0, 0.0, 1.0)
+        @test HRlist[1].t < HRlist[2].t
 
         # Ray from -z, should hit bottom face at (0,0,-0.5)
         O2 = Point(0.0, 0.0, -2.0)
@@ -612,6 +637,15 @@ end
         @test HR2 ≈ Point(0.0, 0.0, -0.5)
         @test HR2.t ≈ 1.5
         @test HR2.normal ≈ Normal(0.0, 0.0, -1.0)
+        HRlist = ray_intersection_list(B, ray2)
+        @test length(HRlist) == 2
+        @test HRlist[1] ≈ Point(0.0, 0.0, -0.5)
+        @test HRlist[1].t ≈ 1.5
+        @test HRlist[1].normal ≈ Normal(0.0, 0.0, -1.0)
+        @test HRlist[2] ≈ Point(0.0, 0.0, 0.5)
+        @test HRlist[2].t ≈ 2.5
+        @test HRlist[2].normal ≈ Normal(0.0, 0.0, -1.0)
+        @test HRlist[1].t < HRlist[2].t
 
         # Ray from +x, should hit right face at (0.5,0,0)
         O3 = Point(2.0, 0.0, 0.0)
@@ -620,6 +654,15 @@ end
         @test HR3 ≈ Point(0.5, 0.0, 0.0)
         @test HR3.t ≈ 1.5
         @test HR3.normal ≈ Normal(1.0, 0.0, 0.0)
+        HRlist = ray_intersection_list(B, ray3)
+        @test length(HRlist) == 2
+        @test HRlist[1] ≈ Point(0.5, 0.0, 0.0)
+        @test HRlist[1].t ≈ 1.5
+        @test HRlist[1].normal ≈ Normal(1.0, 0.0, 0.0)
+        @test HRlist[2] ≈ Point(-0.5, 0.0, 0.0)
+        @test HRlist[2].t ≈ 2.5
+        @test HRlist[2].normal ≈ Normal(1.0, 0.0, 0.0)
+        @test HRlist[1].t < HRlist[2].t
 
         # Ray from -x, should hit left face at (-0.5,0,0)
         O4 = Point(-2.0, 0.0, 0.0)
@@ -628,6 +671,15 @@ end
         @test HR4 ≈ Point(-0.5, 0.0, 0.0)
         @test HR4.t ≈ 1.5
         @test HR4.normal ≈ Normal(-1.0, 0.0, 0.0)
+        HRlist = ray_intersection_list(B, ray4)
+        @test length(HRlist) == 2
+        @test HRlist[1] ≈ Point(-0.5, 0.0, 0.0)
+        @test HRlist[1].t ≈ 1.5
+        @test HRlist[1].normal ≈ Normal(-1.0, 0.0, 0.0)
+        @test HRlist[2] ≈ Point(0.5, 0.0, 0.0)
+        @test HRlist[2].t ≈ 2.5
+        @test HRlist[2].normal ≈ Normal(-1.0, 0.0, 0.0)
+        @test HRlist[1].t < HRlist[2].t
 
         # Ray from +y, should hit back face at (0,0.5,0)
         O5 = Point(0.0, 2.0, 0.0)
@@ -636,6 +688,15 @@ end
         @test HR5 ≈ Point(0.0, 0.5, 0.0)
         @test HR5.t ≈ 1.5
         @test HR5.normal ≈ Normal(0.0, 1.0, 0.0)
+        HRlist = ray_intersection_list(B, ray5)
+        @test length(HRlist) == 2
+        @test HRlist[1] ≈ Point(0.0, 0.5, 0.0)
+        @test HRlist[1].t ≈ 1.5
+        @test HRlist[1].normal ≈ Normal(0.0, 1.0, 0.0)
+        @test HRlist[2] ≈ Point(0.0, -0.5, 0.0)
+        @test HRlist[2].t ≈ 2.5
+        @test HRlist[2].normal ≈ Normal(0.0, 1.0, 0.0)
+        @test HRlist[1].t < HRlist[2].t
 
         # Ray from -y, should hit front face at (0,-0.5,0)
         O6 = Point(0.0, -2.0, 0.0)
@@ -644,12 +705,23 @@ end
         @test HR6 ≈ Point(0.0, -0.5, 0.0)
         @test HR6.t ≈ 1.5
         @test HR6.normal ≈ Normal(0.0, -1.0, 0.0)
+        HRlist = ray_intersection_list(B, ray6)
+        @test length(HRlist) == 2
+        @test HRlist[1] ≈ Point(0.0, -0.5, 0.0)
+        @test HRlist[1].t ≈ 1.5
+        @test HRlist[1].normal ≈ Normal(0.0, -1.0, 0.0)
+        @test HRlist[2] ≈ Point(0.0, 0.5, 0.0)
+        @test HRlist[2].t ≈ 2.5
+        @test HRlist[2].normal ≈ Normal(0.0, -1.0, 0.0)
+        @test HRlist[1].t < HRlist[2].t
 
         # Ray missing the box
         O7 = Point(2.0, 2.0, 2.0)
         ray7 = Ray(origin=O7, dir=Vec(1.0, 1.0, 1.0))
         HR7 = ray_intersection(B, ray7)
         @test HR7 === nothing
+        HRlist = ray_intersection_list(B, ray7)
+        @test isnothing(HRlist)
 
         # Internal point test
         @test internal(B, Point(0.0, 0.0, 0.0)) == true
