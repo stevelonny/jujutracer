@@ -643,25 +643,28 @@ function ray_intersection(S::Cylinder, ray::Ray)
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
     
-    Δrid <= 0.0 && return nothing
-
-    sqrot = sqrt(Δrid)
-    t1 = (-O_dot_d - sqrot) / d_squared
-    t2 = (-O_dot_d + sqrot) / d_squared
+    (Δrid <= 0.0 && d_squared != 0.0) && return nothing
+    
     t1z = (0.5 - O.z)/d.z
     t2z = (-0.5 - O.z)/d.z
+    if d_squared != 0.0
+        sqrot = sqrt(Δrid)
+        t1 = (-O_dot_d - sqrot) / d_squared
+        t2 = (-O_dot_d + sqrot) / d_squared
+    else
+        t1 = t1z
+        t2 = t2z
+    end
+    
     # more concise version but i dont really trust it
     tmin = max(min(t1, t2), min(t1z, t2z))
     tmax = min(max(t1, t2), max(t1z, t2z))
 
-    if tmax < max(inv_ray.tmin, tmin) || tmax > inv_ray.tmax
+    if tmax < max(inv_ray.tmin, tmin)
         return nothing
     end
-    if tmin < inv_ray.tmin || tmin > inv_ray.tmax
-        return nothing
-    end
-    
-    first_hit = tmin
+    first_hit = tmin > inv_ray.tmin ? tmin : tmax
+    first_hit > inv_ray.tmax && return nothing
 
     # point in the sphere's local coordinates
     hit_point = inv_ray(first_hit)
@@ -697,13 +700,19 @@ function ray_intersection_list(S::Cylinder, ray::Ray)
 
     Δrid = (O_dot_d)^2 - d_squared * (O_squared - 1)
 
-    Δrid <= 0.0 && return nothing
-
-    sqrot = sqrt(Δrid)
-    t1 = (-O_dot_d - sqrot) / d_squared
-    t2 = (-O_dot_d + sqrot) / d_squared
+    (Δrid <= 0.0 && d_squared != 0.0) && return nothing
+    
     t1z = (0.5 - O.z)/d.z
     t2z = (-0.5 - O.z)/d.z
+    if d_squared != 0.0
+        sqrot = sqrt(Δrid)
+        t1 = (-O_dot_d - sqrot) / d_squared
+        t2 = (-O_dot_d + sqrot) / d_squared
+    else
+        t1 = t1z
+        t2 = t2z
+    end
+    
     # more concise version but i dont really trust it
     tmin = max(min(t1, t2), min(t1z, t2z))
     tmax = min(max(t1, t2), max(t1z, t2z))

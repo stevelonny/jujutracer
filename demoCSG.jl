@@ -45,7 +45,7 @@ function demoCSG(width, height, cam_angle)
     S[1] = CSGUnion(Translation(0.0, 0.0, 2.0) ⊙ Rz(0.2) ⊙ Ry(-0.4), (S1 ∪ S2), S3)
     S[2] = CSGDifference(Translation(0.0, 2.0, 0.0) ⊙ Rx(0.4) ⊙ Ry(-0.4), (S1 ∪ S2), S3)
     S[3] = CSGIntersection(Translation(0.0, -2.0, 0.0) ⊙ Ry(0.2) ⊙ Scaling(1.2, 1.2, 1.2), (S1 ∩ S2), S3)
-    S[4] = Cylinder(Translation(1.0, 0.0, 0.0) ⊙ Ry(-π / 6.0), Mat1)# - Box(Scaling(1.5, 1.5, 4.0), Mat2)
+    S[4] = Cylinder(Translation(1.0, 0.0, 0.0) ⊙ Ry(π / 6.0), Mat1)# - Box(Scaling(1.5, 1.5, 4.0), Mat2)
 
 
     R_cam = Rz(cam_angle)
