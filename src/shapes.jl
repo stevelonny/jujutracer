@@ -313,25 +313,28 @@ function _point_to_uv(box::Box, p::Point, norm::Normal)
     nx = (p.x - p1.x) / (p2.x - p1.x)
     ny = (p.y - p1.y) / (p2.y - p1.y)
     nz = (p.z - p1.z) / (p2.z - p1.z)
-    third = 1.0 / 3.0
-    if !signbit(norm.x) # +X (Right)
+    third = 1.0 / 4.0
+    tol = 1e-6
+    if abs(norm.x - 1.0) < tol      # +X (Right)
         u = 0.5 + nz * 0.25
         v = third + (1.0 - ny) * third
-    elseif signbit(norm.x) # -X (Left)
+    elseif abs(norm.x + 1.0) < tol # -X (Left)
         u = 0.0 + nz * 0.25
         v = third + (1.0 - ny) * third
-    elseif !signbit(norm.y)  # +Y (Top)
+    elseif abs(norm.y - 1.0) < tol  # +Y (Top)
         u = 0.25 + nx * 0.25
-        v = 2.0 * third + (1.0 - nz) * third
-    elseif signbit(norm.y) # -Y (Bottom)
+        v = 2.0*third + (1.0 - nz) * third
+    elseif abs(norm.y + 1.0) < tol # -Y (Bottom)
         u = 0.25 + nx * 0.25
         v = 0.0 + nz * third
-    elseif !signbit(norm.z)  # +Z (Front)
+    elseif abs(norm.z - 1.0) < tol  # +Z (Front)
         u = 0.25 + nx * 0.25
         v = third + (1.0 - ny) * third
-    elseif signbit(norm.z) # -Z (Back)
+    elseif abs(norm.z + 1.0) < tol # -Z (Back)
         u = 0.75 + (1.0 - nx) * 0.25
         v = third + (1.0 - ny) * third
+    else
+        u, v = 0.0, 0.0
     end
     return SurfacePoint(u, v)
 end
@@ -411,11 +414,11 @@ function ray_intersection(box::Box, ray::Ray)
     hit_point = inv_ray(first_hit)
     # normal
     if first_hit == t1x || first_hit == t2x
-        norm = Normal(-sign(d.x), 0.0, 0.0)
+        norm = Normal(-copysign(1.0, d.x), 0.0, 0.0)
     elseif first_hit == t1y || first_hit == t2y
-        norm = Normal(0.0, -sign(d.y), 0.0)
+        norm = Normal(0.0, -copysign(1.0, d.y), 0.0)
     else
-        norm = Normal(0.0, 0.0, -sign(d.z))
+        norm = Normal(0.0, 0.0, -copysign(1.0, d.z))
     end
 
     # point_to_uv needs the untransformed normal
