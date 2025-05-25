@@ -746,9 +746,9 @@ end
         ray2 = Ray(origin = Point(0.0, 0.0, 3.0),
                     dir = Vec(0.0, 0.0, -1.0))
         repo2 = ray_intersection_list(C, ray2)
-        #@test !isnothing(repo2)
-        #@test repo2[1].normal ≈ -ray2.dir
-        #@test repo2[2].normal ≈ -ray2.dir
+        @test !isnothing(repo2)
+        @test repo2[1].normal ≈ -ray2.dir
+        @test repo2[2].normal ≈ -ray2.dir
     end
 end
 

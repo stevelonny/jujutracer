@@ -424,12 +424,12 @@ function ray_intersection(box::Box, ray::Ray)
     norm = box.Tr(norm)
 
     return HitRecord(
-        world_P=box.Tr(hit_point),
-        normal=norm,
-        surface_P=sur_point, #= _point_to_uv(box, hit_point) =#
-        t=first_hit,
-        ray=ray,
-        shape=box
+        world_P = box.Tr(hit_point),
+        normal = norm,
+        surface_P = sur_point, #= _point_to_uv(box, hit_point) =#
+        t = first_hit,
+        ray = ray,
+        shape = box
     )
 end
 
@@ -541,51 +541,51 @@ function ray_intersection_list(box::Box, ray::Ray)
     norm2 = box.Tr(norm2)
 
     HR1 = HitRecord(
-        world_P=box.Tr(hit_point_1),
-        normal=norm1,
-        surface_P=sur_point_1, #= _point_to_uv(box, hit_point) =#
-        t=first_hit,
-        ray=ray,
-        shape=box
+        world_P = box.Tr(hit_point_1),
+        normal = norm1,
+        surface_P = sur_point_1, #= _point_to_uv(box, hit_point) =#
+        t = first_hit,
+        ray = ray,
+        shape = box
     )
     HR2 = HitRecord(
-        world_P=box.Tr(hit_point_2),
-        normal=norm2,
-        surface_P=sur_point_2, #= _point_to_uv(box, hit_point) =#
-        t=second_hit,
-        ray=ray,
-        shape=box
+        world_P = box.Tr(hit_point_2),
+        normal = norm2,
+        surface_P = sur_point_2, #= _point_to_uv(box, hit_point) =#
+        t = second_hit,
+        ray = ray,
+        shape = box
     )
     return [HR1, HR2]
 end
 
 #---------------------------------------------------------
-# _inf_Cylinder
+# Cylndre
 #---------------------------------------------------------
 
 """
-    struct _inf_Cylinder <: AbstractSolid
+    struct Cylinder <: AbstractSolid
 
-A sphere.
+A cylinder of unitary radiuos and height centered in the origin.
 This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `Tr::Transformation`: the transformation applied to the sphere.
 - `Mat::Material`: the material of the shape
 """
-struct _inf_Cylinder <: AbstractSolid
+struct Cylinder <: AbstractSolid
     Tr::AbstractTransformation
     Mat::Material
 
-    function _inf_Cylinder()
+    function Cylinder()
         new(Transformation(), Material())
     end
-    function _inf_Cylinder(Tr::AbstractTransformation)
+    function Cylinder(Tr::AbstractTransformation)
         new(Tr, Material())
     end
-    function _inf_Cylinder(Mat::Material)
+    function Cylinder(Mat::Material)
         new(Transformation(), Mat)
     end
-    function _inf_Cylinder(Tr::AbstractTransformation, Mat::Material)
+    function Cylinder(Tr::AbstractTransformation, Mat::Material)
         new(Tr, Mat)
     end
 end
@@ -593,44 +593,46 @@ end
 """
     _cylinder_normal(p::Point, dir::Vec)
 
-Calculate the normal vector of a point on the sphere.
+Calculate the normal vector of a point on the cylinder.
 # Arguments
-- `p::Point`: the point on the sphere.
+- `p::Point`: the point on the cylinder.
 - `dir::Vec`: the direction vector of the ray.
 # Returns
-- `Normal`: the normal to the sphere's surface at the point.
+- `Normal`: the normal to the cylinder's surface at the point.
 """
 function _cylinder_normal(p::Point, dir::Vec)
-    norm = Normal(p.x, p.y, 0.0)
+    # if p.z = ± 0.5 than the normal is vertical, 
+    # else if the point lies on the curve surface the normal is radial
+    norm = Normal(p.x * (0.25 - p.z^2), p.y * (0.25 - p.z^2), 1.0 * (1.0 - (p.x^2 + p.y^2)))
     return (Vec(p) ⋅ dir < 0.0) ? norm : -norm
 end
 
 """
 
-    _point_to_uv(S::_inf_Cylinder, p::Point)
+    _point_to_uv(S::Cylndre, p::Point)
 
-Calculate the UV coordinates of a point on the sphere.
+Calculate the UV coordinates of a point on the cylinder.
 # Arguments
-- `S::_inf_Cylinder` the _inf_Cylinder
-- `p::Point` the point on the sphere
+- `S::Cylndre` the cylinder.
+- `p::Point` the point on the cylinder.
 # Returns
-- `SurfacePoint`: the UV coordinates of the point on the sphere
+- `SurfacePoint`: the UV coordinates of the point on the cylinder.
 """
-function _point_to_uv(S::_inf_Cylinder, p::Point)
-    return SurfacePoint(0.5 + atan(p.y, p.x) / (2.0 * π), p.z - floor(p.z))
+function _point_to_uv(S::Cylinder, p::Point)
+    return SurfacePoint(0.5 + atan(p.y, p.x) / (2.0 * π), p.z + 0.5)
 end
 
 """
-    ray_intersection(s::_inf_Cylinder, r::Ray)
+    ray_intersection(s::Cylndre, r::Ray)
 
 Calculates the intersection of a ray and a sphere.
 # Arguments
-- `S::_inf_Cylinder`: the sphere to be intersected
+- `S::Cylndre`: the sphere to be intersected
 - `ray::Ray`: the ray intersecting the sphere
 # Returns
 If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
-function ray_intersection(S::_inf_Cylinder, ray::Ray)
+function ray_intersection(S::Cylinder, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
@@ -638,10 +640,6 @@ function ray_intersection(S::_inf_Cylinder, ray::Ray)
     O_dot_d = O.x * d.x + O.y * d.y 
     d_squared = d.x^2 + d.y^2
     O_squared = O.x^2 + O.y^2
-    
-    if O_squared > 1.0 && O_dot_d > 0.0
-       return nothing
-    end
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
     
@@ -650,13 +648,20 @@ function ray_intersection(S::_inf_Cylinder, ray::Ray)
     sqrot = sqrt(Δrid)
     t1 = (-O_dot_d - sqrot) / d_squared
     t2 = (-O_dot_d + sqrot) / d_squared
-    first_hit = if t1 > inv_ray.tmin && t1 < inv_ray.tmax
-        t1
-    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
-        t2
-    else
+    t1z = (0.5 - O.z)/d.z
+    t2z = (-0.5 - O.z)/d.z
+    # more concise version but i dont really trust it
+    tmin = max(min(t1, t2), min(t1z, t2z))
+    tmax = min(max(t1, t2), max(t1z, t2z))
+
+    if tmax < max(inv_ray.tmin, tmin) || tmax > inv_ray.tmax
         return nothing
     end
+    if tmin < inv_ray.tmin || tmin > inv_ray.tmax
+        return nothing
+    end
+    
+    first_hit = tmin
 
     # point in the sphere's local coordinates
     hit_point = inv_ray(first_hit)
@@ -671,17 +676,17 @@ function ray_intersection(S::_inf_Cylinder, ray::Ray)
 end
 
 """
-    ray_intersection_list(S::_inf_Cylinder, ray::Ray)
+    ray_intersection_list(S::Cylndre, ray::Ray)
 
 Calculates all intersections of a ray with a sphere.
 # Arguments
-- `S::_inf_Cylinder`: The sphere to be intersected.
+- `S::Cylndre`: The sphere to be intersected.
 - `ray::Ray`: The ray intersecting the sphere.
 # Returns
 - `Vector{HitRecord}`: A list of of the two hit records for the two intersections, ordered by distance.
 - `nothing`: If no intersections occur.
 """
-function ray_intersection_list(S::_inf_Cylinder, ray::Ray)
+function ray_intersection_list(S::Cylinder, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
@@ -692,87 +697,72 @@ function ray_intersection_list(S::_inf_Cylinder, ray::Ray)
 
     Δrid = (O_dot_d)^2 - d_squared * (O_squared - 1)
 
-    if Δrid > 0
-        sqrot = sqrt(Δrid)
-        t1 = (-O_dot_d - sqrot) / squared_norm(d)
-        t2 = (-O_dot_d + sqrot) / squared_norm(d)
-        if t1 > inv_ray.tmin && t1 < inv_ray.tmax
-            first_hit = t1
-            second_hit = t2
-        elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
-            first_hit = t2
-            second_hit = t1
-        else
-            return nothing
-        end
-    else
+    Δrid <= 0.0 && return nothing
+
+    sqrot = sqrt(Δrid)
+    t1 = (-O_dot_d - sqrot) / d_squared
+    t2 = (-O_dot_d + sqrot) / d_squared
+    t1z = (0.5 - O.z)/d.z
+    t2z = (-0.5 - O.z)/d.z
+    # more concise version but i dont really trust it
+    tmin = max(min(t1, t2), min(t1z, t2z))
+    tmax = min(max(t1, t2), max(t1z, t2z))
+
+    if tmax < max(inv_ray.tmin, tmin) || tmax > inv_ray.tmax
         return nothing
+    end
+    if tmin < inv_ray.tmin || tmin > inv_ray.tmax
+        return nothing
+    end
+    
+    first_hit = tmin
+    second_hit = tmax
+
+    # when a ray is originated inside the cylinder, the equation gives also the solution of the intersection in the opposite direction
+    if signbit(first_hit - ray.tmin)
+        first_hit = Inf
+        second_hit = Inf
+    elseif signbit(second_hit - ray.tmin)
+        second_hit = Inf
     end
 
     hit_point_1 = inv_ray(first_hit)
     hit_point_2 = inv_ray(second_hit)
     HR1 = HitRecord(
-        world_P=S.Tr(hit_point_1),
-        normal=S.Tr(_sphere_normal(hit_point_1, ray.dir)),
-        surface_P=_point_to_uv(S, hit_point_1),
-        t=first_hit,
-        ray=ray,
-        shape=S
+        world_P = S.Tr(hit_point_1),
+        normal = S.Tr(_sphere_normal(hit_point_1, ray.dir)),
+        surface_P = _point_to_uv(S, hit_point_1),
+        t = first_hit,
+        ray = ray,
+        shape = S
     )
     HR2 = HitRecord(
-        world_P=S.Tr(hit_point_2),
-        normal=S.Tr(_sphere_normal(hit_point_2, ray.dir)),
-        surface_P=_point_to_uv(S, hit_point_2),
-        t=second_hit,
-        ray=ray,
-        shape=S
+        world_P = S.Tr(hit_point_2),
+        normal = S.Tr(_sphere_normal(hit_point_2, ray.dir)),
+        surface_P = _point_to_uv(S, hit_point_2),
+        t = second_hit,
+        ray = ray,
+        shape = S
     )
     return [HR1, HR2]
 end
 
 """
-    internal(S::_inf_Cylinder, P::Point)
+    internal(S::Cylndre, P::Point)
 
 Checks if a point is inside a sphere.
 # Arguments
-- `S::_inf_Cylinder`: The sphere to check.
+- `S::Cylndre`: The sphere to check.
 - `P::Point`: The point to check.
 # Returns
 - `Bool`: `true` if the point is inside the sphere, `false` otherwise.
 """
-function internal(S::_inf_Cylinder, P::Point)
+function internal(S::Cylinder, P::Point)
     p = inverse(S.Tr)(P)
-    return (p.x^2 + p.y^2 <= 1.0) ? true : false
+    circle = (p.x^2 + p.y^2 <= 1.0)
+    z = (p.z^2 <= 0.25)
+    return (circle && z) ? true : false
 end
-
-
-"""
-    struct Cylinder <: AbstractSolid
-
-A sphere.
-This structure is a subtype of [`AbstractSolid`](@ref).
-# Fields
-- `Tr::Transformation`: the transformation applied to the sphere.
-- `Mat::Material`: the material of the shape
-"""
-struct Cylinder <: AbstractSolid
-    Tr::AbstractTransformation
-    Mat::Material
-
-    function Cylinder()
-        return CSGIntersection(Transformation(), _inf_Cylinder(), Box(Scaling(3.0, 3.0, 1.0)))
-    end
-    function Cylinder(Tr::AbstractTransformation)
-        return CSGIntersection(Tr, _inf_Cylinder(), Box(Scaling(3.0, 3.0, 1.0)))
-    end
-    function Cylinder(Mat::Material)
-        return CSGIntersection(Transformation(),_inf_Cylinder(Mat), Box(Scaling(3.0, 3.0, 1.0), Mat))
-    end
-    function Cylinder(Tr::AbstractTransformation, Mat::Material)
-        return CSGIntersection(Tr, _inf_Cylinder(Mat), Box(Scaling(3.0, 3.0, 1.0), Mat))
-    end
-end
-
 
 # Solid shapes are water-tight, and can be used to create CSG shapes.
 

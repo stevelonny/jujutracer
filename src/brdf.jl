@@ -75,11 +75,6 @@ abstract type AbstractBRDF end
     DiffusiveBRDF(Pigment::AbstractPigment, R::Float64)
 
 Diffusive BRDF with reflective pigment `Pigment`.
-<<<<<<< HEAD
-Methods in [`renderer.jl`](@ref)
-=======
-
->>>>>>> main
 """
 struct DiffusiveBRDF <: AbstractBRDF
     Pigment::AbstractPigment
@@ -89,11 +84,6 @@ end
     SpecularBRDF(Pigment::AbstractPigment, R::Float64)
 
 Specular BRDF with reflective pigment `Pigment`.
-<<<<<<< HEAD
-Methods in [`renderer.jl`](@ref)
-=======
-
->>>>>>> main
 """
 struct SpecularBRDF <: AbstractBRDF
     Pigment::AbstractPigment
