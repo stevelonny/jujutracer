@@ -90,7 +90,7 @@ Calculates the intersection of a ray and a sphere.
 If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
 function ray_intersection(S::Sphere, ray::Ray)
-    inv_ray = _unsafe_invese(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # precompute common values, probably not needed as the compiler is already smart enough
@@ -141,7 +141,7 @@ Calculates all intersections of a ray with a sphere.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(S::Sphere, ray::Ray)
-    inv_ray = _unsafe_invese(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # precompute common values, probably not needed as the compiler is already smart enough
@@ -207,7 +207,7 @@ Checks if a point is inside a sphere.
 - `Bool`: `true` if the point is inside the sphere, `false` otherwise.
 """
 function internal(S::Sphere, P::Point)
-    return (squared_norm(Vec(_unsafe_invese(S.Tr)(P))) <= 1.0) ? true : false
+    return (squared_norm(Vec(_unsafe_inverse(S.Tr)(P))) <= 1.0) ? true : false
 end
 
 #---------------------------------------------------------
@@ -351,7 +351,7 @@ Calculate the intersection of a ray and a box.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(box::Box, ray::Ray)
-    inv_ray = _unsafe_invese(box.Tr)(ray)
+    inv_ray = _unsafe_inverse(box.Tr)(ray)
     p1 = box.P1
     p2 = box.P2
     O = inv_ray.origin
@@ -447,7 +447,7 @@ Check if a point is inside the box.
 - `Bool`: `true` if the point is inside the box, `false` otherwise.
 """
 function internal(box::Box, P::Point)
-    p = _unsafe_invese(box.Tr)(P)
+    p = _unsafe_inverse(box.Tr)(P)
     cond_x = p.x <= box.P2.x && p.x >= box.P1.x
     cond_y = p.y <= box.P2.y && p.y >= box.P1.y
     cond_z = p.z <= box.P2.z && p.z >= box.P1.z
@@ -467,7 +467,7 @@ Calculate all intersections of a ray with a box.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(box::Box, ray::Ray)
-    inv_ray = _unsafe_invese(box.Tr)(ray)
+    inv_ray = _unsafe_inverse(box.Tr)(ray)
     p1 = box.P1
     p2 = box.P2
     O = inv_ray.origin
@@ -634,7 +634,7 @@ Calculates the intersection of a ray and a sphere.
 If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
 function ray_intersection(S::_inf_Cylinder, ray::Ray)
-    inv_ray = _unsafe_invese(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # precompute common values, probably not needed as the compiler is already smart enough
@@ -685,7 +685,7 @@ Calculates all intersections of a ray with a sphere.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(S::_inf_Cylinder, ray::Ray)
-    inv_ray = _unsafe_invese(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
 
@@ -744,7 +744,7 @@ Checks if a point is inside a sphere.
 - `Bool`: `true` if the point is inside the sphere, `false` otherwise.
 """
 function internal(S::_inf_Cylinder, P::Point)
-    p = _unsafe_invese(S.Tr)(P)
+    p = _unsafe_inverse(S.Tr)(P)
     return (p.x^2 + p.y^2 <= 1.0) ? true : false
 end
 
@@ -882,7 +882,7 @@ Calculate the intersection of a ray and a plane.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection(pl::Plane, ray::Ray)
-    inv_ray = _unsafe_invese(pl.Tr)(ray)
+    inv_ray = _unsafe_inverse(pl.Tr)(ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
 
@@ -983,7 +983,7 @@ Calculate the intersection of a ray and a plane.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection(S::Rectangle, ray::Ray)
-    inv_ray = _unsafe_invese(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = inv_ray.origin
     d = inv_ray.dir
 
