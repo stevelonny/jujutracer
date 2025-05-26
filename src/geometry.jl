@@ -182,6 +182,8 @@ end
 # Transformations
 #--------------------------------------------------------------------------
 
+struct Unsafe end
+
 """
     AbstractTransformation
 
@@ -236,6 +238,9 @@ struct Transformation <: AbstractTransformation
         end
         new(M, inv)
     end
+    function Transformation(M::Matrix{Float64}, inv::Matrix{Float64}, unsafe::Unsafe)
+        new(M, inv)
+    end        
 end
 
 """
@@ -413,6 +418,10 @@ Return the inverse transformation
 """
 function inverse(a::AbstractTransformation)
     return Transformation(a.inv,a.M)
+end
+
+function _unsafe_inverse(a::AbstractTransformation)
+    return Transformation(a.inv,a.M, Unsafe())
 end
 
 """

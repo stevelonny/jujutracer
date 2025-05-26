@@ -90,7 +90,7 @@ function ray_intersection(S::Triangle, ray::Ray)
     A = S.A                         # Point A
     B = S.B - A                     # Vec B - A
     C = S.C - A                     # Vec C - A
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_invese(S.Tr)(ray)
     O = inv_ray.origin - A          # Vec O - A
     d = inv_ray.dir
     # M = (B C -d)
@@ -203,7 +203,7 @@ function ray_intersection(S::Parallelogram, ray::Ray)
     A = S.A                         # Point A
     B = S.B - A                     # Vec B - A
     C = S.C - A                     # Vec C - A
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_invese(S.Tr)(ray)
     O = inv_ray.origin - A          # Vec O - A
     d = inv_ray.dir
     # M = (B C -d)
@@ -262,7 +262,7 @@ struct AABB <: AbstractShape
 end
 
 function ray_intersection(box::AABB, ray::Ray)
-    inv_ray = inverse(box.Tr)(ray)
+    inv_ray = _unsafe_invese(box.Tr)(ray)
     repo = ray_intersection(Box(box.P1, box.P2), inv_ray)
 
     if isnothing(repo)
