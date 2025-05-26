@@ -181,7 +181,11 @@ end
 #--------------------------------------------------------------------------
 # Transformations
 #--------------------------------------------------------------------------
-
+"""
+    struct Unsafe
+A singleton struct used to indicate unsafe operations in transformations.
+See also [`Transformation`](@ref) and [`_unsafe_inverse`](@ref).
+"""
 struct Unsafe end
 
 """
@@ -206,6 +210,7 @@ This structure is a subtype of [`AbstractTransformation`](@ref).
 # Constructors
 - `Transformation()`: Creates an identity transformation where `M` and `inv` are both 4x4 identity matrices.
 - `Transformation(M::Matrix{Float64}, inv::Matrix{Float64})`: Creates a transformation with the given `M` and `inv` matrices.
+- `Transformation(M::Matrix{Float64}, inv::Matrix{Float64}, unsafe::Unsafe)`: Creates a transformation with the given `M` and `inv` matrices, without veryfing the inputs.
 Throws an `ArgumentError` if:
   - `M` or `inv` are not 4x4 matrices.
   - The last element of `M` or `inv` is not `1.0`.
@@ -414,12 +419,17 @@ end
 """
     inverse(a::AbstractTransformation)
 
-Return the inverse transformation
+Return the inverse transformation.
 """
 function inverse(a::AbstractTransformation)
     return Transformation(a.inv,a.M)
 end
 
+"""
+    _unsafe_inverse(a::AbstractTransformation)
+
+Return the inverse transformation without checking if the matrices are inverses of each other.
+"""
 function _unsafe_inverse(a::AbstractTransformation)
     return Transformation(a.inv,a.M, Unsafe())
 end
