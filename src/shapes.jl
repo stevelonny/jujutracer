@@ -810,7 +810,7 @@ end
 """
     struct Cone <: AbstractSolid
 
-A cone of unitary radiuos and height centered in the origin.
+A cone of unitary radiuos and height resting on the xy plane.
 This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `Tr::Transformation`: the transformation applied to the sphere.
@@ -880,7 +880,6 @@ function ray_intersection(S::Cone, ray::Ray)
     inv_ray = inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
-    # precompute common values, probably not needed as the compiler is already smart enough
     # z = 1 - sqrt(x^2 + y^2)
     # (z - 1)^2 = x^2 + y^2
     # ... check minus signs
@@ -889,38 +888,74 @@ function ray_intersection(S::Cone, ray::Ray)
     c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
 
     Δ = b^2 - 4.0*a*c
-    Δ <= 0.0 && return nothing
+    #Δ <= 0.0 && return nothing
+
+    if Δ < 0.0
+        if d.z ≈ 0.0
+            return nothing # ray is parallel to the cone axis
+        end
+        tz = -O.z / d.z
+        hit_base = inv_ray(tz)
+        if tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
+            return HitRecord(
+                world_P = S.Tr(hit_base),
+                normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+                surface_P = _circle_point_to_uv(hit_base),
+                t = tz,
+                ray = ray,
+                shape = S
+            )
+        else
+            return nothing
+        end
+    end
 
     sqrot = sqrt(Δ)
     t1 = (-b - sqrot) / (2.0*a)
     t2 = (-b + sqrot) / (2.0*a)
     z1 = O.z + t1 * d.z
     z2 = O.z + t2 * d.z
+    tz = -O.z / d.z
+    hit_base = inv_ray(tz)
     if t1 > inv_ray.tmin && t1 < inv_ray.tmax && z1 >= 0.0 && z1 <= 1.0
         first_hit = t1
+        if tz < t1 && tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
+            # if the base is hit before the first intersection, we return the base hit
+            return HitRecord(
+                world_P = S.Tr(hit_base),
+                normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+                surface_P = _circle_point_to_uv(hit_base),
+                t = tz,
+                ray = ray,
+                shape = S
+            )
+        end
     elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 >= 0.0 && z2 <= 1.0
         first_hit = t2
+        if tz < t2 && tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
+            # if the base is hit before the first intersection, we return the base hit
+            return HitRecord(
+                world_P = S.Tr(hit_base),
+                normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+                surface_P = _circle_point_to_uv(hit_base),
+                t = tz,
+                ray = ray,
+                shape = S
+            )
+        end
+    elseif tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
+        # if the base is hit before the first intersection, we return the base hit
+        return HitRecord(
+            world_P = S.Tr(hit_base),
+            normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+            surface_P = _circle_point_to_uv(hit_base),
+            t = tz,
+            ray = ray,
+            shape = S
+        )
     else
         return nothing
     end
-
-    #O_dot_d = O.x * d.x + O.y * d.y + (O.z + 1.0) * d.z 
-    #d_squared = d.x^2 + d.y^2 - d.z^2
-    #O_squared = O.x^2 + O.y^2 - (O.z - 1.0)^2
-
-    #Δrid = O_dot_d - d_squared * O_squared
-    #
-    #Δrid <= 0.0 && return nothing
-    #
-    #sqrot = sqrt(Δrid)
-    #t1 = (-O_dot_d - sqrot) / d_squared
-    #t2 = (-O_dot_d + sqrot) / d_squared
-
-    #if t1 > inv_ray.tmin && t1 < inv_ray.tmax
-    #    first_hit = t1
-    #elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
-    #    first_hit = t2
-    #end
     
     hit_point = inv_ray(first_hit)
     return HitRecord(
@@ -1327,8 +1362,25 @@ Calculate the UV coordinates of a point on the circle.
 function _point_to_uv(S::Circle, p::Point)
     r = sqrt(p.x^2 + p.y^2)
     θ = atan(p.y, p.x)
-    u = 0.5 + r * cos(θ) / 2.0
-    v = 0.5 + r * sin(θ) / 2.0
+    u = θ / (2.0 * π) + 0.5
+    v = r
+    return SurfacePoint(u, v)
+end
+
+
+"""
+    _circle_point_to_uv(p::Point)
+Helper function to convert a point on the circle to UV coordinates.
+# Arguments
+- `p::Point`: the point on the circle.
+# Returns
+- `SurfacePoint`: the UV coordinates of the point on the circle.
+"""
+function _circle_point_to_uv(p::Point)
+    r = sqrt(p.x^2 + p.y^2)
+    θ = atan(p.y, p.x)
+    u = θ / (2.0 * π) + 0.5
+    v = r
     return SurfacePoint(u, v)
 end
 
