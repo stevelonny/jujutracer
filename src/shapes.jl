@@ -455,9 +455,9 @@ Check if a point is inside the box.
 """
 function internal(box::Box, P::Point)
     p = inverse(box.Tr)(P)
-    cond_x = p.x <= box.P2.x && p.x >= box.P1.x
-    cond_y = p.y <= box.P2.y && p.y >= box.P1.y
-    cond_z = p.z <= box.P2.z && p.z >= box.P1.z
+    cond_x = p.x < box.P2.x && p.x > box.P1.x
+    cond_y = p.y < box.P2.y && p.y > box.P1.y
+    cond_z = p.z < box.P2.z && p.z > box.P1.z
 
     return (cond_x && cond_y && cond_z) ? true : false
 end
@@ -888,9 +888,9 @@ function ray_intersection(S::Cone, ray::Ray)
     c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
 
     Δ = b^2 - 4.0*a*c
-    #Δ <= 0.0 && return nothing
+    Δ <= 0.0 && return nothing
 
-    if Δ < 0.0
+#=     if Δ < 0.0
         if d.z ≈ 0.0
             return nothing # ray is parallel to the cone axis
         end
@@ -908,7 +908,7 @@ function ray_intersection(S::Cone, ray::Ray)
         else
             return nothing
         end
-    end
+    end =#
 
     sqrot = sqrt(Δ)
     t1 = (-b - sqrot) / (2.0*a)
@@ -917,7 +917,7 @@ function ray_intersection(S::Cone, ray::Ray)
     z2 = O.z + t2 * d.z
     tz = -O.z / d.z
     hit_base = inv_ray(tz)
-    if t1 > inv_ray.tmin && t1 < inv_ray.tmax && z1 >= 0.0 && z1 <= 1.0
+    if t1 > inv_ray.tmin && t1 < inv_ray.tmax && z1 > 0.0 && z1 < 1.0
         first_hit = t1
         if tz < t1 && tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
             # if the base is hit before the first intersection, we return the base hit
@@ -930,7 +930,7 @@ function ray_intersection(S::Cone, ray::Ray)
                 shape = S
             )
         end
-    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 >= 0.0 && z2 <= 1.0
+    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 > 0.0 && z2 < 1.0
         first_hit = t2
         if tz < t2 && tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
             # if the base is hit before the first intersection, we return the base hit
@@ -943,7 +943,7 @@ function ray_intersection(S::Cone, ray::Ray)
                 shape = S
             )
         end
-    elseif tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
+    elseif tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 < 1.0
         # if the base is hit before the first intersection, we return the base hit
         return HitRecord(
             world_P = S.Tr(hit_base),
@@ -980,88 +980,101 @@ Calculates all intersections of a ray with a sphere.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(S::Cone, ray::Ray)
-    inv_ray = inverse(S.Tr)(ray)
-    O = Vec(inv_ray.origin)
-    d = inv_ray.dir
+    O = Vec(ray.origin)
+    d = ray.dir
+    a = d.x^2 + d.y^2 - d.z^2
+    b = 2.0 * (-O.z * d.z + O.x * d.x + O.y * d.y + d.z)
+    c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
 
-    O_dot_d = O.x * d.x + O.y * d.y 
-    d_squared = d.x^2 + d.y^2
-    O_squared = O.x^2 + O.y^2
+    Δ = b^2 - 4.0*a*c
 
-    Δrid = (O_dot_d)^2 - d_squared * (O_squared - 1)
-
-    (Δrid <= 0.0 && d_squared != 0.0) && return nothing
+    Δ <= 0.0 && return nothing
     
-    t1z = (0.5 - O.z)/d.z
-    t2z = (-0.5 - O.z)/d.z
-    if d_squared != 0.0
-        sqrot = sqrt(Δrid)
-        t1 = (-O_dot_d - sqrot) / d_squared
-        t2 = (-O_dot_d + sqrot) / d_squared
-    else
-        t1 = t1z
-        t2 = t2z
+    hit_records = HitRecord[]
+    
+    sqrot = sqrt(Δ)
+    t1 = (-b - sqrot) / (2.0*a)
+    t2 = (-b + sqrot) / (2.0*a)
+    z1 = O.z + t1 * d.z
+    z2 = O.z + t2 * d.z
+    tz = -O.z / d.z
+    hit_base = ray(tz)
+    if tz > ray.tmin && tz < ray.tmax && hit_base.x^2 + hit_base.y^2 < 1.0
+        HR_base = HitRecord(
+            world_P = S.Tr(hit_base),
+            normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+            surface_P = _circle_point_to_uv(hit_base),
+            t = tz,
+            ray = ray,
+            shape = S
+        )
+        push!(hit_records, HR_base)
     end
-    
-    # more concise version but i dont really trust it
-    tmin = max(min(t1, t2), min(t1z, t2z))
-    tmax = min(max(t1, t2), max(t1z, t2z))
-
-    if tmax < max(inv_ray.tmin, tmin) || tmax > inv_ray.tmax
+    if t1 > ray.tmin && t1 < ray.tmax && z1 > 0.0 && z1 < 1.0
+        HR1 = HitRecord(
+            world_P = S.Tr(ray(t1)),
+            normal = S.Tr(_cone_normal(ray(t1), ray.dir)),
+            surface_P = _point_to_uv(S, ray(t1)),
+            t = t1,
+            ray = ray,
+            shape = S
+        )
+        push!(hit_records, HR1)
+    end
+    if t2 > ray.tmin && t2 < ray.tmax && z2 > 0.0 && z2 < 1.0
+        HR2 = HitRecord(
+            world_P = S.Tr(ray(t2)),
+            normal = S.Tr(_cone_normal(ray(t2), ray.dir)),
+            surface_P = _point_to_uv(S, ray(t2)),
+            t = t2,
+            ray = ray,
+            shape = S
+        )
+        push!(hit_records, HR2)
+    end
+    sort!(hit_records, by = h -> h.t)  # sort by distance
+    if length(hit_records) == 0
         return nothing
     end
-    if tmin < inv_ray.tmin || tmin > inv_ray.tmax
-        return nothing
-    end
-    
-    first_hit = tmin
-    second_hit = tmax
-
-    # when a ray is originated inside the cone, the equation gives also the solution of the intersection in the opposite direction
-    if signbit(first_hit - ray.tmin)
-        first_hit = Inf
-        second_hit = Inf
-    elseif signbit(second_hit - ray.tmin)
-        second_hit = Inf
-    end
-
-    hit_point_1 = inv_ray(first_hit)
-    hit_point_2 = inv_ray(second_hit)
-    HR1 = HitRecord(
-        world_P = S.Tr(hit_point_1),
-        normal = S.Tr(_sphere_normal(hit_point_1, ray.dir)),
-        surface_P = _point_to_uv(S, hit_point_1),
-        t = first_hit,
-        ray = ray,
-        shape = S
-    )
-    HR2 = HitRecord(
-        world_P = S.Tr(hit_point_2),
-        normal = S.Tr(_sphere_normal(hit_point_2, ray.dir)),
-        surface_P = _point_to_uv(S, hit_point_2),
-        t = second_hit,
-        ray = ray,
-        shape = S
-    )
-    return [HR1, HR2]
+    return [hit_records[2], hit_records[1]]  # return the first two hits, if they exists
 end
 
 """
     internal(S::Cone, P::Point)
 
-Checks if a point is inside a sphere.
+Checks if a point is inside a cone.
 # Arguments
-- `S::Cone`: The sphere to check.
+- `S::Cone`: The cone to check.
 - `P::Point`: The point to check.
 # Returns
-- `Bool`: `true` if the point is inside the sphere, `false` otherwise.
+- `Bool`: `true` if the point is inside the cone, `false` otherwise.
 """
 function internal(S::Cone, P::Point)
     p = inverse(S.Tr)(P)
-    z2 = p.x^2 + p.y^2
-    return (p.z <= sqrt(z2)) ? true : false
+    if p.z < 0.0 || p.z > 1.0
+        return false
+    end
+    return (p.x^2 + p.y^2 < (1.0 - p.z)^2) ? true : false
 end
 
+"""
+    boxed(S::Cone)::Tuple{Point, Point}
+
+Returns the bounding box of the cone.
+# Arguments
+- `S::Cone`: The cone to get the bounding box of.
+# Returns
+- `Tuple{Point, Point}`: A tuple containing the two corners of the bounding box.
+"""
+function boxed(S::Cone)::Tuple{Point, Point}
+    # return P1 and P2 of the bounding box of the sphere
+    # remember to apply the transformation to the points
+    P1 = Point(-1.0, -1.0, 0.0)
+    P2 = Point(1.0, 1.0, 1.0)
+    P1 = S.Tr(P1)
+    P2 = S.Tr(P2)
+    return (P1, P2)
+end
 # Solid shapes are water-tight, and can be used to create CSG shapes.
 
 #---------------------------------------------------------
@@ -1366,7 +1379,6 @@ function _point_to_uv(S::Circle, p::Point)
     v = r
     return SurfacePoint(u, v)
 end
-
 
 """
     _circle_point_to_uv(p::Point)
