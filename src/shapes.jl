@@ -884,9 +884,9 @@ function ray_intersection(S::Cone, ray::Ray)
     # z = 1 - sqrt(x^2 + y^2)
     # (z - 1)^2 = x^2 + y^2
     # ... check minus signs
-    a = -d.x^2 - d.y^2 + d.z^2
-    b = 2.0 * (O.z * d.z - O.x * d.x - O.y * d.y - d.z)
-    c = 1.0 - O.x^2 - O.y^2 + O.z^2 - 2.0 * O.z
+    a = d.x^2 + d.y^2 - d.z^2
+    b = 2.0 * (-O.z * d.z + O.x * d.x + O.y * d.y + d.z)
+    c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
 
     Δ = b^2 - 4.0*a*c
     Δ <= 0.0 && return nothing
