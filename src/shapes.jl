@@ -884,9 +884,9 @@ function ray_intersection(S::Cone, ray::Ray)
     # z = 1 - sqrt(x^2 + y^2)
     # (z - 1)^2 = x^2 + y^2
     # ... check minus signs
-    a = d.x^2 + d.y^2 - d.z^2
-    b = 2.0 * (-O.z * d.z + O.x * d.x  + O.y * d.y + d.z)
-    c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
+    a = -d.x^2 - d.y^2 + d.z^2
+    b = 2.0 * (O.z * d.z - O.x * d.x - O.y * d.y - d.z)
+    c = 1.0 - O.x^2 - O.y^2 + O.z^2 - 2.0 * O.z
 
     Δ = b^2 - 4.0*a*c
     Δ <= 0.0 && return nothing
@@ -894,14 +894,13 @@ function ray_intersection(S::Cone, ray::Ray)
     sqrot = sqrt(Δ)
     t1 = (-b - sqrot) / (2.0*a)
     t2 = (-b + sqrot) / (2.0*a)
-
-    if t1 > inv_ray.tmin && t1 < inv_ray.tmax
+    z1 = O.z + t1 * d.z
+    z2 = O.z + t2 * d.z
+    if t1 > inv_ray.tmin && t1 < inv_ray.tmax && z1 >= 0.0 && z1 <= 1.0
         first_hit = t1
-    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
+    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 >= 0.0 && z2 <= 1.0
         first_hit = t2
-    end
-    z = O.z + first_hit * d.z
-    if z < 0.0 || z > 1.0
+    else
         return nothing
     end
 
