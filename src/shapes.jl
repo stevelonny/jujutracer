@@ -881,28 +881,52 @@ function ray_intersection(S::Cone, ray::Ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # precompute common values, probably not needed as the compiler is already smart enough
-    O_dot_d = O.x * d.x + O.y * d.y + (O.z + 1.0) * d.z 
-    d_squared = d.x^2 + d.y^2 - d.z^2
-    O_squared = O.x^2 + O.y^2 - (O.z - 1.0)^2
+    # z = 1 - sqrt(x^2 + y^2)
+    # (z - 1)^2 = x^2 + y^2
+    # ... check minus signs
+    a = d.x^2 + d.y^2 - d.z^2
+    b = 2.0 * (-O.z * d.z + O.x * d.x  + O.y * d.y + d.z)
+    c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
 
-    Δrid = O_dot_d - d_squared * O_squared
-    
-    Δrid <= 0.0 && return nothing
-    
-    sqrot = sqrt(Δrid)
-    t1 = (-O_dot_d - sqrot) / d_squared
-    t2 = (-O_dot_d + sqrot) / d_squared
+    Δ = b^2 - 4.0*a*c
+    Δ <= 0.0 && return nothing
 
-    if t1 > ray.tmin && t1 < ray.tmax
+    sqrot = sqrt(Δ)
+    t1 = (-b - sqrot) / (2.0*a)
+    t2 = (-b + sqrot) / (2.0*a)
+
+    if t1 > inv_ray.tmin && t1 < inv_ray.tmax
         first_hit = t1
-    elseif t2 > ray.tmin && t2 < ray.tmax
+    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
         first_hit = t2
     end
+    z = O.z + first_hit * d.z
+    if z < 0.0 || z > 1.0
+        return nothing
+    end
+
+    #O_dot_d = O.x * d.x + O.y * d.y + (O.z + 1.0) * d.z 
+    #d_squared = d.x^2 + d.y^2 - d.z^2
+    #O_squared = O.x^2 + O.y^2 - (O.z - 1.0)^2
+
+    #Δrid = O_dot_d - d_squared * O_squared
+    #
+    #Δrid <= 0.0 && return nothing
+    #
+    #sqrot = sqrt(Δrid)
+    #t1 = (-O_dot_d - sqrot) / d_squared
+    #t2 = (-O_dot_d + sqrot) / d_squared
+
+    #if t1 > inv_ray.tmin && t1 < inv_ray.tmax
+    #    first_hit = t1
+    #elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
+    #    first_hit = t2
+    #end
     
     hit_point = inv_ray(first_hit)
     return HitRecord(
         world_P = S.Tr(hit_point),
-        normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
+        normal = S.Tr(_cone_normal(hit_point, ray.dir)),
         surface_P = _point_to_uv(S, hit_point),
         t = first_hit,
         ray = ray,
