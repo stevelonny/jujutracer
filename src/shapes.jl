@@ -210,6 +210,16 @@ function internal(S::Sphere, P::Point)
     return (squared_norm(Vec(inverse(S.Tr)(P))) <= 1.0) ? true : false
 end
 
+function boxed(S::Sphere)::Tuple{Point, Point}
+    # return P1 and P2 of the bounding box of the sphere
+    # remember to apply the transformation to the points
+    P1 = Point(-1.0, -1.0, -1.0)
+    P2 = Point(1.0, 1.0, 1.0)
+    P1 = S.Tr(P1)
+    P2 = S.Tr(P2)
+    return (P1, P2)
+end
+
 #---------------------------------------------------------
 # Box
 #---------------------------------------------------------
@@ -559,8 +569,18 @@ function ray_intersection_list(box::Box, ray::Ray)
     return [HR1, HR2]
 end
 
+function boxed(S::Box)::Tuple{Point, Point}
+    # return P1 and P2 of the bounding box of the sphere
+    # remember to apply the transformation to the points
+    P1_ = S.P1
+    P2_ = S.P2
+    P1_ = S.Tr(P1_)
+    P2_ = S.Tr(P2_)
+    return (P1_, P2_)
+end
+
 #---------------------------------------------------------
-# Cylndre
+# Cylinder
 #---------------------------------------------------------
 
 """
@@ -771,6 +791,16 @@ function internal(S::Cylinder, P::Point)
     circle = (p.x^2 + p.y^2 <= 1.0)
     z = (p.z^2 <= 0.25)
     return (circle && z) ? true : false
+end
+
+function boxed(S::Cylinder)::Tuple{Point, Point}
+    # return P1 and P2 of the bounding box of the sphere
+    # remember to apply the transformation to the points
+    P1 = Point(-1.0, -1.0, -0.5)
+    P2 = Point(1.0, 1.0, 0.5)
+    P1 = S.Tr(P1)
+    P2 = S.Tr(P2)
+    return (P1, P2)
 end
 
 # Solid shapes are water-tight, and can be used to create CSG shapes.

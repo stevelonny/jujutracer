@@ -245,33 +245,64 @@ end
 #---------------------------------------------------------
 
 struct AABB <: AbstractShape
-    Tr::AbstractTransformation
-    S::Vector{AbstractShape}
+    # no need for a transformation, the AABB is always axis aligned
+    S::Vector{AbstractSolid}
     P1::Point
     P2::Point
 
-    function AABB(S::Vector{AbstractShape}, P1::Point, P2::Point)
-        new(Transformation(), S, P1, P2)
+    function AABB(S::Vector{AbstractSolid})
+        if isempty(S)
+            throw(ArgumentError("Cannot create AABB with an empty set of solids."))
+        end
+        P1 = Point(Inf, Inf, Inf)
+        P2 = Point(-Inf, -Inf, -Inf)
+        for s in S
+            p1, p2 = boxed(s)
+            P1 = Point(min(P1.x, p1.x), min(P1.y, p1.y), min(P1.z, p1.z))
+            P2 = Point(max(P2.x, p2.x), max(P2.y, p2.y), max(P2.z, p2.z))
+        end
+        new(S, P1, P2)
     end
-    function AABB(Tr::AbstractTransformation, S::Vector{AbstractShape}, P1::Point, P2::Point)
-        new(Tr, S, P1, P2)
-    end
-    function AABB(box::Box, S::Vector{AbstractShape})
-        new(box.Tr, S, box.P1, box.P2)
+    function AABB(S::Vector{AbstractSolid}, P1::Point, P2::Point)
+        new(S, P1, P2)
     end
 end
+        
 
-function ray_intersection(box::AABB, ray::Ray)
-    inv_ray = inverse(box.Tr)(ray)
-    repo = ray_intersection(Box(box.P1, box.P2), inv_ray)
+function intersected(axisbox::AABB, ray::Ray)::Bool
+    # by having a specialized function we avoid useless allocations or operations (inverse...)
+    p1 = axisbox.P1
+    p2 = axisbox.P2
+    O = ray.origin
+    d = ray.dir
 
-    if isnothing(repo)
+    t1x = (p1.x - O.x) / d.x
+    t2x = (p2.x - O.x) / d.x
+    t1y = (p1.y - O.y) / d.y
+    t2y = (p2.y - O.y) / d.y
+    t1z = (p1.z - O.z) / d.z
+    t2z = (p2.z - O.z) / d.z
+
+    # more concise version but i dont really trust it
+    tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
+    tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+    if tmax < max(ray.tmin, tmin)
+        return false
+    end
+    first_hit = tmin > ray.tmin ? tmin : tmax
+    first_hit > ray.tmax && return false
+    return true
+
+end
+
+function ray_intersection(axisbox::AABB, ray::Ray)
+    if !intersected(axisbox, ray)
         return nothing
     else
-        dim = length(box.S)
+        dim = length(axisbox.S)
         closest = nothing
         for i in 1:dim
-            inter = ray_intersection(box.S[i], inv_ray)
+            inter = ray_intersection(axisbox.S[i], ray)
             if isnothing(inter)
                 continue
             end

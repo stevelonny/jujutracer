@@ -275,3 +275,11 @@ function internal(I::CSGIntersection, P::Point)
     p = inverse(I.Tr)(P) # P in the un-transofmed intersection system
     return internal(I.Sh1, p) && internal(I.Sh2, p) # da inserire la trasformation di I
 end
+
+function boxed(CSG::Union{CSGUnion, CSGDifference, CSGIntersection})::Tuple{Point, Point}
+    P1_1, P1_2 = boxed(CSG.Sh1)
+    P2_1, P2_2 = boxed(CSG.Sh2)
+    P1 = Point(min(P1_1.x, P2_1.x), min(P1_1.y, P2_1.y), min(P1_1.z, P2_1.z))
+    P2 = Point(max(P1_2.x, P2_2.x), max(P1_2.y, P2_2.y), max(P1_2.z, P2_2.z))
+return P1, P2
+end
