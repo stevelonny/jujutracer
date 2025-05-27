@@ -40,7 +40,7 @@ include("brdf.jl")
 export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBRDF, SpecularBRDF, Material
 
 include("shapes.jl")
-export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, Box, Cylinder, Cone, Plane, Rectangle, World, ray_intersection, ray_intersection_list, Eval, boxed
+export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, Box, Cylinder, Cone, Plane, Rectangle, Circle, World, ray_intersection, ray_intersection_list, Eval, boxed
 
 include("meshes.jl")
 export Triangle, Parallelogram, ray_intersection, intersected, boxed
