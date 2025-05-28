@@ -58,7 +58,7 @@ Calculate the UV coordinates of a point on the cylinder.
 - `SurfacePoint`: the UV coordinates of the point on the cylinder.
 """
 function _point_to_uv(S::Cylinder, p::Point)
-    return SurfacePoint(0.5 + atan(p.y, p.x) / (2.0 * π), p.z + 0.5)
+    return SurfacePoint(0.5 + atan(p.y, p.x) / (2.0 * π), round(p.z + 0.5; digits = 2))
 end
 
 """
