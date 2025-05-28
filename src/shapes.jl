@@ -210,14 +210,35 @@ function internal(S::Sphere, P::Point)
     return (squared_norm(Vec(inverse(S.Tr)(P))) <= 1.0) ? true : false
 end
 
+"""
+    boxed(S::Sphere)::Tuple{Point, Point}
+
+Returns the bounding box of the sphere.
+# Arguments
+- `S::Sphere`: The sphere for which to calculate the bounding box.
+# Returns
+- `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the sphere.
+"""
 function boxed(S::Sphere)::Tuple{Point, Point}
     # return P1 and P2 of the bounding box of the sphere
     # remember to apply the transformation to the points
-    P1 = Point(-1.0, -1.0, -1.0)
-    P2 = Point(1.0, 1.0, 1.0)
-    P1 = S.Tr(P1)
-    P2 = S.Tr(P2)
-    return (P1, P2)
+    p1 = Point(-1.0, -1.0, -1.0)
+    p2 = Point(1.0, 1.0, 1.0)
+    corners = [
+        Point(x, y, z)
+        for x in (p1.x, p2.x),
+            y in (p1.y, p2.y),
+            z in (p1.z, p2.z)
+    ]
+    # Transform all corners
+    world_corners = [S.Tr(c) for c in corners]
+    # Find min/max for each coordinate
+    xs = [c.x for c in world_corners]
+    ys = [c.y for c in world_corners]
+    zs = [c.z for c in world_corners]
+    Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
+    Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
+    return (Pmin, Pmax)
 end
 
 #---------------------------------------------------------
@@ -569,14 +590,34 @@ function ray_intersection_list(box::Box, ray::Ray)
     return [HR1, HR2]
 end
 
+"""
+    boxed(S::Box)::Tuple{Point, Point}
+
+Returns the bounding box of the box.
+# Arguments
+- `S::Box`: The box for which to calculate the bounding box.
+# Returns
+- `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the box.
+"""
 function boxed(S::Box)::Tuple{Point, Point}
-    # return P1 and P2 of the bounding box of the sphere
-    # remember to apply the transformation to the points
-    P1_ = S.P1
-    P2_ = S.P2
-    P1_ = S.Tr(P1_)
-    P2_ = S.Tr(P2_)
-    return (P1_, P2_)
+    # Thanks chatGPT
+    # Get local-space corners
+    p1, p2 = S.P1, S.P2
+    corners = [
+        Point(x, y, z)
+        for x in (p1.x, p2.x),
+            y in (p1.y, p2.y),
+            z in (p1.z, p2.z)
+    ]
+    # Transform all corners
+    world_corners = [S.Tr(c) for c in corners]
+    # Find min/max for each coordinate
+    xs = [c.x for c in world_corners]
+    ys = [c.y for c in world_corners]
+    zs = [c.z for c in world_corners]
+    Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
+    Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
+    return (Pmin, Pmax)
 end
 
 #---------------------------------------------------------
@@ -793,14 +834,35 @@ function internal(S::Cylinder, P::Point)
     return (circle && z) ? true : false
 end
 
+"""
+    boxed(S::Cylinder)::Tuple{Point, Point}
+
+Returns the bounding box of the cylinder.
+# Arguments
+- `S::Cylinder`: The cylinder for which to calculate the bounding box.
+# Returns
+- `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the cylinder.
+"""
 function boxed(S::Cylinder)::Tuple{Point, Point}
     # return P1 and P2 of the bounding box of the sphere
     # remember to apply the transformation to the points
-    P1 = Point(-1.0, -1.0, -0.5)
-    P2 = Point(1.0, 1.0, 0.5)
-    P1 = S.Tr(P1)
-    P2 = S.Tr(P2)
-    return (P1, P2)
+    p1 = Point(-1.0, -1.0, -0.5)
+    p2 = Point(1.0, 1.0, 0.5)
+    corners = [
+        Point(x, y, z)
+        for x in (p1.x, p2.x),
+            y in (p1.y, p2.y),
+            z in (p1.z, p2.z)
+    ]
+    # Transform all corners
+    world_corners = [S.Tr(c) for c in corners]
+    # Find min/max for each coordinate
+    xs = [c.x for c in world_corners]
+    ys = [c.y for c in world_corners]
+    zs = [c.z for c in world_corners]
+    Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
+    Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
+    return (Pmin, Pmax)
 end
 
 #---------------------------------------------------------
@@ -1069,11 +1131,23 @@ Returns the bounding box of the cone.
 function boxed(S::Cone)::Tuple{Point, Point}
     # return P1 and P2 of the bounding box of the sphere
     # remember to apply the transformation to the points
-    P1 = Point(-1.0, -1.0, 0.0)
-    P2 = Point(1.0, 1.0, 1.0)
-    P1 = S.Tr(P1)
-    P2 = S.Tr(P2)
-    return (P1, P2)
+    p1 = Point(-1.0, -1.0, 0.0)
+    p2 = Point(1.0, 1.0, 1.0)
+    corners = [
+        Point(x, y, z)
+        for x in (p1.x, p2.x),
+            y in (p1.y, p2.y),
+            z in (p1.z, p2.z)
+    ]
+    # Transform all corners
+    world_corners = [S.Tr(c) for c in corners]
+    # Find min/max for each coordinate
+    xs = [c.x for c in world_corners]
+    ys = [c.y for c in world_corners]
+    zs = [c.z for c in world_corners]
+    Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
+    Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
+    return (Pmin, Pmax)
 end
 # Solid shapes are water-tight, and can be used to create CSG shapes.
 
