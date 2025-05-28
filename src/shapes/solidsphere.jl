@@ -140,18 +140,11 @@ function ray_intersection_list(S::Sphere, ray::Ray)
     sqrot = sqrt(Δrid)
     t1 = (-O_dot_d - sqrot) / d_squared
     t2 = (-O_dot_d + sqrot) / d_squared
-    if t1 > inv_ray.tmin && t1 < inv_ray.tmax
+    if t1 > inv_ray.tmin && t1 < inv_ray.tmax && t2 > inv_ray.tmin && t2 < inv_ray.tmax
+        # actually they are not yet ordered by distance
         first_hit = t1
         second_hit = t2
-    elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax
-        first_hit = t2
-        second_hit = t1
-    else
-        return nothing
-    end
-
-    # when a ray is originated inside the sphere, the equation gives also the solution of the intersection in the opposite direction
-    if signbit(first_hit) || signbit(second_hit)
+    else # return nothing if both hits are outside the ray's range
         return nothing
     end
 
@@ -173,7 +166,7 @@ function ray_intersection_list(S::Sphere, ray::Ray)
         ray=ray,
         shape=S
     )
-    return [HR1, HR2]
+    return t1 < t2 ? [HR1, HR2] : [HR2, HR1]
 end
 
 """
