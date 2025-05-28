@@ -74,7 +74,7 @@ Calculates the intersection of a ray and a sphere.
 If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
 function ray_intersection(S::Cone, ray::Ray)
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # z = 1 - sqrt(x^2 + y^2)
@@ -118,10 +118,8 @@ function ray_intersection(S::Cone, ray::Ray)
         if tz < t1 && tz > inv_ray.tmin && tz < inv_ray.tmax
             # if the base is hit before the first intersection, we return the base hit
             hit_base = inv_ray(tz)
-            if hit_base.x^2 + hit_base.y^2 > 1.0
-                return nothing  # base hit is outside the circle
-            end
-            return HitRecord(
+            if hit_base.x^2 + hit_base.y^2 <= 1.0
+                return HitRecord(
                 world_P = S.Tr(hit_base),
                 normal = S.Tr(_circle_normal(hit_base, ray.dir)),
                 surface_P = _circle_point_to_uv(hit_base),
@@ -129,16 +127,15 @@ function ray_intersection(S::Cone, ray::Ray)
                 ray = ray,
                 shape = S
             )
+            end
         end
     elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 > 0.0 && z2 < 1.0
         first_hit = t2
-        if tz < t2 && tz > inv_ray.tmin && tz < inv_ray.tmax
+        if tz < t1 && tz > inv_ray.tmin && tz < inv_ray.tmax
             # if the base is hit before the first intersection, we return the base hit
             hit_base = inv_ray(tz)
-            if hit_base.x^2 + hit_base.y^2 > 1.0
-                return nothing  # base hit is outside the circle
-            end
-            return HitRecord(
+            if hit_base.x^2 + hit_base.y^2 <= 1.0
+                return HitRecord(
                 world_P = S.Tr(hit_base),
                 normal = S.Tr(_circle_normal(hit_base, ray.dir)),
                 surface_P = _circle_point_to_uv(hit_base),
@@ -146,6 +143,7 @@ function ray_intersection(S::Cone, ray::Ray)
                 ray = ray,
                 shape = S
             )
+            end
         end
     elseif tz > inv_ray.tmin && tz < inv_ray.tmax
         # if the base is hit before the first intersection, we return the base hit
@@ -244,10 +242,10 @@ function ray_intersection_list(S::Cone, ray::Ray)
         push!(hit_records, HR2)
     end
     sort!(hit_records, by = h -> h.t)  # sort by distance
-    if length(hit_records) == 0
+    if length(hit_records) != 2
         return nothing
     end
-    return [hit_records[2], hit_records[1]]  # return the first two hits, if they exists
+    return [hit_records[1], hit_records[2]]  # return the first two hits, if they exists
 end
 
 """
