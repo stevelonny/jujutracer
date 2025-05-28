@@ -15,8 +15,10 @@
 - Constructive Solid Geometry [#10](https://github.com/stevelonny/jujutracer/pull/10)
 - Implement `Pigment` types and rudimental `BRDF` methods
 - Implement `Flat` renderer
-## Bugfixes
+## Bugfixes & optimization
 - Fix `read_pfm_file` which incorrectly would reset the reading buffer after each read line
+- Change transformation operations on `Point`, `Vec` and `Normal`
+- Add `_unsafe_inverse` for creating inverse trasformation without checking the inputs
 
 # Version 0.2.1
 

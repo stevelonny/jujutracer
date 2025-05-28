@@ -181,6 +181,12 @@ end
 #--------------------------------------------------------------------------
 # Transformations
 #--------------------------------------------------------------------------
+"""
+    struct Unsafe
+A singleton struct used to indicate unsafe operations in transformations.
+See also [`Transformation`](@ref) and [`_unsafe_inverse`](@ref).
+"""
+struct Unsafe end
 
 """
     AbstractTransformation
@@ -204,6 +210,7 @@ This structure is a subtype of [`AbstractTransformation`](@ref).
 # Constructors
 - `Transformation()`: Creates an identity transformation where `M` and `inv` are both 4x4 identity matrices.
 - `Transformation(M::Matrix{Float64}, inv::Matrix{Float64})`: Creates a transformation with the given `M` and `inv` matrices.
+- `Transformation(M::Matrix{Float64}, inv::Matrix{Float64}, unsafe::Unsafe)`: Creates a transformation with the given `M` and `inv` matrices, without veryfing the inputs.
 Throws an `ArgumentError` if:
   - `M` or `inv` are not 4x4 matrices.
   - The last element of `M` or `inv` is not `1.0`.
@@ -236,6 +243,9 @@ struct Transformation <: AbstractTransformation
         end
         new(M, inv)
     end
+    function Transformation(M::Matrix{Float64}, inv::Matrix{Float64}, unsafe::Unsafe)
+        new(M, inv)
+    end        
 end
 
 """
@@ -409,10 +419,19 @@ end
 """
     inverse(a::AbstractTransformation)
 
-Return the inverse transformation
+Return the inverse transformation.
 """
 function inverse(a::AbstractTransformation)
     return Transformation(a.inv,a.M)
+end
+
+"""
+    _unsafe_inverse(a::AbstractTransformation)
+
+Return the inverse transformation without checking if the matrices are inverses of each other.
+"""
+function _unsafe_inverse(a::AbstractTransformation)
+    return Transformation(a.inv,a.M, Unsafe())
 end
 
 """
@@ -421,10 +440,10 @@ end
 Applies the transformation to a `Vec`.
 """
 function (t::AbstractTransformation)(v::Vec)
-    # homogeneous coordinates
-    v4 = [v.x; v.y; v.z; 0]
-    v4t = t.M * v4
-    return Vec(v4t[1], v4t[2], v4t[3])
+    v4_x = t.M[1, 1] * v.x + t.M[1, 2] * v.y + t.M[1, 3] * v.z
+    v4_y = t.M[2, 1] * v.x + t.M[2, 2] * v.y + t.M[2, 3] * v.z
+    v4_z = t.M[3, 1] * v.x + t.M[3, 2] * v.y + t.M[3, 3] * v.z
+    return Vec(v4_x, v4_y, v4_z)
 end
 
 """
@@ -433,9 +452,10 @@ end
 Applies the transformation to a `Point`.
 """
 function (t::AbstractTransformation)(p::Point)
-    v4 = [p.x; p.y; p.z; 1]
-    v4t = t.M * v4
-    return Point(v4t[1], v4t[2], v4t[3])
+    v4t_x = t.M[1, 1] * p.x + t.M[1, 2] * p.y + t.M[1, 3] * p.z + t.M[1, 4]
+    v4t_y = t.M[2, 1] * p.x + t.M[2, 2] * p.y + t.M[2, 3] * p.z + t.M[2, 4]
+    v4t_z = t.M[3, 1] * p.x + t.M[3, 2] * p.y + t.M[3, 3] * p.z + t.M[3, 4]
+return Point(v4t_x, v4t_y, v4t_z)
 end
 
 """
@@ -444,9 +464,11 @@ end
 Applies the transformation to a `Normal`.
 """
 function (t::AbstractTransformation)(n::Normal)
-    v4 = [n.x; n.y; n.z; 0]
-    v4t = transpose(t.inv) * v4
-    return Normal(v4t[1], v4t[2], v4t[3])
+    # use the traspose!
+    v4_x = t.inv[1, 1] * n.x + t.inv[2, 1] * n.y + t.inv[3, 1] * n.z
+    v4_y = t.inv[1, 2] * n.x + t.inv[2, 2] * n.y + t.inv[3, 2] * n.z
+    v4_z = t.inv[1, 3] * n.x + t.inv[2, 3] * n.y + t.inv[3, 3] * n.z
+    return Normal(v4_x, v4_y, v4_z)
 end
 
 """

@@ -107,7 +107,7 @@ Calculates all intersections of a ray with the union of two solid shapes.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(U::CSGUnion, ray::Ray)
-    inv_ray = inverse(U.Tr)(ray) # ray in the un-transformed union system
+    inv_ray = _unsafe_inverse(U.Tr)(ray) # ray in the un-transformed union system
     # collects the hit records list of the two shapes
     HR1_list = ray_intersection_list(U.Sh1, inv_ray)
     HR2_list = ray_intersection_list(U.Sh2, inv_ray)
@@ -141,7 +141,7 @@ Checks if a point is inside the union of two solid shapes.
 - `Bool`: `true` if the point is inside the union, `false` otherwise.
 """
 function internal(U::CSGUnion, P::Point)
-    p = inverse(U.Tr)(P) # P in the un-transofmed union system
+    p = _unsafe_inverse(U.Tr)(P) # P in the un-transofmed union system
     return internal(U.Sh1, p) || internal(U.Sh2, p)
 end
 
@@ -173,7 +173,7 @@ Calculates all intersections of a ray with the difference of two solid shapes.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(D::CSGDifference, ray::Ray)
-    inv_ray = inverse(D.Tr)(ray) # ray in the un-transformed difference system
+    inv_ray = _unsafe_inverse(D.Tr)(ray) # ray in the un-transformed difference system
     # collect the hrs of the first shape
     HR1_list = ray_intersection_list(D.Sh1, inv_ray)
 
@@ -210,7 +210,7 @@ Checks if a point is inside the difference of two solid shapes.
 - `Bool`: `true` if the point is inside the difference, `false` otherwise.
 """
 function internal(D::CSGDifference, P::Point)
-    p = inverse(D.Tr)(P) # P in the un-transofmed difference system
+    p = _unsafe_inverse(D.Tr)(P) # P in the un-transofmed difference system
     return internal(D.Sh1, p) && !internal(D.Sh2, p)
 end
 
@@ -242,7 +242,7 @@ Calculates all intersections of a ray with the intersection of two solid shapes.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(I::CSGIntersection, ray::Ray)
-    inv_ray = inverse(I.Tr)(ray) # ray in the un-transformed intersection system
+    inv_ray = _unsafe_inverse(I.Tr)(ray) # ray in the un-transformed intersection system
     # collect the hrs of both shapes
     HR1_list = ray_intersection_list(I.Sh1, inv_ray)
     if isnothing(HR1_list)
@@ -272,7 +272,7 @@ Checks if a point is inside the intersection of two solid shapes.
 - `Bool`: `true` if the point is inside the intersection, `false` otherwise.
 """
 function internal(I::CSGIntersection, P::Point)
-    p = inverse(I.Tr)(P) # P in the un-transofmed intersection system
+    p = _unsafe_inverse(I.Tr)(P) # P in the un-transofmed intersection system
     return internal(I.Sh1, p) && internal(I.Sh2, p) # da inserire la trasformation di I
 end
 

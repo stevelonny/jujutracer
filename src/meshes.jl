@@ -3,7 +3,7 @@
 #---------------------------------------------------------
 
 """
-    Mat(a::Vec, b::Vec, c::Vec)
+    _mat(a::Vec, b::Vec, c::Vec)
 
 Returns a Matrix build with the transposed Vectors aᵗ, bᵗ and cᵗ.
 """
@@ -12,7 +12,7 @@ function _mat(a::Vec, b::Vec, c::Vec)
 end
 
 """
-    Sarrus(Mat::Matrix)
+    _sarrus(Mat::Matrix)
 
 Implement the Sarrus method for calculation of the determinant of a 3x3 Matrix.
 """
@@ -24,6 +24,20 @@ function _sarrus(Mat::Matrix)
     det -= Mat[1,2] * Mat[2,1] * Mat[3,3]
     det -= Mat[1,3] * Mat[2,2] * Mat[3,1]
     return det
+end
+
+"""
+    _sarrus(a::Vec, b::Vec, c::Vec)
+
+Efficiently computes the determinant of the 3x3 matrix whose columns are `a`, `b`, and `c`, without allocating a matrix.
+"""
+function _sarrus(a::Vec, b::Vec, c::Vec)
+    return  a.x * b.y * c.z +
+            a.y * b.z * c.x +
+            a.z * b.x * c.y -
+            a.z * b.y * c.x -
+            a.y * b.x * c.z -
+            a.x * b.z * c.y
 end
 
 #---------------------------------------------------------
@@ -90,19 +104,19 @@ function ray_intersection(S::Triangle, ray::Ray)
     A = S.A                         # Point A
     B = S.B - A                     # Vec B - A
     C = S.C - A                     # Vec C - A
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = inv_ray.origin - A          # Vec O - A
     d = inv_ray.dir
     # M = (B C -d)
     # Mx = O
     # evaluating the determinant of the Matrix moltipling (β, γ, t)ᵗ
-    detM = _sarrus(_mat(B, C, -d))
+    detM = _sarrus(B, C, -d)
 
     if detM != 0.0
         # Cramer's rule for β, γ and t
-        β = _sarrus(_mat(O, C, -d)) / detM
-        γ = _sarrus(_mat(B, O, -d)) / detM
-        t = _sarrus(_mat(B, C, O)) / detM
+        β = _sarrus(O, C, -d) / detM
+        γ = _sarrus(B, O, -d) / detM
+        t = _sarrus(B, C, O) / detM
 
         if t > inv_ray.tmin && t < inv_ray.tmax && β <= 1.0 && β >= 0.0 && γ <= 1.0 && γ >= 0.0 && β + γ <= 1.0
             first_hit = t
@@ -203,19 +217,19 @@ function ray_intersection(S::Parallelogram, ray::Ray)
     A = S.A                         # Point A
     B = S.B - A                     # Vec B - A
     C = S.C - A                     # Vec C - A
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = inv_ray.origin - A          # Vec O - A
     d = inv_ray.dir
     # M = (B C -d)
     # Mx = O
     # evaluating the determinant of the Matrix moltipling (β, γ, t)ᵗ
-    detM = _sarrus(_mat(B, C, -d))
+    detM = _sarrus(B, C, -d)
 
     if detM != 0.0
         # Cramer's rule for β, γ and t
-        β = _sarrus(_mat(O, C, -d)) / detM
-        γ = _sarrus(_mat(B, O, -d)) / detM
-        t = _sarrus(_mat(B, C, O)) / detM
+        β = _sarrus(O, C, -d) / detM
+        γ = _sarrus(B, O, -d) / detM
+        t = _sarrus(B, C, O) / detM
 
         if t > inv_ray.tmin && t < inv_ray.tmax && β <= 1.0 && β >= 0.0 && γ <= 1.0 && γ >= 0.0
             first_hit = t

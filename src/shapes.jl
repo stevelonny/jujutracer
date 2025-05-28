@@ -90,7 +90,7 @@ Calculates the intersection of a ray and a sphere.
 If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
 function ray_intersection(S::Sphere, ray::Ray)
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # precompute common values, probably not needed as the compiler is already smart enough
@@ -141,7 +141,7 @@ Calculates all intersections of a ray with a sphere.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(S::Sphere, ray::Ray)
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # precompute common values, probably not needed as the compiler is already smart enough
@@ -207,7 +207,7 @@ Checks if a point is inside a sphere.
 - `Bool`: `true` if the point is inside the sphere, `false` otherwise.
 """
 function internal(S::Sphere, P::Point)
-    return (squared_norm(Vec(inverse(S.Tr)(P))) <= 1.0) ? true : false
+    return (squared_norm(Vec(_unsafe_inverse(S.Tr)(P))) <= 1.0) ? true : false
 end
 
 """
@@ -344,25 +344,28 @@ function _point_to_uv(box::Box, p::Point, norm::Normal)
     nx = (p.x - p1.x) / (p2.x - p1.x)
     ny = (p.y - p1.y) / (p2.y - p1.y)
     nz = (p.z - p1.z) / (p2.z - p1.z)
-    third = 1.0 / 3.0
-    if !signbit(norm.x) # +X (Right)
+    third = 1.0 / 4.0
+    tol = 1e-6
+    if abs(norm.x - 1.0) < tol      # +X (Right)
         u = 0.5 + nz * 0.25
         v = third + (1.0 - ny) * third
-    elseif signbit(norm.x) # -X (Left)
+    elseif abs(norm.x + 1.0) < tol # -X (Left)
         u = 0.0 + nz * 0.25
         v = third + (1.0 - ny) * third
-    elseif !signbit(norm.y)  # +Y (Top)
+    elseif abs(norm.y - 1.0) < tol  # +Y (Top)
         u = 0.25 + nx * 0.25
-        v = 2.0 * third + (1.0 - nz) * third
-    elseif signbit(norm.y) # -Y (Bottom)
+        v = 2.0*third + (1.0 - nz) * third
+    elseif abs(norm.y + 1.0) < tol # -Y (Bottom)
         u = 0.25 + nx * 0.25
         v = 0.0 + nz * third
-    elseif !signbit(norm.z)  # +Z (Front)
+    elseif abs(norm.z - 1.0) < tol  # +Z (Front)
         u = 0.25 + nx * 0.25
         v = third + (1.0 - ny) * third
-    elseif signbit(norm.z) # -Z (Back)
+    elseif abs(norm.z + 1.0) < tol # -Z (Back)
         u = 0.75 + (1.0 - nx) * 0.25
         v = third + (1.0 - ny) * third
+    else
+        u, v = 0.0, 0.0
     end
     return SurfacePoint(u, v)
 end
@@ -379,7 +382,7 @@ Calculate the intersection of a ray and a box.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(box::Box, ray::Ray)
-    inv_ray = inverse(box.Tr)(ray)
+    inv_ray = _unsafe_inverse(box.Tr)(ray)
     p1 = box.P1
     p2 = box.P2
     O = inv_ray.origin
@@ -442,11 +445,11 @@ function ray_intersection(box::Box, ray::Ray)
     hit_point = inv_ray(first_hit)
     # normal
     if first_hit == t1x || first_hit == t2x
-        norm = Normal(-sign(d.x), 0.0, 0.0)
+        norm = Normal(-copysign(1.0, d.x), 0.0, 0.0)
     elseif first_hit == t1y || first_hit == t2y
-        norm = Normal(0.0, -sign(d.y), 0.0)
+        norm = Normal(0.0, -copysign(1.0, d.y), 0.0)
     else
-        norm = Normal(0.0, 0.0, -sign(d.z))
+        norm = Normal(0.0, 0.0, -copysign(1.0, d.z))
     end
 
     # point_to_uv needs the untransformed normal
@@ -475,10 +478,10 @@ Check if a point is inside the box.
 - `Bool`: `true` if the point is inside the box, `false` otherwise.
 """
 function internal(box::Box, P::Point)
-    p = inverse(box.Tr)(P)
-    cond_x = p.x < box.P2.x && p.x > box.P1.x
-    cond_y = p.y < box.P2.y && p.y > box.P1.y
-    cond_z = p.z < box.P2.z && p.z > box.P1.z
+    p = _unsafe_inverse(box.Tr)(P)
+    cond_x = p.x <= box.P2.x && p.x >= box.P1.x
+    cond_y = p.y <= box.P2.y && p.y >= box.P1.y
+    cond_z = p.z <= box.P2.z && p.z >= box.P1.z
 
     return (cond_x && cond_y && cond_z) ? true : false
 end
@@ -495,7 +498,7 @@ Calculate all intersections of a ray with a box.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(box::Box, ray::Ray)
-    inv_ray = inverse(box.Tr)(ray)
+    inv_ray = _unsafe_inverse(box.Tr)(ray)
     p1 = box.P1
     p2 = box.P2
     O = inv_ray.origin
@@ -693,8 +696,8 @@ Calculates the intersection of a ray and a sphere.
 # Returns
 If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
-function ray_intersection(S::Cylinder, ray::Ray)
-    inv_ray = inverse(S.Tr)(ray)
+function ray_intersection(S::_inf_Cylinder, ray::Ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # precompute common values, probably not needed as the compiler is already smart enough
@@ -750,8 +753,8 @@ Calculates all intersections of a ray with a sphere.
 - `Vector{HitRecord}`: A list of of the two hit records for the two intersections, ordered by distance.
 - `nothing`: If no intersections occur.
 """
-function ray_intersection_list(S::Cylinder, ray::Ray)
-    inv_ray = inverse(S.Tr)(ray)
+function ray_intersection_list(S::_inf_Cylinder, ray::Ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
 
@@ -828,7 +831,7 @@ Checks if a point is inside a sphere.
 - `Bool`: `true` if the point is inside the sphere, `false` otherwise.
 """
 function internal(S::Cylinder, P::Point)
-    p = inverse(S.Tr)(P)
+    p = _unsafe_inverse(S.Tr)(P)
     circle = (p.x^2 + p.y^2 <= 1.0)
     z = (p.z^2 <= 0.25)
     return (circle && z) ? true : false
@@ -1254,7 +1257,7 @@ Calculate the intersection of a ray and a plane.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection(pl::Plane, ray::Ray)
-    inv_ray = inverse(pl.Tr)(ray)
+    inv_ray = _unsafe_inverse(pl.Tr)(ray)
     Oz = inv_ray.origin.z
     d = inv_ray.dir
 
@@ -1355,7 +1358,7 @@ Calculate the intersection of a ray and a plane.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection(S::Rectangle, ray::Ray)
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = inv_ray.origin
     d = inv_ray.dir
 
