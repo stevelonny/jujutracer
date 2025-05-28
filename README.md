@@ -57,9 +57,10 @@ julia demoPath.jl <output_file> <width> <height> <cam_angle>
 
 </div>
 
-### ~~Multi-thread support~~
-See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)
-<!-- The code leverages multi-threading in a clean way simply by parallelizing each ray fired using the `@threads` keyword. The following results have been obtained on a Windows 10 machine powered by an i5-10300H using julia 1.11.4, running both demo scenes illustrated previously at a resolution of `1920x1080`.
+### Multi-thread support
+*See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)*
+The code leverages multi-threading in a clean way simply by parallelizing each ray fired using the `@threads` keyword.
+<!-- The following results have been obtained on a Windows 10 machine powered by an i5-10300H using julia 1.11.4, running both demo scenes illustrated previously at a resolution of `1920x1080`.
 ```powershell
 C:\Users\steve\projects\jujutracer> julia -t 1 bench.jl
   Activating project at `C:\Users\steve\projects\jujutracer`
@@ -76,14 +77,14 @@ Benchmarking demo...
 Benchmarking demoCSG...
   15.422 s (1248189455 allocations: 59.90 GiB)
 C:\Users\steve\projects\jujutracer> 
-```
+``` -->
 
 To leverage multi-thread, launch `julia` with the correct flag `t` and the number of threads to be assigned (or the `auto` keyword).
 ```bash
 julia -t auto demo.jl <output_file> <width> <height> <cam_angle>
 julia -t auto demoCSG.jl <output_file> <width> <height> <cam_angle>
 ```
- -->
+
 #### Animation
 `demogif.jl` creates 360 png images of the [`demo.jl`](#demo-version) scene by rotating the camera around the z-axis. The images can then be used as frames to generate a GIF. This script leverages multi-threading by paralallelizing the frame generation with the `@threads` macro. It will save into the `demo` folder, and won't overwrite existing frames, so that the process can be interrupted and recovered at a later moment. With the parallalization the generated frames won't be in order.
 To launch execute:
