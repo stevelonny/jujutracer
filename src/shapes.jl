@@ -696,7 +696,7 @@ Calculates the intersection of a ray and a sphere.
 # Returns
 If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
-function ray_intersection(S::_inf_Cylinder, ray::Ray)
+function ray_intersection(S::Cylinder, ray::Ray)
     inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
@@ -753,7 +753,7 @@ Calculates all intersections of a ray with a sphere.
 - `Vector{HitRecord}`: A list of of the two hit records for the two intersections, ordered by distance.
 - `nothing`: If no intersections occur.
 """
-function ray_intersection_list(S::_inf_Cylinder, ray::Ray)
+function ray_intersection_list(S::Cylinder, ray::Ray)
     inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
@@ -912,7 +912,12 @@ Calculate the normal vector of a point on the cone.
 function _cone_normal(p::Point, dir::Vec)
     # if p.z = ± 0.5 than the normal is vertical, 
     # else if the point lies on the curve surface the normal is radial
-    norm = Normal(p.x * (0.25 - p.z^2), p.y * (0.25 - p.z^2), 1.0 * (1.0 - (p.x^2 + p.y^2)))
+    nor = sqrt((p.x^2 + p.y^2) / 2.0)
+    if p.z > 0.0
+        norm = Normal(p.x / nor, p.y / nor, 1.0 / sqrt(2.0))
+    else
+        norm = Normal(0.0, 0.0, -1.0)
+    end
     return (Vec(p) ⋅ dir < 0.0) ? norm : -norm
 end
 
