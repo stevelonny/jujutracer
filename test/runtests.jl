@@ -880,3 +880,41 @@ end
         @test color.b ≈ exp atol = 10e-5
     end
 end
+
+@testset "AABB" begin
+    # boxed methods
+    B1 = Box(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0))
+    @test jujutracer.boxed(B1) == (Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0))
+    S1 = Sphere()
+    @test jujutracer.boxed(S1) == (Point(-1.0, -1.0, -1.0), Point(1.0, 1.0, 1.0))
+    Co1 = Cone()
+    @test jujutracer.boxed(Co1) == (Point(-1.0, -1.0, 0.0), Point(1.0, 1.0, 1.0))
+    Cy1 = Cylinder()
+    @test jujutracer.boxed(Cy1) == (Point(-1.0, -1.0, -0.5), Point(1.0, 1.0, 0.5))
+    R1 = Rectangle()
+    @test jujutracer.boxed(R1) == (Point(-0.5, -0.5, 0.0), Point(0.5, 0.5, 0.0))
+    Ci1 = Circle()
+    @test jujutracer.boxed(Ci1) == (Point(-1.0, -1.0, 0.0), Point(1.0, 1.0, 0.0))
+    T1 = Triangle(Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0))
+    @test jujutracer.boxed(T1) == (Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0))
+    P1 = Parallelogram(Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0))
+    @test jujutracer.boxed(P1) == (Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0))
+    B2 = Box(Point(1.0, 1.0, 1.0), Point(2.0, 2.0, 2.0))
+    @test jujutracer.boxed(B2) == (Point(1.0, 1.0, 1.0), Point(2.0, 2.0, 2.0))
+    # test for AABB intersection
+    axisVec = Vector{AbstractShape}(undef, 2)
+    axisVec[1] = B1
+    axisVec[2] = B2
+    axisbox = jujutracer.AABB(axisVec)
+    @test axisbox.P1 ≈ Point(0.0, 0.0, 0.0)
+    @test axisbox.P2 ≈ Point(2.0, 2.0, 2.0)
+    ray1 = Ray(origin=Point(-1.0, 0.5, 0.5), dir=Vec(1.0, 0.0, 0.0))
+    @test jujutracer.intersected(axisbox, ray1) == true
+    HR1_a = ray_intersection(axisbox, ray1)
+    HR1 = ray_intersection(B1, ray1)
+    @test HR1_a ≈ HR1
+    ray2 = Ray(origin=Point(-1.0, 1.5, 0.5), dir=Vec(1.0, 0.0, 0.0))
+    @test jujutracer.intersected(axisbox, ray2) == true
+    HR2_a = ray_intersection(axisbox, ray2)
+    HR2 = ray_intersection(B2, ray2)
+end
