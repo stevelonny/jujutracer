@@ -244,15 +244,27 @@ end
 # AABB
 #---------------------------------------------------------
 
+"""
+    struct AABB <: AbstractShape
+
+Axis-Aligned Bounding Box (AABB) for a set of shapes.
+# Fields
+- `S::Vector{AbstractShape}`: the vector of shapes contained within the AABB.
+- `P1::Point`: the minimum corner of the AABB.
+- `P2::Point`: the maximum corner of the AABB.
+# Constructor
+- `AABB(S::Vector{AbstractShape})`: creates an AABB for the shapes in `S`, calculating the minimum and maximum corners based on the bounding boxes of the shapes.
+- `AABB(S::Vector{AbstractShape}, P1::Point, P2::Point)`: creates an AABB with the specified minimum and maximum corners `P1` and `P2` for the shapes in `S`.
+"""
 struct AABB <: AbstractShape
     # no need for a transformation, the AABB is always axis aligned
-    S::Vector{AbstractSolid}
+    S::Vector{AbstractShape}
     P1::Point
     P2::Point
 
-    function AABB(S::Vector{AbstractSolid})
+    function AABB(S::Vector{AbstractShape})
         if isempty(S)
-            throw(ArgumentError("Cannot create AABB with an empty set of solids."))
+            throw(ArgumentError("Cannot create AABB with an empty set of shapes."))
         end
         P1 = Point(Inf, Inf, Inf)
         P2 = Point(-Inf, -Inf, -Inf)
@@ -263,12 +275,21 @@ struct AABB <: AbstractShape
         end
         new(S, P1, P2)
     end
-    function AABB(S::Vector{AbstractSolid}, P1::Point, P2::Point)
+    function AABB(S::Vector{AbstractShape}, P1::Point, P2::Point)
         new(S, P1, P2)
     end
 end
         
+"""
+    intersected(axisbox::AABB, ray::Ray)
 
+Check if a ray intersects an axis-aligned bounding box (AABB).
+# Arguments
+- `axisbox::AABB`: the axis-aligned bounding box to be checked for intersection.
+- `ray::Ray`: the ray to be checked for intersection with the AABB.
+# Returns
+- `Bool`: `true` if the ray intersects the AABB, `false` otherwise.
+"""
 function intersected(axisbox::AABB, ray::Ray)::Bool
     # by having a specialized function we avoid useless allocations or operations (inverse...)
     p1 = axisbox.P1
@@ -295,6 +316,19 @@ function intersected(axisbox::AABB, ray::Ray)::Bool
 
 end
 
+"""
+    ray_intersection(axisbox::AABB, ray::Ray)
+
+Calculate the intersection of a ray and an axis-aligned bounding box (AABB).
+# Arguments
+- `axisbox::AABB`: the axis-aligned bounding box to be intersected.
+- `ray::Ray`: the ray intersecting the AABB.
+# Returns
+- `HitRecord`: The hit record of the first shape hit, if any.
+- `nothing`: If no intersections occur.
+# Notes
+- This function checks if the ray intersects the AABB and, if so, finds the closest intersection point among the shapes contained within the AABB.
+"""
 function ray_intersection(axisbox::AABB, ray::Ray)
     if !intersected(axisbox, ray)
         return nothing
@@ -312,4 +346,17 @@ function ray_intersection(axisbox::AABB, ray::Ray)
         end
         return closest
     end
+end
+
+"""
+    boxed(axisbox::AABB)
+
+Returns the two points defining the axis-aligned bounding box (AABB) `axisbox`.
+# Arguments
+- `axisbox::AABB`: the axis-aligned bounding box to be boxed.
+# Returns
+- `Tuple{Point, Point}`: a tuple containing the two points defining the AABB, where the first point is the minimum corner and the second point is the maximum corner.
+"""
+function boxed(axisbox::AABB)::Tuple{Point, Point}
+    return (axisbox.P1, axisbox.P2)
 end

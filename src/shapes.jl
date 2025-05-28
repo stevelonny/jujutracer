@@ -1380,6 +1380,37 @@ function ray_intersection(S::Rectangle, ray::Ray)
     )
 end
 
+"""
+    boxed(S::Rectangle)::Tuple{Point, Point}
+
+Returns the bounding box of the rectangle.
+# Arguments
+- `S::Rectangle`: The rectangle for which to calculate the bounding box.
+# Returns
+- `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the rectangle.
+"""
+function boxed(S::Rectangle)::Tuple{Point, Point}
+    # return P1 and P2 of the bounding box of the rectangle
+    # remember to apply the transformation to the points
+    p1 = Point(-0.5, -0.5, 0.0)
+    p2 = Point(0.5, 0.5, 0.0)
+    corners = [
+        Point(x, y, z)
+        for x in (p1.x, p2.x),
+            y in (p1.y, p2.y),
+            z in (p1.z, p2.z)
+    ]
+    # Transform all corners
+    world_corners = [S.Tr(c) for c in corners]
+    # Find min/max for each coordinate
+    xs = [c.x for c in world_corners]
+    ys = [c.y for c in world_corners]
+    zs = [c.z for c in world_corners]
+    Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
+    Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
+    return (Pmin, Pmax)
+end
+
 #---------------------------------------------------------
 # Circle
 #---------------------------------------------------------
@@ -1503,6 +1534,37 @@ function ray_intersection(S::Circle, ray::Ray)
         ray=ray,
         shape=S
     )
+end
+
+"""
+    boxed(S::Circle)::Tuple{Point, Point}
+
+Returns the bounding box of the circle.
+# Arguments
+- `S::Circle`: The circle for which to calculate the bounding box.
+# Returns
+- `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the circle.
+"""
+function boxed(S::Circle)::Tuple{Point, Point}
+    # return P1 and P2 of the bounding box of the circle
+    # remember to apply the transformation to the points
+    p1 = Point(-1.0, -1.0, 0.0)
+    p2 = Point(1.0, 1.0, 0.0)
+    corners = [
+        Point(x, y, z)
+        for x in (p1.x, p2.x),
+            y in (p1.y, p2.y),
+            z in (p1.z, p2.z)
+    ]
+    # Transform all corners
+    world_corners = [S.Tr(c) for c in corners]
+    # Find min/max for each coordinate
+    xs = [c.x for c in world_corners]
+    ys = [c.y for c in world_corners]
+    zs = [c.z for c in world_corners]
+    Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
+    Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
+    return (Pmin, Pmax)
 end
 
 # AbstractShape is not guaranteed to be water-tight, and cannot be used to create CSG shapes. (for now)
