@@ -311,18 +311,18 @@ function ray_intersection_list(box::Box, ray::Ray)
     hit_point_2 = inv_ray(second_hit)
     # normal
     if first_hit == t1x || first_hit == t2x
-        norm1 = Normal(-sign(d.x), 0.0, 0.0)
+        norm1 = Normal(-copysign(1.0, d.x), 0.0, 0.0)
     elseif first_hit == t1y || first_hit == t2y
-        norm1 = Normal(0.0, -sign(d.y), 0.0)
+        norm1 = Normal(0.0, -copysign(1.0, d.y), 0.0)
     else
-        norm1 = Normal(0.0, 0.0, -sign(d.z))
+        norm1 = Normal(0.0, 0.0, -copysign(1.0, d.z))
     end
     if second_hit == t1x || second_hit == t2x
-        norm2 = Normal(-sign(d.x), 0.0, 0.0)
+        norm2 = Normal(-copysign(1.0, d.x), 0.0, 0.0)
     elseif second_hit == t1y || second_hit == t2y
-        norm2 = Normal(0.0, -sign(d.y), 0.0)
+        norm2 = Normal(0.0, -copysign(1.0, d.y), 0.0)
     else
-        norm2 = Normal(0.0, 0.0, -sign(d.z))
+        norm2 = Normal(0.0, 0.0, -copysign(1.0, d.z))
     end
 
     # point_to_uv needs the untransformed normal
