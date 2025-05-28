@@ -40,11 +40,8 @@ Calculate the normal vector of a point on the cone.
 - `Normal`: the normal to the cone's surface at the point.
 """
 function _cone_normal(p::Point, dir::Vec)
-    # if p.z = ± 0.5 than the normal is vertical, 
-    # else if the point lies on the curve surface the normal is radial
-    nor = sqrt((p.x^2 + p.y^2) / 2.0)
     if p.z > 0.0
-        norm = Normal(p.x / nor, p.y / nor, 1.0 / sqrt(2.0))
+        norm = Normal(p.x, p.y, 1.0 - p.z)
     else
         norm = Normal(0.0, 0.0, -1.0)
     end
@@ -116,11 +113,14 @@ function ray_intersection(S::Cone, ray::Ray)
     z1 = O.z + t1 * d.z
     z2 = O.z + t2 * d.z
     tz = -O.z / d.z
-    hit_base = inv_ray(tz)
     if t1 > inv_ray.tmin && t1 < inv_ray.tmax && z1 > 0.0 && z1 < 1.0
         first_hit = t1
-        if tz < t1 && tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
+        if tz < t1 && tz > inv_ray.tmin && tz < inv_ray.tmax
             # if the base is hit before the first intersection, we return the base hit
+            hit_base = inv_ray(tz)
+            if hit_base.x^2 + hit_base.y^2 > 1.0
+                return nothing  # base hit is outside the circle
+            end
             return HitRecord(
                 world_P = S.Tr(hit_base),
                 normal = S.Tr(_circle_normal(hit_base, ray.dir)),
@@ -132,8 +132,12 @@ function ray_intersection(S::Cone, ray::Ray)
         end
     elseif t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 > 0.0 && z2 < 1.0
         first_hit = t2
-        if tz < t2 && tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
+        if tz < t2 && tz > inv_ray.tmin && tz < inv_ray.tmax
             # if the base is hit before the first intersection, we return the base hit
+            hit_base = inv_ray(tz)
+            if hit_base.x^2 + hit_base.y^2 > 1.0
+                return nothing  # base hit is outside the circle
+            end
             return HitRecord(
                 world_P = S.Tr(hit_base),
                 normal = S.Tr(_circle_normal(hit_base, ray.dir)),
@@ -143,8 +147,12 @@ function ray_intersection(S::Cone, ray::Ray)
                 shape = S
             )
         end
-    elseif tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 < 1.0
+    elseif tz > inv_ray.tmin && tz < inv_ray.tmax
         # if the base is hit before the first intersection, we return the base hit
+        hit_base = inv_ray(tz)
+        if hit_base.x^2 + hit_base.y^2 > 1.0
+            return nothing  # base hit is outside the circle
+        end
         return HitRecord(
             world_P = S.Tr(hit_base),
             normal = S.Tr(_circle_normal(hit_base, ray.dir)),
@@ -198,8 +206,11 @@ function ray_intersection_list(S::Cone, ray::Ray)
     z1 = O.z + t1 * d.z
     z2 = O.z + t2 * d.z
     tz = -O.z / d.z
-    hit_base = ray(tz)
-    if tz > ray.tmin && tz < ray.tmax && hit_base.x^2 + hit_base.y^2 < 1.0
+    if tz > ray.tmin && tz < ray.tmax
+        hit_base = ray(tz)
+        if hit_base.x^2 + hit_base.y^2 > 1.0
+            return nothing  # base hit is outside the circle
+        end
         HR_base = HitRecord(
             world_P = S.Tr(hit_base),
             normal = S.Tr(_circle_normal(hit_base, ray.dir)),
