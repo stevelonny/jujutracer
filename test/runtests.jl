@@ -750,16 +750,67 @@ end
         @test repo2[1].normal ≈ -ray2.dir
         @test repo2[2].normal ≈ -ray2.dir
     end
-
     @testset "Cone" begin
         C = Cone()
 
-        ray1 = Ray(origin = Point(0.5, 0.0, 1.0),
-                    dir = Vec(0.0, 0.0, -1.0))
-        repo1 = ray_intersection_list(C, ray1)
-        @test !isnothing(repo1)
-        @test repo1[1].normal ≈ Normal(1.0, 0.0, 1.0)
-        @test repo1[2].normal ≈ Normal(0.0, 0.0, 1.0)
+        # Ray from above, should hit the side at (0,0.5,0.5)
+        O1 = Point(0.0, 0.5, 1.0)
+        ray1 = Ray(origin=O1, dir=Vec(0.0, 0.0, -1.0))
+        HR1 = ray_intersection(C, ray1)
+        @test !isnothing(HR1)
+        @test HR1 ≈ Point(0.0, 0.5, 0.5)
+        @test HR1.normal ≈ Normal(0.0, 1.0/sqrt(2.0), 1.0 / sqrt(2.0))
+
+        # Ray from below, should hit the base at (0.5,0.5,0)
+        O2 = Point(0.5, 0.5, -1.0)
+        ray2 = Ray(origin=O2, dir=Vec(0.0, 0.0, 1.0))
+        HR2 = ray_intersection(C, ray2)
+        @test !isnothing(HR2)
+        @test HR2 ≈ Point(0.5, 0.5, 0.0)
+        @test HR2.normal ≈ Normal(0.0, 0.0, -1.0)
+
+        # Ray from side, should hit side at (0.5,0,0.5)
+        O4 = Point(2.0, 0.0, 0.5)
+        ray4 = Ray(origin=O4, dir=Vec(-1.0, 0.0, 0.0))
+        HR4 = ray_intersection(C, ray4)
+        @test !isnothing(HR4)
+        @test HR4 ≈ Point(0.5, 0, 0.5)
+        @test HR4.normal ≈ Normal(1.0 / sqrt(2.0), 0.0, 1.0 / sqrt(2.0))
+
+        # Internal point test
+        @test internal(C, Point(0.0, 0.0, 0.5)) == true
+        @test internal(C, Point(1.0, 0.0, 0.5)) == false
+    end
+    @testset "Circle" begin
+        Ci = Circle(Transformation(), Mat)
+
+        # Ray from above, should hit at (0,0,0)
+        O1 = Point(0.0, 0.0, 1.0)
+        ray1 = Ray(origin=O1, dir=Vec(0.0, 0.0, -1.0))
+        HR1 = ray_intersection(Ci, ray1)
+        @test HR1 ≈ Point(0.0, 0.0, 0.0)
+        @test HR1.t ≈ 1.0
+        @test HR1.normal ≈ Normal(0.0, 0.0, 1.0)
+
+        # Ray from side, should hit at (1,0,0)
+        O2 = Point(1.0, 0.0, 1.0)
+        ray2 = Ray(origin=O2, dir=Vec(0.0, 0.0, -1.0))
+        HR2 = ray_intersection(Ci, ray2)
+        @test HR2 ≈ Point(1.0, 0.0, 0.0)
+        @test HR2.t ≈ 1.0
+        @test HR2.normal ≈ Normal(0.0, 0.0, 1.0)
+
+        # Ray outside circle, should miss
+        O3 = Point(2.0, 0.0, 1.0)
+        ray3 = Ray(origin=O3, dir=Vec(0.0, 0.0, -1.0))
+        HR3 = ray_intersection(Ci, ray3)
+        @test HR3 === nothing
+
+        # Ray parallel to plane, should miss
+        O4 = Point(0.0, 0.0, 1.0)
+        ray4 = Ray(origin=O4, dir=Vec(1.0, 0.0, 0.0))
+        HR4 = ray_intersection(Ci, ray4)
+        @test HR4 === nothing
     end
 end
 

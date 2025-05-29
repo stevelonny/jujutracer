@@ -279,7 +279,20 @@ end
 function boxed(CSG::Union{CSGUnion, CSGDifference, CSGIntersection})::Tuple{Point, Point}
     P1_1, P1_2 = boxed(CSG.Sh1)
     P2_1, P2_2 = boxed(CSG.Sh2)
-    P1 = Point(min(P1_1.x, P2_1.x), min(P1_1.y, P2_1.y), min(P1_1.z, P2_1.z))
-    P2 = Point(max(P1_2.x, P2_2.x), max(P1_2.y, P2_2.y), max(P1_2.z, P2_2.z))
-return P1, P2
+    # get all the corners of the bounding boxes of the two shapes
+    corners = [
+        Point(x, y, z)
+        for x in (P1_1.x, P1_2.x, P2_1.x, P2_2.x),
+            y in (P1_1.y, P1_2.y, P2_1.y, P2_2.y),
+            z in (P1_1.z, P1_2.z, P2_1.z, P2_2.z)
+    ]
+    # apply the transformation to all corners
+    world_corners = [CSG.Tr(c) for c in corners]
+    # find the min and max points of the bounding box
+    xs = [c.x for c in world_corners]
+    ys = [c.y for c in world_corners]
+    zs = [c.z for c in world_corners]
+    Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
+    Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
+    return (Pmin, Pmax)
 end
