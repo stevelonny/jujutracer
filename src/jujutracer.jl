@@ -43,7 +43,7 @@ include("shapes/shapes.jl")
 #export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, Box, Cylinder, Cone, Plane, Rectangle, Circle, World, ray_intersection, ray_intersection_list, Eval, boxed
 
 include("meshes.jl")
-export Triangle, Parallelogram, ray_intersection, intersected, boxed
+export AABB, Triangle, Parallelogram, ray_intersection, intersected, boxed
 
 include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, ray_intersection_list, internal, boxed
