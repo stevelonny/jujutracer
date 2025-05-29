@@ -53,7 +53,7 @@ Apply a function to each pixel in the image. Leverage parallel processing for pe
 """
 function (it::ImageTracer)(fun::Function)
     # remember: julia is column-major order
-    #= @threads  =#for i in eachindex(IndexCartesian(), it.img.img)
+    @threads for i in eachindex(IndexCartesian(), it.img.img)
         col_pixel = i[2] - 1
         row_pixel = i[1] - 1
         ray = it(col_pixel, row_pixel)
@@ -64,18 +64,18 @@ function (it::ImageTracer)(fun::Function)
 end
 
 function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
-    for i in eachindex(IndexCartesian(), it.img.img)
+    @threads for i in eachindex(IndexCartesian(), it.img.img)
         col_pixel = i[2] - 1
         row_pixel = i[1] - 1
         color = RGB(0.0, 0.0, 0.0)
-        for j in 1:AA
-            for k in 1:AA
-                ray = it(col_pixel, 
-                        row_pixel, 
-                        u_pixel = (j - 1 + rand_uniform(pcg)) / AA, 
-                        v_pixel = (k - 1 + rand_uniform(pcg)) / AA)
-                color += fun(ray)
-            end
+        for idx in 1:(AA^2)
+            j = div(idx - 1, AA) + 1
+            k = mod(idx - 1, AA) + 1
+            ray = it(col_pixel, 
+                row_pixel, 
+                u_pixel = (j - 1 + rand_uniform(pcg)) / AA, 
+                v_pixel = (k - 1 + rand_uniform(pcg)) / AA)
+            color += fun(ray)
         end
         it.img[col_pixel, row_pixel] = color / (AA^2)
     end
