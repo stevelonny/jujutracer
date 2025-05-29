@@ -32,7 +32,7 @@ function demoCSG(width, height, cam_angle)
     S = Vector{AbstractShape}(undef, 3)
     S1 = Sphere(Translation(0.0, 0.5, 0.0) ⊙ Sc, Mat1)
     S2 = Sphere(Translation(0.0, -0.5, 0.0) ⊙ Sc, Mat2)
-    S3 = Cylinder(Translation(0.0, 0.0, 0.5) ⊙ Sc, Mat3)
+    S3 = Cone(#=Translation(0.0, 0.0, 0.5) ⊙ Sc,=# Mat3)
     #S[1] = (S1 ∪ S2) ∪ S3
     #S[1] = (S1 ∪ S2) - S3
     #S[1] = (S1 ∩ S2) ∩ S3

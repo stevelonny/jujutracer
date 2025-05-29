@@ -750,6 +750,17 @@ end
         @test repo2[1].normal ≈ -ray2.dir
         @test repo2[2].normal ≈ -ray2.dir
     end
+
+    @testset "Cone" begin
+        C = Cone()
+
+        ray1 = Ray(origin = Point(0.5, 0.0, 1.0),
+                    dir = Vec(0.0, 0.0, -1.0))
+        repo1 = ray_intersection_list(C, ray1)
+        @test !isnothing(repo1)
+        @test repo1[1].normal ≈ Normal(1.0, 0.0, 1.0)
+        @test repo1[2].normal ≈ Normal(0.0, 0.0, 1.0)
+    end
 end
 
 @testset "Random Generator" begin
