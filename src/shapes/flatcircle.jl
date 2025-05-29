@@ -47,12 +47,8 @@ Calculate the normal vector of a point on the circle.
 - `ArgumentError`: if the point is outside the circle.
 """
 function _circle_normal(p::Point, dir::Vec)
-    if p.x^2 + p.y^2 > 1.0
-        throw(ArgumentError("Point outside the circle"))
-    else
-        norm = Normal(0.0, 0.0, 1.0)
-        return (dir.z < 0.0) ? norm : -norm
-    end
+    norm = Normal(0.0, 0.0, 1.0)
+    return (dir.z < 0.0) ? norm : -norm
 end
 
 """
@@ -66,11 +62,7 @@ Calculate the UV coordinates of a point on the circle.
 - `SurfacePoint`: the UV coordinates of the point on the circle.
 """
 function _point_to_uv(S::Circle, p::Point)
-    r = sqrt(p.x^2 + p.y^2)
-    θ = atan(p.y, p.x)
-    u = θ / (2.0 * π) + 0.5
-    v = r
-    return SurfacePoint(u, v)
+    return _circle_point_to_uv(p)
 end
 
 """
@@ -101,7 +93,7 @@ Calculate the intersection of a ray and a circle.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(S::Circle, ray::Ray)
-    inv_ray = inverse(S.Tr)(ray)
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
 

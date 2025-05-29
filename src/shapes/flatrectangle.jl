@@ -38,12 +38,8 @@ Calculate the normal vector of a point on the rectangle
 - `Normal`: the normal to the rectangle's surface at the point.
 """
 function _rectangle_normal(p::Point, dir::Vec)
-    if abs(p.x) > 0.5 || abs(p.y) > 0.5
-        throw(ArgumentError("Point outside the rectangle"))
-    else
-        norm = Normal(0.0, 0.0, 1.0)
-        return (dir.z < 0.0) ? norm : -norm
-    end
+    norm = Normal(0.0, 0.0, 1.0)
+    return (dir.z < 0.0) ? norm : -norm
 end
 
 """
@@ -56,11 +52,7 @@ Calculate the UV coordinates of a point on the plane in PBC
 - `SurfacePoint`: the UV coordinates of the point in PBC
 """
 function _point_to_uv(S::Rectangle, p::Point)
-    if abs(p.x) > 0.5 || abs(p.y) > 0.5
-        throw(ArgumentError("Point outside the rectangle"))
-    else
         return SurfacePoint(p.x + 0.5, p.y + 0.5)
-    end
 end
 
 """
