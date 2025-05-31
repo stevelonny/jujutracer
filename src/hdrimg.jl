@@ -109,7 +109,7 @@ function _normalize_img!(img::hdrimg; a=0.18 , lum = nothing)
     end
 
     a= a>0 ? a : throw(ArgumentError("Expected a positive value for a"))
-
+    @debug "Normalizing image with a = $a and luminosity = $lum"
     img.img .= map(x ->  x* (a / lum), img.img)
 end
 

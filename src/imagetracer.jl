@@ -56,19 +56,16 @@ Apply a function to each pixel in the image. Leverage parallel processing for pe
 function (it::ImageTracer)(fun::Function)
     total = length(it.img.img)
     progress = Threads.Atomic{Int}(0)
-    # last_percent = 0
     update_interval = max(1, div(total, 200)) # update progress every 0.5% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
     @info "Starting rendering with $(renderer_type) renderer"
+    @info "Anti-Aliasing factor: $(AA)"
     if fun isa PathTracer
         @debug "PathTracer parameters" n_rays=fun.n_rays depth=fun.depth russian=fun.russian
     end
     @info "Starting image tracing with $(Threads.nthreads()) threads."
     @info "Starting time: $(time())"
     starting_time = time_ns()
-    # print is without newline at the end
-    # print("Progress: 0%")
-    # flush(stdout)
     # remember: julia is column-major order
     @withprogress name="Rendering" begin
         @threads for i in eachindex(IndexCartesian(), it.img.img)
@@ -82,22 +79,8 @@ function (it::ImageTracer)(fun::Function)
             if count % update_interval == 0 && Threads.threadid() == 1
                 @logprogress count / total
             end
-            # update progress indicator (only in thread 1)
-            #= if Threads.threadid() == 1
-                # atomic_add! returns the old value
-                done = Threads.atomic_add!(progress, 1)
-                percent = Int(floor(100 * done / total))
-                if percent > last_percent
-                    last_percent = percent
-                    print("\rProgress: $percent%")
-                    flush(stdout)
-                end
-            else
-                Threads.atomic_add!(progress, 1)
-            end =#
         end # forloop
     end # withprogress
-    # println("\rProgress: 100%")
     elapsed_time = (time_ns() - starting_time) / 1e9
     @info "Image tracing completed in $(elapsed_time) seconds."
 end
@@ -115,14 +98,16 @@ Apply a function to each pixel in the image with Anti-Aliasing (AA) leveraging s
 function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
     total = length(it.img.img)
     progress = Threads.Atomic{Int}(0)
-    # last_percent = 0
     update_interval = max(1, div(total, 200)) # update progress every 0.5% of total
+    renderer_type = typeof(fun).name.name  # Get type name as Symbol
     @info "Starting rendering with $(renderer_type) renderer"
+    @info "Anti-Aliasing factor: $(AA)"
+    if fun isa PathTracer
+        @debug "PathTracer parameters" n_rays=fun.n_rays depth=fun.depth russian=fun.russian
+    end
     @info "Starting image tracing with $(Threads.nthreads()) threads."
     @info "Starting time: $(time())"
     starting_time = time_ns()
-    # print("Progress: 0%")
-    # flush(stdout)
     @withprogress name="Rendering" begin
         @threads for i in eachindex(IndexCartesian(), it.img.img)
             col_pixel = i[2] - 1
@@ -142,20 +127,8 @@ function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
             if count % update_interval == 0 && Threads.threadid() == 1
                 @logprogress count / total
             end
-            #= if Threads.threadid() == 1
-                done = Threads.atomic_add!(progress, 1)
-                percent = Int(floor(100 * done / total))
-                if percent > last_percent
-                    last_percent = percent
-                    print("\rProgress: $percent%")
-                    flush(stdout)
-                end
-            else
-                Threads.atomic_add!(progress, 1)
-            end =#
         end # forloop
     end # withprogress
-    # println("\rProgress: 100%")
     elapsed_time = (time_ns() - starting_time) / 1e9
     @info "Image tracing completed in $(elapsed_time) seconds."
 end

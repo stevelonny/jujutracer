@@ -24,12 +24,14 @@ mutable struct PCG
     init_seq::UInt64: The initial sequence number. Default is 54.
     """
     function PCG( (init_state::UInt64) = UInt64(42), (init_seq::UInt64) = UInt64(54))
+        @debug "Creating PCG with init_state: $init_state, init_seq: $init_seq"
         pcg = new(0,0)
         @atomic pcg.state = 0
         pcg.inc = (init_seq << 1) | 1
         rand_pcg(pcg)
         @atomic pcg.state += init_state
         rand_pcg(pcg)
+        @debug "PCG initialized with state: $(@atomic pcg.state), inc: $(pcg.inc)"
         new(pcg.state, pcg.inc)
         return pcg
     end
