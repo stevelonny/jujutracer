@@ -94,7 +94,7 @@ end
 # Path Tracer
 #---------------------------------------------------------
 """
-    Flat(world::World)
+    PathTracer(world::World)
 
 Flat renderer of the scene. Returns the Emition pigment of the hitten shapes
 # Fields

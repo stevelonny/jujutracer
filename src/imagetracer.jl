@@ -58,6 +58,11 @@ function (it::ImageTracer)(fun::Function)
     progress = Threads.Atomic{Int}(0)
     # last_percent = 0
     update_interval = max(1, div(total, 200)) # update progress every 0.5% of total
+    renderer_type = typeof(fun).name.name  # Get type name as Symbol
+    @info "Starting rendering with $(renderer_type) renderer"
+    if fun isa PathTracer
+        @debug "PathTracer parameters" n_rays=fun.n_rays depth=fun.depth russian=fun.russian
+    end
     @info "Starting image tracing with $(Threads.nthreads()) threads."
     @info "Starting time: $(time())"
     starting_time = time_ns()
@@ -112,6 +117,7 @@ function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
     progress = Threads.Atomic{Int}(0)
     # last_percent = 0
     update_interval = max(1, div(total, 200)) # update progress every 0.5% of total
+    @info "Starting rendering with $(renderer_type) renderer"
     @info "Starting image tracing with $(Threads.nthreads()) threads."
     @info "Starting time: $(time())"
     starting_time = time_ns()

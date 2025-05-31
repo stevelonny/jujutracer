@@ -45,10 +45,13 @@ function save_ldrimage(img_matrix::Matrix, filename::String)
     if any(x -> x.r < 0 || x.g < 0 || x.b < 0, img_matrix)
         throw(ArgumentError("Image values are not clamped. Please clamp the image before saving."))
     end
-
+    # Chek if the file already exists
+    if isfile(filename)
+        @warn("File already exists. Overwriting: $filename")
+    end
     # Save the image using FileIO
     save(filename, img_matrix)
-
+    @info("Image saved successfully to $filename")
     # Return the path to the saved file
     return filename
 end
@@ -204,7 +207,7 @@ function read_pfm_image(io)
             img[col_pixel, row_pixel] = RGB(r, g, b)
         end
     end
-
+    @info("Read PFM image with dimensions: $(w)x$(h) and endianness: $(endianness ? "little-endian" : "big-endian")")
     return img
 end
 
@@ -225,6 +228,7 @@ function read_pfm_image(filename::String)
         throw(InvalidPfmFileFormat("Invalid file extension. Only .pfm is supported."))
     end
     io = IOBuffer()
+    @info("Reading PFM image from file: $filename")
     open(filename, "r") do file
         write(io, file)
     end
@@ -263,6 +267,7 @@ function write_pfm_image(img::hdrimg, io::IOBuffer, endianness::Bool=true)
         end
         # println(row_pixel)
     end
+    @info("Saving PFM image with dimensions: $(img.w)x$(img.h) and endianness: $(endianness ? "little-endian" : "big-endian")")
 end
 
 """
@@ -286,12 +291,15 @@ function write_pfm_image(img::hdrimg, filename::String, endianness::Bool=true)
     io = IOBuffer()
     write_pfm_image(img, io, endianness)
     seekstart(io)  # Reset the buffer position to the beginning
-
+    # Check if the file already exists
+    if isfile(filename)
+        @warn("File already exists. Overwriting: $filename")
+    end
     open(filename, "w") do file
         write(file, io)
     end
     # No need to close the IOBuffer as it does not hold external resources
-
+    @info("PFM image saved successfully to $filename with endianness: $(endianness ? "little-endian" : "big-endian")")
 end
 
 """

@@ -7,8 +7,6 @@ using ProgressLogging
 using TerminalLoggers
 using Logging
 
-global_logger(TerminalLogger())
-
 # import
 import Base:
     +, -, *, ≈, /, sort, sign
