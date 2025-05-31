@@ -3,6 +3,7 @@ module jujutracer
 #using
 using Images, FileIO, ImageIO
 using Base.Threads
+using ProgressLogging
 
 # import
 import Base:

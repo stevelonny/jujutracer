@@ -1,5 +1,7 @@
 using jujutracer
 using Test
+using Logging
+Logging.disable_logging(Logging.Info)   
 
 
 @testset "Colors arithmetics" begin
