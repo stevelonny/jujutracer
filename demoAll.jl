@@ -8,13 +8,14 @@ using BenchmarkTools
 # Welcome to steve's playground
 
 filename = "all_"
+renderer = "flat" # or "flat"
 width = 640
 height = 360
 n_rays = 2
 depth = 3
 russian = 2
 aa = 2
-fullname = filename * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus_" * string(aa) * "aa"
+fullname = filename * renderer * "_" * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus_" * string(aa) * "aa"
 png_output = fullname * ".png"
 pfm_output = fullname * ".pfm"
 
@@ -80,9 +81,15 @@ cam = Perspective(d=2.0, t=Translation(-3.25, 0.0, 1.5) ⊙ Ry(π / 6.0))
 hdr = hdrimg(width, height)
 ImgTr = ImageTracer(hdr, cam)
 pcg = PCG()
-path = PathTracer(world, gray, pcg, n_rays, depth, russian)
-flat = Flat(world)
-ImgTr(flat, aa, pcg)
+renderer = nothing
+if renderer == "flat"
+    renderer = Flat(world)
+elseif renderer == "path"
+    renderer = PathTracer(world, gray, pcg, n_rays, depth, russian)
+else
+    throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
+end
+ImgTr(rendere, aa, pcg)
 luminosity = jujutracer._average_luminosity(hdr; type="W")
 @info "Average luminosity: " luminosity
 toned_img = tone_mapping(hdr; a=0.5, γ=1.3)
