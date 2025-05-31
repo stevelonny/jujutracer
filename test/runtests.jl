@@ -734,6 +734,86 @@ end
         @test internal(B2, Point(1.5, 3.0, 4.0)) == true
         @test internal(B2, Point(0.0, 0.0, 0.0)) == false
     end
+
+    @testset "Cylinder" begin
+        C = Cylinder()
+
+        ray1 = Ray(origin = Point(2.0, 0.0, 0.0),
+                    dir = Vec(-1.0, 0.0, 0.0))
+        repo1 = ray_intersection_list(C, ray1)
+        @test !isnothing(repo1)
+        @test repo1[1].normal ≈ -ray1.dir
+        @test repo1[2].normal ≈ -ray1.dir
+
+        ray2 = Ray(origin = Point(0.0, 0.0, 3.0),
+                    dir = Vec(0.0, 0.0, -1.0))
+        repo2 = ray_intersection_list(C, ray2)
+        @test !isnothing(repo2)
+        @test repo2[1].normal ≈ -ray2.dir
+        @test repo2[2].normal ≈ -ray2.dir
+    end
+    @testset "Cone" begin
+        C = Cone()
+
+        # Ray from above, should hit the side at (0,0.5,0.5)
+        O1 = Point(0.0, 0.5, 1.0)
+        ray1 = Ray(origin=O1, dir=Vec(0.0, 0.0, -1.0))
+        HR1 = ray_intersection(C, ray1)
+        @test !isnothing(HR1)
+        @test HR1 ≈ Point(0.0, 0.5, 0.5)
+        @test HR1.normal ≈ Normal(0.0, 1.0/sqrt(2.0), 1.0 / sqrt(2.0))
+
+        # Ray from below, should hit the base at (0.5,0.5,0)
+        O2 = Point(0.5, 0.5, -1.0)
+        ray2 = Ray(origin=O2, dir=Vec(0.0, 0.0, 1.0))
+        HR2 = ray_intersection(C, ray2)
+        @test !isnothing(HR2)
+        @test HR2 ≈ Point(0.5, 0.5, 0.0)
+        @test HR2.normal ≈ Normal(0.0, 0.0, -1.0)
+
+        # Ray from side, should hit side at (0.5,0,0.5)
+        O4 = Point(2.0, 0.0, 0.5)
+        ray4 = Ray(origin=O4, dir=Vec(-1.0, 0.0, 0.0))
+        HR4 = ray_intersection(C, ray4)
+        @test !isnothing(HR4)
+        @test HR4 ≈ Point(0.5, 0, 0.5)
+        @test HR4.normal ≈ Normal(1.0 / sqrt(2.0), 0.0, 1.0 / sqrt(2.0))
+
+        # Internal point test
+        @test internal(C, Point(0.0, 0.0, 0.5)) == true
+        @test internal(C, Point(1.0, 0.0, 0.5)) == false
+    end
+    @testset "Circle" begin
+        Ci = Circle(Transformation(), Mat)
+
+        # Ray from above, should hit at (0,0,0)
+        O1 = Point(0.0, 0.0, 1.0)
+        ray1 = Ray(origin=O1, dir=Vec(0.0, 0.0, -1.0))
+        HR1 = ray_intersection(Ci, ray1)
+        @test HR1 ≈ Point(0.0, 0.0, 0.0)
+        @test HR1.t ≈ 1.0
+        @test HR1.normal ≈ Normal(0.0, 0.0, 1.0)
+
+        # Ray from side, should hit at (1,0,0)
+        O2 = Point(1.0, 0.0, 1.0)
+        ray2 = Ray(origin=O2, dir=Vec(0.0, 0.0, -1.0))
+        HR2 = ray_intersection(Ci, ray2)
+        @test HR2 ≈ Point(1.0, 0.0, 0.0)
+        @test HR2.t ≈ 1.0
+        @test HR2.normal ≈ Normal(0.0, 0.0, 1.0)
+
+        # Ray outside circle, should miss
+        O3 = Point(2.0, 0.0, 1.0)
+        ray3 = Ray(origin=O3, dir=Vec(0.0, 0.0, -1.0))
+        HR3 = ray_intersection(Ci, ray3)
+        @test HR3 === nothing
+
+        # Ray parallel to plane, should miss
+        O4 = Point(0.0, 0.0, 1.0)
+        ray4 = Ray(origin=O4, dir=Vec(1.0, 0.0, 0.0))
+        HR4 = ray_intersection(Ci, ray4)
+        @test HR4 === nothing
+    end
 end
 
 @testset "Random Generator" begin
@@ -863,4 +943,42 @@ end
         @test color.g ≈ exp atol = 10e-5
         @test color.b ≈ exp atol = 10e-5
     end
+end
+
+@testset "AABB" begin
+    # boxed methods
+    B1 = Box(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0))
+    @test jujutracer.boxed(B1) == (Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0))
+    S1 = Sphere()
+    @test jujutracer.boxed(S1) == (Point(-1.0, -1.0, -1.0), Point(1.0, 1.0, 1.0))
+    Co1 = Cone()
+    @test jujutracer.boxed(Co1) == (Point(-1.0, -1.0, 0.0), Point(1.0, 1.0, 1.0))
+    Cy1 = Cylinder()
+    @test jujutracer.boxed(Cy1) == (Point(-1.0, -1.0, -0.5), Point(1.0, 1.0, 0.5))
+    R1 = Rectangle()
+    @test jujutracer.boxed(R1) == (Point(-0.5, -0.5, 0.0), Point(0.5, 0.5, 0.0))
+    Ci1 = Circle()
+    @test jujutracer.boxed(Ci1) == (Point(-1.0, -1.0, 0.0), Point(1.0, 1.0, 0.0))
+    T1 = Triangle(Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0))
+    @test jujutracer.boxed(T1) == (Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0))
+    P1 = Parallelogram(Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0))
+    @test jujutracer.boxed(P1) == (Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0))
+    B2 = Box(Point(1.0, 1.0, 1.0), Point(2.0, 2.0, 2.0))
+    @test jujutracer.boxed(B2) == (Point(1.0, 1.0, 1.0), Point(2.0, 2.0, 2.0))
+    # test for AABB intersection
+    axisVec = Vector{AbstractShape}(undef, 2)
+    axisVec[1] = B1
+    axisVec[2] = B2
+    axisbox = jujutracer.AABB(axisVec)
+    @test axisbox.P1 ≈ Point(0.0, 0.0, 0.0)
+    @test axisbox.P2 ≈ Point(2.0, 2.0, 2.0)
+    ray1 = Ray(origin=Point(-1.0, 0.5, 0.5), dir=Vec(1.0, 0.0, 0.0))
+    @test jujutracer.intersected(axisbox, ray1) == true
+    HR1_a = ray_intersection(axisbox, ray1)
+    HR1 = ray_intersection(B1, ray1)
+    @test HR1_a ≈ HR1
+    ray2 = Ray(origin=Point(-1.0, 1.5, 0.5), dir=Vec(1.0, 0.0, 0.0))
+    @test jujutracer.intersected(axisbox, ray2) == true
+    HR2_a = ray_intersection(axisbox, ray2)
+    HR2 = ray_intersection(B2, ray2)
 end

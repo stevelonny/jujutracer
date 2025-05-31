@@ -141,6 +141,24 @@ function ray_intersection(S::Triangle, ray::Ray)
     )
 end
 
+"""
+    boxed(S::Triangle)::Tuple{Point, Point}
+Returns the two points defining the bounding box of the triangle `S`.
+# Arguments
+- `S::Triangle`: the triangle to be boxed.
+# Returns
+- `Tuple{Point, Point}`: a tuple containing the two points defining the bounding box of the triangle.
+"""
+function boxed(S::Triangle)::Tuple{Point, Point}
+    A = S.Tr(S.A)
+    B = S.Tr(S.B)
+    C = S.Tr(S.C)
+    P1 = Point(min(A.x, B.x, C.x), min(A.y, B.y, C.y), min(A.z, B.z, C.z))
+    P2 = Point(max(A.x, B.x, C.x), max(A.y, B.y, C.y), max(A.z, B.z, C.z))
+    return (P1, P2)
+end
+    
+
 #---------------------------------------------------------
 # Parallelogram
 #---------------------------------------------------------
@@ -254,45 +272,20 @@ function ray_intersection(S::Parallelogram, ray::Ray)
     )
 end
 
-#---------------------------------------------------------
-# AABB
-#---------------------------------------------------------
-
-struct AABB <: AbstractShape
-    Tr::AbstractTransformation
-    S::Vector{AbstractShape}
-    P1::Point
-    P2::Point
-
-    function AABB(S::Vector{AbstractShape}, P1::Point, P2::Point)
-        new(Transformation(), S, P1, P2)
-    end
-    function AABB(Tr::AbstractTransformation, S::Vector{AbstractShape}, P1::Point, P2::Point)
-        new(Tr, S, P1, P2)
-    end
-    function AABB(box::Box, S::Vector{AbstractShape})
-        new(box.Tr, S, box.P1, box.P2)
-    end
-end
-
-function ray_intersection(box::AABB, ray::Ray)
-    inv_ray = _unsafe_inverse(box.Tr)(ray)
-    repo = ray_intersection(Box(box.P1, box.P2), inv_ray)
-
-    if isnothing(repo)
-        return nothing
-    else
-        dim = length(box.S)
-        closest = nothing
-        for i in 1:dim
-            inter = ray_intersection(box.S[i], inv_ray)
-            if isnothing(inter)
-                continue
-            end
-            if (isnothing(closest) || inter.t < closest.t)
-                closest = inter
-            end
-        end
-        return closest
-    end
+"""
+    boxed(S::Parallelogram)::Tuple{Point, Point}
+Returns the two points defining the bounding box of the parallelogram.
+# Arguments
+- `S::Parallelogram`: the parallelogram to be boxed.
+# Returns
+- `Tuple{Point, Point}`: a tuple containing the two points defining the bounding box of the parallelogram.
+"""
+function boxed(S::Parallelogram)::Tuple{Point, Point}
+    A = S.Tr(S.A)
+    B = S.Tr(S.B)
+    C = S.Tr(S.C)
+    D = A + (B - A) + (C - A)  # D = A + AB + AC
+    P1 = Point(min(A.x, B.x, C.x, D.x), min(A.y, B.y, C.y, D.y), min(A.z, B.z, C.z, D.z))
+    P2 = Point(max(A.x, B.x, C.x, D.x), max(A.y, B.y, C.y, D.y), max(A.z, B.z, C.z, D.z))
+    return (P1, P2)
 end
