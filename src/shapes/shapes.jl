@@ -22,16 +22,23 @@ export Cylinder
 include("solidcone.jl")
 export Cone
 
+include("csg.jl")
+export CSGUnion, CSGDifference, CSGIntersection
+
+
+include("aabb.jl")
+export AABB, intersected
+
+include("meshes.jl")
+export Triangle, Parallelogram
+
 include("world.jl")
 export World
 
 include("hitrecord.jl")
 export SurfacePoint, HitRecord
 
-
-
-
-export ray_intersection, ray_intersection_list, Eval, boxed
+export ray_intersection, ray_intersection_list, internal, Eval, boxed
 
 import Base:
     ≈

@@ -276,6 +276,15 @@ function internal(I::CSGIntersection, P::Point)
     return internal(I.Sh1, p) && internal(I.Sh2, p) # da inserire la trasformation di I
 end
 
+
+"""
+    boxed(CSG::Union{CSGUnion, CSGDifference, CSGIntersection})::Tuple{Point, Point}
+Calculates the bounding box of a CSG shape.
+# Arguments
+- `CSG::Union{CSGUnion, CSGDifference, CSGIntersection}`: The CSG shape for which to calculate the bounding box.
+# Returns
+- `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the CSG shape.
+"""
 function boxed(CSG::Union{CSGUnion, CSGDifference, CSGIntersection})::Tuple{Point, Point}
     P1_1, P1_2 = boxed(CSG.Sh1)
     P2_1, P2_2 = boxed(CSG.Sh2)
