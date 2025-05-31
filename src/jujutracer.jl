@@ -4,6 +4,10 @@ module jujutracer
 using Images, FileIO, ImageIO
 using Base.Threads
 using ProgressLogging
+using TerminalLoggers
+using Logging
+
+global_logger(TerminalLogger())
 
 # import
 import Base:
