@@ -4,19 +4,28 @@ Pkg.activate(".")
 using jujutracer
 using Base.Threads
 using BenchmarkTools
+using Logging
+using TerminalLoggers
+using LoggingExtras
+
+# Create a filtered logger
+module_filter(log) = log._module == jujutracer || log.level > Logging.Debug
+filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logging.Debug))
+
+# Set as the global logger
+global_logger(filtered_logger)
 
 if length(ARGS) != 4
     println("Usage: julia demoPath.jl <output_file> <width> <height> <cam_angle>")
     return
 end
 
-println("Number of threads: ", Threads.nthreads())
 
-png_output = ARGS[1]*".png"
-width = parse(Int64,ARGS[2])
-height = parse(Int64,ARGS[3])
-cam_angle = parse(Float64,ARGS[4])
-pfm_output = ARGS[1]*".pfm"
+png_output = ARGS[1] * ".png"
+width = parse(Int64, ARGS[2])
+height = parse(Int64, ARGS[3])
+cam_angle = parse(Float64, ARGS[4])
+pfm_output = ARGS[1] * ".pfm"
 
 Sc = Scaling(1.0 / 1.5, 1.0 / 1.5, 1.0 / 1.5)
 green = RGB(0.0, 1.0, 0.0)
@@ -43,20 +52,17 @@ S[4] = Plane(Mat1)
 R_cam = Rz(cam_angle)
 world = World(S)
 #cam = Orthogonal(t = R_cam ⊙ Translation(-1.0, 0.0, 0.0), a_ratio = convert(Float64, 16 // 9))
-cam = Perspective(d = 2.0, t = R_cam ⊙ Translation(-1.5, 0.0, 1.0) ⊙ Ry(-π/10.0))
+cam = Perspective(d=2.0, t=R_cam ⊙ Translation(-1.5, 0.0, 1.0) ⊙ Ry(-π / 10.0))
 hdr = hdrimg(width, height)
 ImgTr = ImageTracer(hdr, cam)
 pcg = PCG()
 
 path = PathTracer(world, gray, pcg, 2, 5, 2)
 #flat = Flat(world)
-@btime ImgTr(path, 2, pcg)
+ImgTr(path, 2, pcg)
 
-println("Saving image in ", png_output)
-toned_img = tone_mapping(hdr; a = 0.5, lum = 0.5, γ = 1.3)
+toned_img = tone_mapping(hdr; a=0.5, lum=0.5, γ=1.3)
 # Save the LDR image
 save_ldrimage(get_matrix(toned_img), png_output)
-println("Saved image in ", png_output)
-println("Saving image in ", pfm_output)
 write_pfm_image(hdr, pfm_output)
 println("Done")

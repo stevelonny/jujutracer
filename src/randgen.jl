@@ -6,14 +6,14 @@
 
 A Pseudo-Random Number Generator (PRNG) based on the PCG algorithm.
 # Fields
-- `state::UInt64`: The current state of the PCG.
+- `state::UInt64`: The current state of the PCG. It is atomically wrapped to ensure thread safety.
 - `inc::UInt64`: The increment value used in the PCG algorithm.
 # Constructor
 - `PCG(init_state::UInt64, init_seq::UInt64)`: Creates a new PCG instance with the given initial state and sequence. Defaults are `42` and `54` respectively.
 """
 
 mutable struct PCG
-    state::UInt64
+    @atomic state::UInt64
     inc::UInt64
 
     """
@@ -24,12 +24,14 @@ mutable struct PCG
     init_seq::UInt64: The initial sequence number. Default is 54.
     """
     function PCG( (init_state::UInt64) = UInt64(42), (init_seq::UInt64) = UInt64(54))
+        @debug "Creating PCG with init_state: $init_state, init_seq: $init_seq"
         pcg = new(0,0)
-        pcg.state = 0
+        @atomic pcg.state = 0
         pcg.inc = (init_seq << 1) | 1
         rand_pcg(pcg)
-        pcg.state += init_state
+        @atomic pcg.state += init_state
         rand_pcg(pcg)
+        @debug "PCG initialized with state: $(@atomic pcg.state), inc: $(pcg.inc)"
         new(pcg.state, pcg.inc)
         return pcg
     end
@@ -43,14 +45,23 @@ end
     rand_pcg(pcg::PCG)::UInt32
 
 Generate a random 32-bit unsigned integer using the PCG algorithm.
+
 # Arguments
 - pcg::PCG: The PCG instance to use for random number generation.
+
 # Returns
-Random `::UInt32` unsigned integer.
+- Random `::UInt32` unsigned integer.
+
+# Notes
+This function updates the internal state of the PCG instance atomically and returns a random number based on the current state.
 """
 function rand_pcg(pcg::PCG)::UInt32
-    oldstate = pcg.state
-    pcg.state = oldstate * UInt64(6364136223846793005) + pcg.inc
+    # obtain the current state and inc aotmically
+    oldstate = @atomic pcg.state
+
+    newstate = oldstate * UInt64(6364136223846793005) + pcg.inc
+    # update the current state atomically
+    @atomic pcg.state = newstate
 
     xorshifted = _to_uint32(((oldstate >> 18) ⊻ oldstate) >> 27)
     rot = _to_uint32(oldstate >> 59)
