@@ -4,18 +4,28 @@ Pkg.activate(".")
 using jujutracer
 using Base.Threads
 using BenchmarkTools
+using Logging
+using TerminalLoggers
+using LoggingExtras
+
+# Create a filtered logger
+module_filter(log) = log._module == jujutracer || log.level > Logging.Debug
+filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logging.Debug))
+
+# Set as the global logger
+global_logger(filtered_logger)
 
 # Welcome to steve's playground
 
 filename = "all_"
-renderer = "flat" # or "flat"
+renderertype = "flat" # or "flat"
 width = 640
 height = 360
 n_rays = 2
 depth = 3
 russian = 2
 aa = 2
-fullname = filename * renderer * "_" * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus_" * string(aa) * "aa"
+fullname = filename * renderertype * "_" * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus_" * string(aa) * "aa"
 png_output = fullname * ".png"
 pfm_output = fullname * ".pfm"
 
@@ -82,19 +92,16 @@ hdr = hdrimg(width, height)
 ImgTr = ImageTracer(hdr, cam)
 pcg = PCG()
 renderer = nothing
-if renderer == "flat"
+if renderertype == "flat"
     renderer = Flat(world)
 elseif renderer == "path"
-    renderer = PathTracer(world, gray, pcg, n_rays, depth, russian)
+    renderertype = PathTracer(world, gray, pcg, n_rays, depth, russian)
 else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end
-ImgTr(rendere, aa, pcg)
-luminosity = jujutracer._average_luminosity(hdr; type="W")
-@info "Average luminosity: " luminosity
+ImgTr(renderer, aa, pcg)
 toned_img = tone_mapping(hdr; a=0.5, γ=1.3)
 # Save the LDR image
 save_ldrimage(get_matrix(toned_img), png_output)
-@info "Saved image in " png_output
 write_pfm_image(hdr, pfm_output)
-@info "Saved image in " pfm_output
+println("Done")
