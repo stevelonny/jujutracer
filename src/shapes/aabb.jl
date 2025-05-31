@@ -13,6 +13,7 @@ Axis-Aligned Bounding Box (AABB) for a set of shapes.
 # Constructor
 - `AABB(S::Vector{AbstractShape})`: creates an AABB for the shapes in `S`, calculating the minimum and maximum corners based on the bounding boxes of the shapes.
 - `AABB(S::Vector{AbstractShape}, P1::Point, P2::Point)`: creates an AABB with the specified minimum and maximum corners `P1` and `P2` for the shapes in `S`.
+- `AABB(csg::Union{CSGDifference, CSGUnion, CSGIntersection})`: creates an AABB for a CSG shape, extracting the shapes and their bounding box.
 """
 struct AABB <: AbstractShape
     # no need for a transformation, the AABB is always axis aligned
@@ -35,6 +36,12 @@ struct AABB <: AbstractShape
     end
     function AABB(S::Vector{AbstractShape}, P1::Point, P2::Point)
         new(S, P1, P2)
+    end
+    function AABB(csg::Union{CSGDifference, CSGUnion, CSGIntersection})
+        S = Vector{AbstractShape}(undef, 1)
+        S[1] = csg
+        P1, P2 = boxed(csg)
+        return AABB(S, P1, P2)
     end
 end
         
