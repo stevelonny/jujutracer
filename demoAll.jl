@@ -18,14 +18,21 @@ global_logger(filtered_logger)
 # Welcome to steve's playground
 
 filename = "all_"
-renderertype = "flat" # or "flat"
-width = 640
-height = 360
-n_rays = 2
+renderertype = "flat" # "path" or "flat"
+width = 800
+height = 450
+n_rays = 3
 depth = 3
 russian = 2
 aa = 2
-fullname = filename * renderertype * "_" * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus_" * string(aa) * "aa"
+fullname = filename
+if renderertype == "flat"
+    fullname = fullname * "flat_" * string(width) * "x" * string(height) * "_" * string(aa) * "aa"
+elseif renderertype == "path"
+    fullname = fullname * "path_" * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus_" * string(aa) * "aa"
+else
+    throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
+end
 png_output = fullname * ".png"
 pfm_output = fullname * ".pfm"
 
@@ -40,10 +47,10 @@ gray = RGB(0.2, 0.2, 0.2)
 black = RGB(0.0, 0.0, 0.0)
 white = RGB(1.0, 1.0, 1.0)
 super_white = RGB(10.0, 10.0, 10.0)
-Mat1 = Material(UniformPigment(black), SpecularBRDF(CheckeredPigment(6, 6, gray, green)))
+Mat1 = Material(UniformPigment(gray), DiffusiveBRDF(CheckeredPigment(6, 6, gray, green)))
 Mat2 = Material(UniformPigment(black), DiffusiveBRDF(CheckeredPigment(12, 12, magenta, blue)))
 Mat3 = Material(UniformPigment(black), SpecularBRDF(UniformPigment(white)))
-Mat4 = Material(UniformPigment(super_white), DiffusiveBRDF(UniformPigment(white)))
+Mat4 = Material(UniformPigment(white), DiffusiveBRDF(UniformPigment(white)))
 Mat5 = Material(UniformPigment(black), DiffusiveBRDF(CheckeredPigment(10, 10, purple, yellow)))
 MatCone = Material(UniformPigment(black), SpecularBRDF(CheckeredPigment(12, 12, red, green)))
 MatBox = Material(UniformPigment(black), SpecularBRDF(UniformPigment(red)))
@@ -94,8 +101,8 @@ pcg = PCG()
 renderer = nothing
 if renderertype == "flat"
     renderer = Flat(world)
-elseif renderer == "path"
-    renderertype = PathTracer(world, gray, pcg, n_rays, depth, russian)
+elseif renderertype == "path"
+    renderer = PathTracer(world, gray, pcg, n_rays, depth, russian)
 else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end

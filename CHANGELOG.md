@@ -1,7 +1,7 @@
 # HEAD
 - Implement `PathTracer` renderer [#20](https://github.com/stevelonny/jujutracer/pull/18)
 - Implement Antialiasing
-- Add new shapes [#18](https://github.com/stevelonny/jujutracer/pull/18):
+- Add new shapes [#18](https://github.com/stevelonny/jujutracer/pull/18) and [#23](https://github.com/stevelonny/jujutracer/pull/23):
   - Rectangle
   - Triangle
   - Parallelogram
