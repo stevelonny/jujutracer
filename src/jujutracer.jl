@@ -42,15 +42,9 @@ export ImageTracer
 include("brdf.jl")
 export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBRDF, SpecularBRDF, Material
 
-include("shapes.jl")
-export SurfacePoint, HitRecord, AbstractShape, AbstractSolid, Sphere, Box, Cylinder, Plane, Rectangle, World, ray_intersection, ray_intersection_list, Eval
-
-include("meshes.jl")
-export Triangle, Parallelogram, ray_intersection
-
-include("csg.jl")
-export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, ray_intersection_list, internal
+include("shapes/shapes.jl")
 
 include("renderer.jl")
 export OnOff, Flat, PathTracer
+
 end # module jujutracer

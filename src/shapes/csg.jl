@@ -78,8 +78,9 @@ Calculates the intersection of a ray with the union of two solid shapes.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(U::CSGUnion, ray::Ray)
-    HR1 = ray_intersection(U.Sh1, ray)
-    HR2 = ray_intersection(U.Sh2, ray)
+    inv_ray = inverse(U.Tr)(ray) # ray in the un-transformed union system
+    HR1 = ray_intersection(U.Sh1, inv_ray)
+    HR2 = ray_intersection(U.Sh2, inv_ray)
 
     if isnothing(HR1)
         if isnothing(HR2)
@@ -273,4 +274,34 @@ Checks if a point is inside the intersection of two solid shapes.
 function internal(I::CSGIntersection, P::Point)
     p = _unsafe_inverse(I.Tr)(P) # P in the un-transofmed intersection system
     return internal(I.Sh1, p) && internal(I.Sh2, p) # da inserire la trasformation di I
+end
+
+
+"""
+    boxed(CSG::Union{CSGUnion, CSGDifference, CSGIntersection})::Tuple{Point, Point}
+Calculates the bounding box of a CSG shape.
+# Arguments
+- `CSG::Union{CSGUnion, CSGDifference, CSGIntersection}`: The CSG shape for which to calculate the bounding box.
+# Returns
+- `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the CSG shape.
+"""
+function boxed(CSG::Union{CSGUnion,CSGDifference,CSGIntersection})::Tuple{Point,Point}
+    P1_1, P1_2 = boxed(CSG.Sh1)
+    P2_1, P2_2 = boxed(CSG.Sh2)
+    # get all the corners of the bounding boxes of the two shapes
+    corners = [
+        Point(x, y, z)
+        for x in (P1_1.x, P1_2.x, P2_1.x, P2_2.x),
+            y in (P1_1.y, P1_2.y, P2_1.y, P2_2.y),
+            z in (P1_1.z, P1_2.z, P2_1.z, P2_2.z)
+    ]
+    # apply the transformation to all corners
+    world_corners = [CSG.Tr(c) for c in corners]
+    # find the min and max points of the bounding box
+    xs = [c.x for c in world_corners]
+    ys = [c.y for c in world_corners]
+    zs = [c.z for c in world_corners]
+    Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
+    Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
+    return (Pmin, Pmax)
 end

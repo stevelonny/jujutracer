@@ -57,8 +57,32 @@ julia demoPath.jl <output_file> <width> <height> <cam_angle>
 
 </div>
 
+### Steve's playground
+To showcase all the newly added shapes by [#18](https://github.com/stevelonny/jujutracer/pull/18) and [#23](https://github.com/stevelonny/jujutracer/pull/23) a demo script implmenting CSGs, AABBs, and flat shape is provided with [`demoAll.jl`](/demoAll.jl). Modify the script with the preferred method of rendering, resolution, antialiasing and path tracing parameters.
+
+<div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+
+<div style="text-align: center; margin: 10px;">
+<img src="all_flat_800x450_2aa.png" alt="demoAll Flat" width="400"/>
+<br/>
+<strong>Flat renderer</strong>
+<br/>
+<em>800x450, AA-factor = 2</em>
+</div>
+
+<div style="text-align: center; margin: 10px;">
+<img src="all_path_800x450_3rays_3depth_2rus_2aa.png" alt="demoAll Path" width="400"/>
+<br/>
+<strong>Path Tracer</strong>
+<br/>
+<em>800x450, AA-factor = 2, 2 rays, 3 depth, 2 russian</em>
+</div>
+
+</div>
+
 ### Multi-thread support
 *See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)*
+
 The code leverages multi-threading in a clean way simply by parallelizing each ray fired using the `@threads` keyword.
 <!-- The following results have been obtained on a Windows 10 machine powered by an i5-10300H using julia 1.11.4, running both demo scenes illustrated previously at a resolution of `1920x1080`.
 ```powershell
