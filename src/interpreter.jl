@@ -2,6 +2,17 @@
 # SourceLocation
 #---------------------------------------------------------
 
+"""
+    mutable struct SourceLocation
+Represents a location in a source file, including the filename, line number, and column number.
+# Fields
+- `filename::String`: The name of the source file.
+- `line::Int64`: The line number in the source file.
+- `col::Int64`: The column number in the source file.
+# Constructors
+- `SourceLocation(location::SourceLocation)`: Creates a new `SourceLocation` from an existing one.
+- `SourceLocation(filename::String, line::Int64, col::Int64)`: Creates a new `SourceLocation` with the specified filename, line, and column.
+"""
 mutable struct SourceLocation
     filename::String
     line::Int64
@@ -20,6 +31,18 @@ end
 
 const WHITESPACE = [' ', '\t', '\n', '\r']
 
+"""
+    mutable struct InputStream
+Represents an input stream for reading characters from a source file, with tracking of the current position and saved character.
+# Fields
+- `stream::IOBuffer`: The underlying IO buffer for reading characters.
+- `location::SourceLocation`: The current location in the source file.
+- `saved_c::Char`: A character that has been read but not yet processed.
+- `saved_loc::SourceLocation`: The location corresponding to the saved character.
+- `tablature::Int64`: The number of spaces a tab character represents.
+# Constructors
+- `InputStream(stream::IOBuffer, file_name="", tablature=8)`: Creates a new `InputStream` with the specified IO buffer, filename, and tablature.
+"""
 mutable struct InputStream
     stream::IOBuffer
     location::SourceLocation
@@ -33,6 +56,15 @@ mutable struct InputStream
     end
 end
 
+"""
+    struct InputStreamError <: Exception
+Represents an error that occurs while reading from an `InputStream`.
+# Fields
+- `error_message::String`: A message describing the error.
+- `input::InputStream`: The `InputStream` where the error occurred.
+# Constructors
+- `InputStreamError(error_message::String, input::InputStream)`: Creates a new `InputStreamError` with the specified error message and input stream. Outpus a debug message with details about the InputStream.
+"""
 struct InputStreamError <: Exception
     error_message::String
     input::InputStream
@@ -47,6 +79,15 @@ struct InputStreamError <: Exception
     end
 end
 
+"""
+    open_InputStream(filename::String, tablature=8)
+Opens a file and returns an `InputStream` for reading characters from it.
+# Arguments
+- `filename::String`: The name of the file to open.
+- `tablature=8`: The number of spaces a tab character represents (default is 8).
+# Returns
+- `InputStream`: An `InputStream` object for reading characters from the specified file.
+"""
 function open_InputStream(filename::String, tablature=8)
     io = IOBuffer()
     open(filename, "r") do file
@@ -56,6 +97,13 @@ function open_InputStream(filename::String, tablature=8)
     return InputStream(io, filename, tablature)
 end
 
+"""
+    _update_pos!(input::InputStream, ch::Char)
+Updates the current position in the `InputStream` based on the character read.
+# Arguments
+- `input::InputStream`: The input stream whose position is to be updated.
+- `ch::Char`: The character that was read from the stream.
+"""
 function _update_pos!(input::InputStream, ch::Char)
     # Update `location` after having read `ch` from the stream
     if ch == '\0'
@@ -71,6 +119,14 @@ function _update_pos!(input::InputStream, ch::Char)
     end
 end
 
+"""
+    read_char(input::InputStream)
+Reads a character from the `InputStream`, handling saved characters and updating the position.
+# Arguments
+- `input::InputStream`: The input stream from which to read the character.
+# Returns
+- `Char`: The character read from the input stream. If the end of the stream is reached, returns `'\0'`.
+"""
 function read_char(input::InputStream)
     # Read a new character from the stream
     if input.saved_c != '\0'
@@ -93,6 +149,15 @@ function read_char(input::InputStream)
     return ch
 end
 
+"""
+    unread_char!(input::InputStream, ch::Char)
+Pushes a character back to the `InputStream`, allowing it to be read again later.
+# Arguments
+- `input::InputStream`: The input stream to which the character should be pushed back.
+- `ch::Char`: The character to push back to the stream.
+# Throws
+- `InputStreamError`: If there is already a saved character in the input stream, indicating that it cannot unread another character.
+"""
 function unread_char!(input::InputStream, ch::Char)
     # Push a character back to the stream
     if input.saved_c != '\0' # Cannot unread if there is already a saved character
@@ -102,6 +167,12 @@ function unread_char!(input::InputStream, ch::Char)
     input.location = SourceLocation(input.saved_loc)
 end
 
+"""
+    skip_whitespaces_and_comments!(input::InputStream)
+Skips over whitespace characters and comments in the `InputStream`.
+# Arguments
+- `input::InputStream`: The input stream from which to skip whitespace and comments.
+"""
 function skip_whitespaces_and_comments!(input::InputStream)
     ch = read_char(input)
     while ch in WHITESPACE || ch == '#'
