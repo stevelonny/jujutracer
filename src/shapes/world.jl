@@ -55,3 +55,25 @@ function ray_intersection(W::World, ray::Ray)
 
     return closest
 end
+
+"""
+    is_point_visible(W::World, pos::Point, observer::Point)
+Checks if a point is visible from an observer's position in the world.
+# Arguments
+- `W::World`: the world containing the shapes
+- `pos::Point`: the position of the point to check visibility for
+- `observer::Point`: the position of the observer
+# Returns
+If the point is visible from the observer's position, returns `true`. Otherwise, returns `false`.
+"""
+function is_point_visible(W::World, pos::Point, observer::Point)
+    direction = pos - observer
+    ray = Ray(origin=observer, dir=direction)
+
+    for shape in W.shapes
+        if quick_ray_intersection(shape, ray)
+            return false
+        end
+    end
+    return true
+end

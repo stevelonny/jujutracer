@@ -27,6 +27,9 @@ struct Box <: AbstractSolid
     P2::Point
     Mat::Material
 
+    function Box()
+        new(Transformation(), Point(-0.5, -0.5, -0.5), Point(0.5, 0.5, 0.5), Material())
+    end
     function Box(P1::Point, P2::Point)
         new(Transformation(), _LFD(P1, P2), _RBU(P1, P2), Material())
     end
