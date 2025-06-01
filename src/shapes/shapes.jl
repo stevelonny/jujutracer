@@ -40,7 +40,7 @@ export World
 include("hitrecord.jl")
 export SurfacePoint, HitRecord
 
-export ray_intersection, ray_intersection_list, internal, Eval, boxed
+export ray_intersection, ray_intersection_list, internal, Eval, boxed, quick_ray_intersection
 
 import Base:
     ≈

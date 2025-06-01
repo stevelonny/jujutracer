@@ -146,3 +146,25 @@ function boxed(S::Circle)::Tuple{Point,Point}
     Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
     return (Pmin, Pmax)
 end
+
+"""
+    quick_ray_intersection(S::Circle, ray::Ray)::Bool
+Checks if a ray intersects with the circle without calculating the exact intersection point.
+# Arguments
+- `S::Circle`: The circle to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the circle.
+# Returns
+- `Bool`: `true` if the ray intersects with the circle, `false` otherwise.
+"""
+function quick_ray_intersection(S::Circle, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    O = Vec(inv_ray.origin)
+    d = inv_ray.dir
+
+    t = -O.z / d.z
+    if t <= inv_ray.tmin || t >= inv_ray.tmax || (inv_ray(t).x^2 + inv_ray(t).y^2) > 1.0
+        return false
+    else
+        return true
+    end
+end

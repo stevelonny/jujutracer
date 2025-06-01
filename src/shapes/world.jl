@@ -5,12 +5,14 @@
 """
     struct World
 
-A struct representing a collection of shapes in a 3D world.
+A struct representing a collection of shapes (and lights) in a 3D world.
 # Fields
 - `shapes::Vector{Shapes}`: the vector containing the shapes in the world.
+- `lights::Vector{LightSource}`: the vector containing the light sources in the world.
 # Constructor
 - `World()`: creates a new `World` with an empty vector of shapes.
-- `World(S::Vector{Shapes})`: creates a new `World` with the specified vector of shapes.
+- `World(S::Vector{Shapes})`: creates a new `World` with the specified vector of shapes. Lights are initialized to an empty vector.
+- `World(S::Vector{Shapes}, L::Vector{LightSource})`: creates a new `World` with the specified vector of shapes and light sources.
 # See also
 - [`AbstractShape`](@ref): the abstract type for all shapes.
 - [`Sphere`](@ref): a concrete implementation of `AbstractShape` representing a sphere.
@@ -18,13 +20,13 @@ A struct representing a collection of shapes in a 3D world.
 """
 struct World
     shapes::Vector{AbstractShape}
+    lights::Vector{LightSource}
 
-    function World()
-        new(Vector{AbstractShape}(nothing))
+    function World(shapes::Vector{AbstractShape})
+        new(S, LightSource[])
     end
-
-    function World(S::Vector{AbstractShape})
-        new(S)
+    function World(shapes::Vector{AbstractShape}, lights::Vector{LightSource})
+        new(Shapes, Lights)
     end
 end
 

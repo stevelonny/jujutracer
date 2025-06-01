@@ -310,3 +310,31 @@ function boxed(S::Box)::Tuple{Point,Point}
     Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
     return (Pmin, Pmax)
 end
+
+"""
+    quick_ray_intersection(S::Box, ray::Ray)::Bool
+Checks if a ray intersects with the box without calculating the exact intersection point.
+# Arguments
+- `S::Box`: The box to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the box.
+# Returns
+- `Bool`: `true` if the ray intersects with the box, `false` otherwise.
+"""
+function quick_ray_intersection(S::Box, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    p1 = S.P1
+    p2 = S.P2
+    O = inv_ray.origin
+    d = inv_ray.dir
+
+    t1x = (p1.x - O.x) / d.x
+    t2x = (p2.x - O.x) / d.x
+    t1y = (p1.y - O.y) / d.y
+    t2y = (p2.y - O.y) / d.y
+    t1z = (p1.z - O.z) / d.z
+    t2z = (p2.z - O.z) / d.z
+
+    tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
+    tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+    return !(tmax < max(inv_ray.tmin, tmin) || tmax > inv_ray.tmax || tmin < inv_ray.tmin || tmin > inv_ray.tmax)
+end

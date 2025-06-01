@@ -28,6 +28,8 @@ end
 # _newshape_normal(p::Point, dir::Vec)
 # _point_to_uv(S::NewShape, p::Point)
 # ray_intersection(S::NewShape, ray::Ray)
+# boxed(S::NewSolid)::Tuple{Point, Point}
+# quick_intersection(S::NewShape, ray::Ray)
 #=
 function boxed(S::NewShape)::Tuple{Point, Point}
     # return P1 and P2 of the bounding box of the circle
