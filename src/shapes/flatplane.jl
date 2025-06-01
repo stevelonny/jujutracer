@@ -74,10 +74,10 @@ function ray_intersection(pl::Plane, ray::Ray)
     d = inv_ray.dir
 
     t = -Oz / d.z
-    if t <= inv_ray.tmin || t >= inv_ray.tmax
-        return nothing
-    else
+    if t > inv_ray.tmin && t < inv_ray.tmax
         first_hit = t
+    else
+        return nothing
     end
 
     hit_point = inv_ray(first_hit)

@@ -1,4 +1,3 @@
-
 #---------------------------------------------------------
 # World type
 #---------------------------------------------------------
@@ -23,10 +22,10 @@ struct World
     lights::Vector{LightSource}
 
     function World(shapes::Vector{AbstractShape})
-        new(S, LightSource[])
+        new(shapes, LightSource[])
     end
     function World(shapes::Vector{AbstractShape}, lights::Vector{LightSource})
-        new(Shapes, Lights)
+        new(shapes, lights)
     end
 end
 
