@@ -31,6 +31,9 @@ export AABB, intersected
 include("meshes.jl")
 export Triangle, Parallelogram
 
+include("light.jl")
+export LightSource
+
 include("world.jl")
 export World
 
