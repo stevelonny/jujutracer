@@ -68,7 +68,8 @@ If the point is visible from the observer's position, returns `true`. Otherwise,
 """
 function is_point_visible(W::World, pos::Point, observer::Point)
     direction = pos - observer
-    ray = Ray(origin=observer, dir=direction)
+    dir_norm = norm(direction)
+    ray = Ray(origin=observer, dir=direction, tmin=1e-2 / dir_norm, tmax=1.0)
 
     for shape in W.shapes
         if quick_ray_intersection(shape, ray)

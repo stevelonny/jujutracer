@@ -10,18 +10,18 @@ function (BRDF::DiffusiveBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, 
     sin_θ = sqrt(1.0 - sq)
     ϕ = 2.0 * π * rand_uniform(pcg)
 
-    return Ray(origin = p,
-                dir = e1 * cos(ϕ) * cos_θ + e2 * sin(ϕ) * cos_θ + e3 * sin_θ,
-                tmin = 10e-3,
-                depth = depth)
+    return Ray(origin=p,
+        dir=e1 * cos(ϕ) * cos_θ + e2 * sin(ϕ) * cos_θ + e3 * sin_θ,
+        tmin=10e-3,
+        depth=depth)
 end
 
 function (BRDF::SpecularBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)
     ray_dir = Vec(Normal(in_dir))
-    return Ray(origin = p,
-                dir = ray_dir - 2 * normal * (normal ⋅ ray_dir),
-                tmin = 10e-3,
-                depth = depth)
+    return Ray(origin=p,
+        dir=ray_dir - 2 * normal * (normal ⋅ ray_dir),
+        tmin=10e-3,
+        depth=depth)
 end
 
 function (U::UniformPigment)(p::SurfacePoint)
@@ -123,10 +123,10 @@ function (P::PathTracer)(ray::Ray)
 
     repo = ray_intersection(P.world, ray)
 
-    if isnothing(repo) 
+    if isnothing(repo)
         return P.backg
     end
-    
+
     hit_material = repo.shape.Mat
     hit_color = hit_material.BRDF.Pigment(repo.surface_P)
     emitted_r = hit_material.Emition(repo.surface_P)
@@ -152,4 +152,49 @@ function (P::PathTracer)(ray::Ray)
     end
 
     return emitted_r + cum * (1.0 / P.n_rays)
+end
+
+#---------------------------------------------------------
+# Point-light tracing
+#---------------------------------------------------------
+
+struct PointLight <: Function
+    world::World
+    background_color::RGB
+    ambient_color::RGB
+    scale::Float64
+
+    function PointLight(world::World, background::RGB=RGB(0.0, 0.0, 0.0), ambient=RGB(0.2, 0.2, 0.2), scale::Float64=1.0)
+        if scale <= 0.0
+            throw(ArgumentError("Scale must be positive"))
+        end
+        new(world, background, ambient, scale)
+    end
+end
+
+function (PL::PointLight)(ray::Ray)
+    hit_record = ray_intersection(PL.world, ray)
+    if isnothing(hit_record)
+        return PL.background_color
+    end
+
+    hit_material = hit_record.shape.Mat
+    emitted_color = hit_material.Emition(hit_record.surface_P)
+    result_color = PL.ambient_color + emitted_color
+
+    for cur_light in PL.world.lights
+        if is_point_visible(PL.world, cur_light.position, hit_record.world_P)
+            distance_vec = hit_record.world_P - cur_light.position
+            distance = norm(distance_vec)
+            in_dir = distance_vec / distance
+            cos_theta = max(0.0, -normalize(distance_vec) ⋅ hit_record.normal)
+
+            distance_factor = (cur_light.scale / distance)^2
+            brdf_color = hit_material.BRDF.Pigment(hit_record.surface_P) *(1.0/π)
+
+            result_color += brdf_color * cur_light.emission * cos_theta * distance_factor
+        end
+    end
+
+    return result_color
 end

@@ -169,7 +169,7 @@ Checks if a ray intersects with the triangle without calculating the exact inter
 """
 function quick_ray_intersection(S::Triangle, ray::Ray)::Bool
     inv_ray = _unsafe_inverse(S.Tr)(ray)
-    O = Vec(inv_ray.origin - S.A)
+    O = inv_ray.origin - S.A
     d = inv_ray.dir
 
     detM = _sarrus(S.B - S.A, S.C - S.A, -d)
@@ -327,7 +327,7 @@ Checks if a ray intersects with the parallelogram without calculating the exact 
 """
 function quick_ray_intersection(S::Parallelogram, ray::Ray)::Bool
     inv_ray = _unsafe_inverse(S.Tr)(ray)
-    O = Vec(inv_ray.origin - S.A)
+    O = inv_ray.origin - S.A
     d = inv_ray.dir
 
     detM = _sarrus(S.B - S.A, S.C - S.A, -d)

@@ -59,7 +59,6 @@ function (it::ImageTracer)(fun::Function)
     update_interval = max(1, div(total, 200)) # update progress every 0.5% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
     @info "Starting rendering with $(renderer_type) renderer"
-    @info "Anti-Aliasing factor: $(AA)"
     if fun isa PathTracer
         @debug "PathTracer parameters" n_rays=fun.n_rays depth=fun.depth russian=fun.russian
     end
