@@ -862,3 +862,52 @@ end
         @test color.b ≈ exp atol = 10e-5
     end
 end
+
+@testset "Scene interpreter" begin
+    @testset "InputStream" begin
+        stream = InputStream(IOBuffer("abc   \nd\nef"))
+
+        @test stream.location.line == 1
+        @test stream.location.col == 1
+
+        @test read_char(stream) == 'a'
+        @test stream.location.line == 1
+        @test stream.location.col == 2
+
+        unread_char!(stream, 'A')
+        @test stream.location.line == 1
+        @test stream.location.col == 1
+
+        @test read_char(stream) == 'A'
+        @test stream.location.line == 1
+        @test stream.location.col == 2
+
+        @test read_char(stream) == 'b'
+        @test stream.location.line == 1
+        @test stream.location.col == 3
+
+        @test read_char(stream) == 'c'
+        @test stream.location.line == 1
+        @test stream.location.col == 4
+
+        skip_whitespaces_and_comments!(stream)
+
+        @test read_char(stream) == 'd'
+        @test stream.location.line == 2
+        @test stream.location.col == 2
+
+        @test read_char(stream) == '\n'
+        @test stream.location.line == 3
+        @test stream.location.col == 1
+
+        @test read_char(stream) == 'e'
+        @test stream.location.line == 3
+        @test stream.location.col == 2
+
+        @test read_char(stream) == 'f'
+        @test stream.location.line == 3
+        @test stream.location.col == 3
+
+        @test read_char(stream) == '\0'  # End of file in Julia
+    end
+end

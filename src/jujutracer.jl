@@ -50,4 +50,8 @@ export CSGUnion, CSGDifference, CSGIntersection, ray_intersection, ray_intersect
 
 include("renderer.jl")
 export OnOff, Flat, PathTracer
+
+include("interpreter.jl")
+export SourceLocation, InputStream, InputStreamError, open_InputStream, _update_pos!, read_char, unread_char!, skip_whitespaces_and_comments!
+
 end # module jujutracer
