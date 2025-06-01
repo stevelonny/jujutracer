@@ -52,7 +52,7 @@ Calculate the UV coordinates of a point on the plane in PBC
 - `SurfacePoint`: the UV coordinates of the point in PBC
 """
 function _point_to_uv(S::Rectangle, p::Point)
-        return SurfacePoint(p.x + 0.5, p.y + 0.5)
+    return SurfacePoint(p.x + 0.5, p.y + 0.5)
 end
 
 """
@@ -101,7 +101,7 @@ Returns the bounding box of the rectangle.
 # Returns
 - `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the rectangle.
 """
-function boxed(S::Rectangle)::Tuple{Point, Point}
+function boxed(S::Rectangle)::Tuple{Point,Point}
     # return P1 and P2 of the bounding box of the rectangle
     # remember to apply the transformation to the points
     p1 = Point(-0.5, -0.5, 0.0)

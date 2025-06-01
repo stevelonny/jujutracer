@@ -10,6 +10,11 @@ This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `Tr::Transformation`: the transformation applied to the sphere.
 - `Mat::Material`: the material of the shape
+# Constructors
+- `Cylinder()`: Creates a new cylinder with default transformation and material.
+- `Cylinder(Tr::AbstractTransformation)`: Creates a new cylinder with the specified transformation and default material.
+- `Cylinder(Mat::Material)`: Creates a new cylinder with the default transformation and the specified material.
+- `Cylinder(Tr::AbstractTransformation, Mat::Material)`: Creates a new cylinder with the specified transformation and material.
 """
 struct Cylinder <: AbstractSolid
     Tr::AbstractTransformation
@@ -47,7 +52,6 @@ function _cylinder_normal(p::Point, dir::Vec)
 end
 
 """
-
     _point_to_uv(S::Cylinder, p::Point)
 
 Calculate the UV coordinates of a point on the cylinder.
@@ -58,13 +62,13 @@ Calculate the UV coordinates of a point on the cylinder.
 - `SurfacePoint`: the UV coordinates of the point on the cylinder.
 """
 function _point_to_uv(S::Cylinder, p::Point)
-    return SurfacePoint(0.5 + atan(p.y, p.x) / (2.0 * π), round(p.z + 0.5; digits = 2))
+    return SurfacePoint(0.5 + atan(p.y, p.x) / (2.0 * π), round(p.z + 0.5; digits=2))
 end
 
 """
     ray_intersection(s::Cylinder, r::Ray)
 
-Calculates the intersection of a ray and a sphere.
+Calculates the intersection of a ray and a cylinder.
 # Arguments
 - `S::Cylinder`: the sphere to be intersected
 - `ray::Ray`: the ray intersecting the sphere
@@ -76,16 +80,16 @@ function ray_intersection(S::Cylinder, ray::Ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
     # precompute common values, probably not needed as the compiler is already smart enough
-    O_dot_d = O.x * d.x + O.y * d.y 
+    O_dot_d = O.x * d.x + O.y * d.y
     d_squared = d.x^2 + d.y^2
     O_squared = O.x^2 + O.y^2
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
-    
+
     (Δrid <= 0.0 && d_squared != 0.0) && return nothing
-    
-    t1z = (0.5 - O.z)/d.z
-    t2z = (-0.5 - O.z)/d.z
+
+    t1z = (0.5 - O.z) / d.z
+    t2z = (-0.5 - O.z) / d.z
     if d_squared != 0.0
         sqrot = sqrt(Δrid)
         t1 = (-O_dot_d - sqrot) / d_squared
@@ -105,22 +109,22 @@ function ray_intersection(S::Cylinder, ray::Ray)
     first_hit = tmin > inv_ray.tmin ? tmin : tmax
     first_hit > inv_ray.tmax && return nothing
 
-    # point in the sphere's local coordinates
+    # point in the cylinder's local coordinates
     hit_point = inv_ray(first_hit)
     return HitRecord(
-        world_P = S.Tr(hit_point),
-        normal = S.Tr(_sphere_normal(hit_point, ray.dir)),
-        surface_P = _point_to_uv(S, hit_point),
-        t = first_hit,
-        ray = ray,
-        shape = S
+        world_P=S.Tr(hit_point),
+        normal=S.Tr(_sphere_normal(hit_point, ray.dir)),
+        surface_P=_point_to_uv(S, hit_point),
+        t=first_hit,
+        ray=ray,
+        shape=S
     )
 end
 
 """
     ray_intersection_list(S::Cylinder, ray::Ray)
 
-Calculates all intersections of a ray with a sphere.
+Calculates all intersections of a ray with a cylinder.
 # Arguments
 - `S::Cylinder`: The sphere to be intersected.
 - `ray::Ray`: The ray intersecting the sphere.
@@ -133,16 +137,16 @@ function ray_intersection_list(S::Cylinder, ray::Ray)
     O = Vec(inv_ray.origin)
     d = inv_ray.dir
 
-    O_dot_d = O.x * d.x + O.y * d.y 
+    O_dot_d = O.x * d.x + O.y * d.y
     d_squared = d.x^2 + d.y^2
     O_squared = O.x^2 + O.y^2
 
     Δrid = (O_dot_d)^2 - d_squared * (O_squared - 1)
 
     (Δrid <= 0.0 && d_squared != 0.0) && return nothing
-    
-    t1z = (0.5 - O.z)/d.z
-    t2z = (-0.5 - O.z)/d.z
+
+    t1z = (0.5 - O.z) / d.z
+    t2z = (-0.5 - O.z) / d.z
     if d_squared != 0.0
         sqrot = sqrt(Δrid)
         t1 = (-O_dot_d - sqrot) / d_squared
@@ -151,7 +155,7 @@ function ray_intersection_list(S::Cylinder, ray::Ray)
         t1 = t1z
         t2 = t2z
     end
-    
+
     # more concise version but i dont really trust it
     tmin = max(min(t1, t2), min(t1z, t2z))
     tmax = min(max(t1, t2), max(t1z, t2z))
@@ -162,7 +166,7 @@ function ray_intersection_list(S::Cylinder, ray::Ray)
     if tmin < inv_ray.tmin || tmin > inv_ray.tmax
         return nothing
     end
-    
+
     first_hit = tmin
     second_hit = tmax
 
@@ -174,23 +178,27 @@ function ray_intersection_list(S::Cylinder, ray::Ray)
         second_hit = Inf
     end
 
+    if first_hit == Inf && second_hit == Inf
+        return nothing
+    end
+
     hit_point_1 = inv_ray(first_hit)
     hit_point_2 = inv_ray(second_hit)
     HR1 = HitRecord(
-        world_P = S.Tr(hit_point_1),
-        normal = S.Tr(_sphere_normal(hit_point_1, ray.dir)),
-        surface_P = _point_to_uv(S, hit_point_1),
-        t = first_hit,
-        ray = ray,
-        shape = S
+        world_P=S.Tr(hit_point_1),
+        normal=S.Tr(_sphere_normal(hit_point_1, ray.dir)),
+        surface_P=_point_to_uv(S, hit_point_1),
+        t=first_hit,
+        ray=ray,
+        shape=S
     )
     HR2 = HitRecord(
-        world_P = S.Tr(hit_point_2),
-        normal = S.Tr(_sphere_normal(hit_point_2, ray.dir)),
-        surface_P = _point_to_uv(S, hit_point_2),
-        t = second_hit,
-        ray = ray,
-        shape = S
+        world_P=S.Tr(hit_point_2),
+        normal=S.Tr(_sphere_normal(hit_point_2, ray.dir)),
+        surface_P=_point_to_uv(S, hit_point_2),
+        t=second_hit,
+        ray=ray,
+        shape=S
     )
     return [HR1, HR2]
 end
@@ -198,12 +206,12 @@ end
 """
     internal(S::Cylinder, P::Point)
 
-Checks if a point is inside a sphere.
+Checks if a point is inside a cylinder.
 # Arguments
-- `S::Cylinder`: The sphere to check.
+- `S::Cylinder`: The cylinder to check.
 - `P::Point`: The point to check.
 # Returns
-- `Bool`: `true` if the point is inside the sphere, `false` otherwise.
+- `Bool`: `true` if the point is inside the cylinder, `false` otherwise.
 """
 function internal(S::Cylinder, P::Point)
     p = _unsafe_inverse(S.Tr)(P)
@@ -221,7 +229,7 @@ Returns the bounding box of the cylinder.
 # Returns
 - `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the cylinder.
 """
-function boxed(S::Cylinder)::Tuple{Point, Point}
+function boxed(S::Cylinder)::Tuple{Point,Point}
     # return P1 and P2 of the bounding box of the sphere
     # remember to apply the transformation to the points
     p1 = Point(-1.0, -1.0, -0.5)

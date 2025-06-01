@@ -17,12 +17,12 @@ end
 Implement the Sarrus method for calculation of the determinant of a 3x3 Matrix.
 """
 function _sarrus(Mat::Matrix)
-    det = Mat[1,1] * Mat[2,2] * Mat[3,3]
-    det += Mat[1,2] * Mat[2,3] * Mat[3,1]
-    det += Mat[1,3] * Mat[2,1] * Mat[3,2]
-    det -= Mat[1,1] * Mat[2,3] * Mat[3,2]
-    det -= Mat[1,2] * Mat[2,1] * Mat[3,3]
-    det -= Mat[1,3] * Mat[2,2] * Mat[3,1]
+    det = Mat[1, 1] * Mat[2, 2] * Mat[3, 3]
+    det += Mat[1, 2] * Mat[2, 3] * Mat[3, 1]
+    det += Mat[1, 3] * Mat[2, 1] * Mat[3, 2]
+    det -= Mat[1, 1] * Mat[2, 3] * Mat[3, 2]
+    det -= Mat[1, 2] * Mat[2, 1] * Mat[3, 3]
+    det -= Mat[1, 3] * Mat[2, 2] * Mat[3, 1]
     return det
 end
 
@@ -32,12 +32,12 @@ end
 Efficiently computes the determinant of the 3x3 matrix whose columns are `a`, `b`, and `c`, without allocating a matrix.
 """
 function _sarrus(a::Vec, b::Vec, c::Vec)
-    return  a.x * b.y * c.z +
-            a.y * b.z * c.x +
-            a.z * b.x * c.y -
-            a.z * b.y * c.x -
-            a.y * b.x * c.z -
-            a.x * b.z * c.y
+    return a.x * b.y * c.z +
+           a.y * b.z * c.x +
+           a.z * b.x * c.y -
+           a.z * b.y * c.x -
+           a.y * b.x * c.z -
+           a.x * b.z * c.y
 end
 
 #---------------------------------------------------------
@@ -130,14 +130,14 @@ function ray_intersection(S::Triangle, ray::Ray)
     hit_point = inv_ray(first_hit)
     norm = Normal(B × C)
     norm = (norm ⋅ d < 0.0) ? S.Tr(norm) : S.Tr(-norm)
-    
+
     return HitRecord(
-        world_P = S.Tr(hit_point),
-        normal = norm,
-        surface_P = SurfacePoint(β, γ),
-        t = first_hit,
-        ray = ray,
-        shape = S
+        world_P=S.Tr(hit_point),
+        normal=norm,
+        surface_P=SurfacePoint(β, γ),
+        t=first_hit,
+        ray=ray,
+        shape=S
     )
 end
 
@@ -149,7 +149,7 @@ Returns the two points defining the bounding box of the triangle `S`.
 # Returns
 - `Tuple{Point, Point}`: a tuple containing the two points defining the bounding box of the triangle.
 """
-function boxed(S::Triangle)::Tuple{Point, Point}
+function boxed(S::Triangle)::Tuple{Point,Point}
     A = S.Tr(S.A)
     B = S.Tr(S.B)
     C = S.Tr(S.C)
@@ -157,7 +157,6 @@ function boxed(S::Triangle)::Tuple{Point, Point}
     P2 = Point(max(A.x, B.x, C.x), max(A.y, B.y, C.y), max(A.z, B.z, C.z))
     return (P1, P2)
 end
-    
 
 #---------------------------------------------------------
 # Parallelogram
@@ -261,14 +260,14 @@ function ray_intersection(S::Parallelogram, ray::Ray)
     hit_point = inv_ray(first_hit)
     norm = Normal(B × C)
     norm = (norm ⋅ d < 0.0) ? S.Tr(norm) : S.Tr(-norm)
-    
+
     return HitRecord(
-        world_P = S.Tr(hit_point),
-        normal = norm,
-        surface_P = SurfacePoint(β, γ),
-        t = first_hit,
-        ray = ray,
-        shape = S
+        world_P=S.Tr(hit_point),
+        normal=norm,
+        surface_P=SurfacePoint(β, γ),
+        t=first_hit,
+        ray=ray,
+        shape=S
     )
 end
 
@@ -280,7 +279,7 @@ Returns the two points defining the bounding box of the parallelogram.
 # Returns
 - `Tuple{Point, Point}`: a tuple containing the two points defining the bounding box of the parallelogram.
 """
-function boxed(S::Parallelogram)::Tuple{Point, Point}
+function boxed(S::Parallelogram)::Tuple{Point,Point}
     A = S.Tr(S.A)
     B = S.Tr(S.B)
     C = S.Tr(S.C)

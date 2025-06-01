@@ -192,7 +192,7 @@ Returns the bounding box of the sphere.
 # Returns
 - `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the sphere.
 """
-function boxed(S::Sphere)::Tuple{Point, Point}
+function boxed(S::Sphere)::Tuple{Point,Point}
     # return P1 and P2 of the bounding box of the sphere
     # remember to apply the transformation to the points
     p1 = Point(-1.0, -1.0, -1.0)

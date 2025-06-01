@@ -285,7 +285,7 @@ Calculates the bounding box of a CSG shape.
 # Returns
 - `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the CSG shape.
 """
-function boxed(CSG::Union{CSGUnion, CSGDifference, CSGIntersection})::Tuple{Point, Point}
+function boxed(CSG::Union{CSGUnion,CSGDifference,CSGIntersection})::Tuple{Point,Point}
     P1_1, P1_2 = boxed(CSG.Sh1)
     P2_1, P2_2 = boxed(CSG.Sh2)
     # get all the corners of the bounding boxes of the two shapes

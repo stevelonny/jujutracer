@@ -66,10 +66,10 @@ end
 """
     ray_intersection(s::Cone, r::Ray)
 
-Calculates the intersection of a ray and a sphere.
+Calculates the intersection of a ray and a cone.
 # Arguments
-- `S::Cone`: the sphere to be intersected
-- `ray::Ray`: the ray intersecting the sphere
+- `S::Cone`: the cone to be intersected
+- `ray::Ray`: the ray intersecting the cone
 # Returns
 If there is an intersection, returns a `HitRecord` containing the hit information. Otherwise, returns `nothing`.
 """
@@ -79,33 +79,12 @@ function ray_intersection(S::Cone, ray::Ray)
     d = inv_ray.dir
     # z = 1 - sqrt(x^2 + y^2)
     # (z - 1)^2 = x^2 + y^2
-    # ... check minus signs
     a = d.x^2 + d.y^2 - d.z^2
     b = 2.0 * (-O.z * d.z + O.x * d.x + O.y * d.y + d.z)
     c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
 
     Δ = b^2 - 4.0*a*c
     Δ <= 0.0 && return nothing
-
-#=     if Δ < 0.0
-        if d.z ≈ 0.0
-            return nothing # ray is parallel to the cone axis
-        end
-        tz = -O.z / d.z
-        hit_base = inv_ray(tz)
-        if tz > inv_ray.tmin && tz < inv_ray.tmax && hit_base.x^2 + hit_base.y^2 <= 1.0
-            return HitRecord(
-                world_P = S.Tr(hit_base),
-                normal = S.Tr(_circle_normal(hit_base, ray.dir)),
-                surface_P = _circle_point_to_uv(hit_base),
-                t = tz,
-                ray = ray,
-                shape = S
-            )
-        else
-            return nothing
-        end
-    end =#
 
     sqrot = sqrt(Δ)
     t1 = (-b - sqrot) / (2.0*a)
@@ -177,23 +156,23 @@ end
 """
     ray_intersection_list(S::Cone, ray::Ray)
 
-Calculates all intersections of a ray with a sphere.
+Calculates all intersections of a ray with a cone.
 # Arguments
-- `S::Cone`: The sphere to be intersected.
-- `ray::Ray`: The ray intersecting the sphere.
+- `S::Cone`: The cone to be intersected.
+- `ray::Ray`: The ray intersecting the cone.
 # Returns
 - `Vector{HitRecord}`: A list of of the two hit records for the two intersections, ordered by distance.
 - `nothing`: If no intersections occur.
 """
 function ray_intersection_list(S::Cone, ray::Ray)
-    O = Vec(ray.origin)
-    d = ray.dir
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    O = Vec(inv_ray.origin)
+    d = inv_ray.dir
     a = d.x^2 + d.y^2 - d.z^2
     b = 2.0 * (-O.z * d.z + O.x * d.x + O.y * d.y + d.z)
     c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
 
     Δ = b^2 - 4.0*a*c
-
     Δ <= 0.0 && return nothing
     
     hit_records = HitRecord[]
@@ -204,11 +183,9 @@ function ray_intersection_list(S::Cone, ray::Ray)
     z1 = O.z + t1 * d.z
     z2 = O.z + t2 * d.z
     tz = -O.z / d.z
-    if tz > ray.tmin && tz < ray.tmax
-        hit_base = ray(tz)
-        if hit_base.x^2 + hit_base.y^2 > 1.0
-            return nothing  # base hit is outside the circle
-        end
+    if tz > inv_ray.tmin && tz < inv_ray.tmax
+        hit_base = inv_ray(tz)
+        if hit_base.x^2 + hit_base.y^2 <= 1.0
         HR_base = HitRecord(
             world_P = S.Tr(hit_base),
             normal = S.Tr(_circle_normal(hit_base, ray.dir)),
@@ -218,34 +195,35 @@ function ray_intersection_list(S::Cone, ray::Ray)
             shape = S
         )
         push!(hit_records, HR_base)
+        end
     end
-    if t1 > ray.tmin && t1 < ray.tmax && z1 > 0.0 && z1 < 1.0
+    if t1 > inv_ray.tmin && t1 < inv_ray.tmax && z1 > 0.0 && z1 < 1.0
         HR1 = HitRecord(
-            world_P = S.Tr(ray(t1)),
-            normal = S.Tr(_cone_normal(ray(t1), ray.dir)),
-            surface_P = _point_to_uv(S, ray(t1)),
+            world_P = S.Tr(inv_ray(t1)),
+            normal = S.Tr(_cone_normal(inv_ray(t1), inv_ray.dir)),
+            surface_P = _point_to_uv(S, inv_ray(t1)),
             t = t1,
             ray = ray,
             shape = S
         )
         push!(hit_records, HR1)
     end
-    if t2 > ray.tmin && t2 < ray.tmax && z2 > 0.0 && z2 < 1.0
+    if t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 > 0.0 && z2 < 1.0
         HR2 = HitRecord(
-            world_P = S.Tr(ray(t2)),
-            normal = S.Tr(_cone_normal(ray(t2), ray.dir)),
-            surface_P = _point_to_uv(S, ray(t2)),
+            world_P = S.Tr(inv_ray(t2)),
+            normal = S.Tr(_cone_normal(inv_ray(t2), inv_ray.dir)),
+            surface_P = _point_to_uv(S, inv_ray(t2)),
             t = t2,
             ray = ray,
             shape = S
         )
         push!(hit_records, HR2)
     end
-    sort!(hit_records, by = h -> h.t)  # sort by distance
     if length(hit_records) != 2
-        return nothing
+        return nothing  # no hits found
     end
-    return [hit_records[1], hit_records[2]]  # return the first two hits, if they exists
+    sort!(hit_records, by = h -> h.t)  # sort by distance
+    return [hit_records[1], hit_records[2]]  # return the first two hits (maybe overkill as it never will be 3 hits), if they exists
 end
 
 """

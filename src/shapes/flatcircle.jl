@@ -125,7 +125,7 @@ Returns the bounding box of the circle.
 # Returns
 - `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the circle.
 """
-function boxed(S::Circle)::Tuple{Point, Point}
+function boxed(S::Circle)::Tuple{Point,Point}
     # return P1 and P2 of the bounding box of the circle
     # remember to apply the transformation to the points
     p1 = Point(-1.0, -1.0, 0.0)

@@ -37,14 +37,14 @@ struct AABB <: AbstractShape
     function AABB(S::Vector{AbstractShape}, P1::Point, P2::Point)
         new(S, P1, P2)
     end
-    function AABB(csg::Union{CSGDifference, CSGUnion, CSGIntersection})
+    function AABB(csg::Union{CSGDifference,CSGUnion,CSGIntersection})
         S = Vector{AbstractShape}(undef, 1)
         S[1] = csg
         P1, P2 = boxed(csg)
         return AABB(S, P1, P2)
     end
 end
-        
+
 """
     intersected(axisbox::AABB, ray::Ray)
 
@@ -122,6 +122,6 @@ Returns the two points defining the axis-aligned bounding box (AABB) `axisbox`.
 # Returns
 - `Tuple{Point, Point}`: a tuple containing the two points defining the AABB, where the first point is the minimum corner and the second point is the maximum corner.
 """
-function boxed(axisbox::AABB)::Tuple{Point, Point}
+function boxed(axisbox::AABB)::Tuple{Point,Point}
     return (axisbox.P1, axisbox.P2)
 end

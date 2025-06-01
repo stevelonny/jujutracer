@@ -25,7 +25,6 @@ export Cone
 include("csg.jl")
 export CSGUnion, CSGDifference, CSGIntersection
 
-
 include("aabb.jl")
 export AABB, intersected
 

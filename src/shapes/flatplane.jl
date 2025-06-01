@@ -80,7 +80,6 @@ function ray_intersection(pl::Plane, ray::Ray)
         return nothing
     end
 
-
     hit_point = inv_ray(first_hit)
     norm = pl.Tr(_plane_normal(hit_point, ray.dir))
     return HitRecord(

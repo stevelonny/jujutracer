@@ -101,26 +101,26 @@ function _point_to_uv(box::Box, p::Point, norm::Normal)
     nx = (p.x - p1.x) / (p2.x - p1.x)
     ny = (p.y - p1.y) / (p2.y - p1.y)
     nz = (p.z - p1.z) / (p2.z - p1.z)
-    third = 1.0 / 4.0
+    quarter = 1.0 / 4.0
     tol = 1e-6
     if abs(norm.x - 1.0) < tol      # +X (Right)
         u = 0.5 + nz * 0.25
-        v = third + (1.0 - ny) * third
+        v = quarter + (1.0 - ny) * quarter
     elseif abs(norm.x + 1.0) < tol # -X (Left)
         u = 0.0 + nz * 0.25
-        v = third + (1.0 - ny) * third
+        v = quarter + (1.0 - ny) * quarter
     elseif abs(norm.y - 1.0) < tol  # +Y (Top)
         u = 0.25 + nx * 0.25
-        v = 2.0*third + (1.0 - nz) * third
+        v = 2.0 * quarter + (1.0 - nz) * quarter
     elseif abs(norm.y + 1.0) < tol # -Y (Bottom)
         u = 0.25 + nx * 0.25
-        v = 0.0 + nz * third
+        v = 0.0 + nz * quarter
     elseif abs(norm.z - 1.0) < tol  # +Z (Front)
         u = 0.25 + nx * 0.25
-        v = third + (1.0 - ny) * third
+        v = quarter + (1.0 - ny) * quarter
     elseif abs(norm.z + 1.0) < tol # -Z (Back)
         u = 0.75 + (1.0 - nx) * 0.25
-        v = third + (1.0 - ny) * third
+        v = quarter + (1.0 - ny) * quarter
     else
         u, v = 0.0, 0.0
     end
@@ -145,37 +145,12 @@ function ray_intersection(box::Box, ray::Ray)
     O = inv_ray.origin
     d = inv_ray.dir
 
-    # we need to make this function very fast: must be branchless
-    # precompute some values? inverse ray dir?
-    # reminder: to check if d is zero. There's no need to do it cause julia knows that 1 / 0 = Inf
-    # reminder: check ray.tmin ray.tmax
-
-    # first check x and y planes
     t1x = (p1.x - O.x) / d.x
     t2x = (p2.x - O.x) / d.x
-    #txmin = min(t1x, t2x)
-    #txmax = max(t1x, t2x)
-
     t1y = (p1.y - O.y) / d.y
     t2y = (p2.y - O.y) / d.y
-    #tymin = min(t1y, t2y)
-    #tymax = max(t1y, t2y)
-
-    #if txmin > tymax || tymin > txmax
-    #    return nothing
-    #end
-    #tmin = max(txmin, tymin)
-    #tmax = min(txmax, tymax)
-
-    # then check z planes
     t1z = (p1.z - O.z) / d.z
     t2z = (p2.z - O.z) / d.z
-    #tzmin = min(t1z, t2z)
-    #tzmax = max(t1z, t2z)
-
-    #if tmin > tzmax || tzmin > tmax
-    #    return nothing
-    #end
 
     # more concise version but i dont really trust it
     tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
@@ -185,19 +160,6 @@ function ray_intersection(box::Box, ray::Ray)
     end
     first_hit = tmin > inv_ray.tmin ? tmin : tmax
     first_hit > inv_ray.tmax && return nothing
-
-    #tmin = max(tmin, tzmin)
-    #tmax = min(tmax, tzmax)
-
-    #if tmin > inv_ray.tmin && tmax < inv_ray.tmax
-    #    first_hit = tmin
-    #elseif tmax > inv_ray.tmin && tmax < inv_ray.tmax
-    #    first_hit = tmax
-    #else
-    #    return nothing
-    #end
-
-    # still to do: _box_normal and _point_to_uv
 
     hit_point = inv_ray(first_hit)
     # normal
@@ -211,16 +173,14 @@ function ray_intersection(box::Box, ray::Ray)
 
     # point_to_uv needs the untransformed normal
     sur_point = _point_to_uv(box, hit_point, norm)
-
     norm = box.Tr(norm)
-
     return HitRecord(
-        world_P = box.Tr(hit_point),
-        normal = norm,
-        surface_P = sur_point, #= _point_to_uv(box, hit_point) =#
-        t = first_hit,
-        ray = ray,
-        shape = box
+        world_P=box.Tr(hit_point),
+        normal=norm,
+        surface_P=sur_point, #= _point_to_uv(box, hit_point) =#
+        t=first_hit,
+        ray=ray,
+        shape=box
     )
 end
 
@@ -261,39 +221,13 @@ function ray_intersection_list(box::Box, ray::Ray)
     O = inv_ray.origin
     d = inv_ray.dir
 
-    # we need to make this function very fast: must be branchless
-    # precompute some values? inverse ray dir?
-    # reminder: to check if d is zero. There's no need to do it cause julia knows that 1 / 0 = Inf
-    # reminder: check ray.tmin ray.tmax
-
-    # first check x and y planes
     t1x = (p1.x - O.x) / d.x
     t2x = (p2.x - O.x) / d.x
-    #txmin = min(t1x, t2x)
-    #txmax = max(t1x, t2x)    
-
     t1y = (p1.y - O.y) / d.y
     t2y = (p2.y - O.y) / d.y
-    #tymin = min(t1y, t2y)
-    #tymax = max(t1y, t2y)
-
-    #if txmin > tymax || tymin > txmax
-    #    return nothing
-    #end
-    #tmin = max(txmin, tymin)
-    #tmax = min(txmax, tymax)
-
-    # then check z planes
     t1z = (p1.z - O.z) / d.z
     t2z = (p2.z - O.z) / d.z
-    #tzmin = min(t1z, t2z)
-    #tzmax = max(t1z, t2z)
 
-    #if tmin > tzmax || tzmin > tmax
-    #    return nothing
-    #end
-
-    # more concise version but i dont really trust it
     tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
     tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
     if tmax < max(inv_ray.tmin, tmin) || tmax > inv_ray.tmax
@@ -302,10 +236,8 @@ function ray_intersection_list(box::Box, ray::Ray)
     if tmin < inv_ray.tmin || tmin > inv_ray.tmax
         return nothing
     end
-
     first_hit = tmin
     second_hit = tmax
-
 
     hit_point_1 = inv_ray(first_hit)
     hit_point_2 = inv_ray(second_hit)
@@ -330,22 +262,21 @@ function ray_intersection_list(box::Box, ray::Ray)
     sur_point_2 = _point_to_uv(box, hit_point_2, norm2)
     norm1 = box.Tr(norm1)
     norm2 = box.Tr(norm2)
-
     HR1 = HitRecord(
-        world_P = box.Tr(hit_point_1),
-        normal = norm1,
-        surface_P = sur_point_1, #= _point_to_uv(box, hit_point) =#
-        t = first_hit,
-        ray = ray,
-        shape = box
+        world_P=box.Tr(hit_point_1),
+        normal=norm1,
+        surface_P=sur_point_1, #= _point_to_uv(box, hit_point) =#
+        t=first_hit,
+        ray=ray,
+        shape=box
     )
     HR2 = HitRecord(
-        world_P = box.Tr(hit_point_2),
-        normal = norm2,
-        surface_P = sur_point_2, #= _point_to_uv(box, hit_point) =#
-        t = second_hit,
-        ray = ray,
-        shape = box
+        world_P=box.Tr(hit_point_2),
+        normal=norm2,
+        surface_P=sur_point_2, #= _point_to_uv(box, hit_point) =#
+        t=second_hit,
+        ray=ray,
+        shape=box
     )
     return [HR1, HR2]
 end
@@ -359,7 +290,7 @@ Returns the bounding box of the box.
 # Returns
 - `Tuple{Point, Point}`: A tuple containing the two opposite corners of the bounding box of the box.
 """
-function boxed(S::Box)::Tuple{Point, Point}
+function boxed(S::Box)::Tuple{Point,Point}
     # Thanks chatGPT
     # Get local-space corners
     p1, p2 = S.P1, S.P2
