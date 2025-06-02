@@ -18,18 +18,24 @@ global_logger(filtered_logger)
 # Welcome to steve's playground
 
 filename = "all_"
-renderertype = "flat" # "path" or "flat"
+renderertype = "point" # "path" or "flat" or "point"
 width = 800
 height = 450
 n_rays = 3
 depth = 3
 russian = 2
 aa = 2
+aatype = ""
+if aa != 0
+    aatype = "_" * string(aa) * "aa"
+end
 fullname = filename
 if renderertype == "flat"
-    fullname = fullname * "flat_" * string(width) * "x" * string(height) * "_" * string(aa) * "aa"
+    fullname = fullname * "flat_" * string(width) * "x" * string(height) * aatype
 elseif renderertype == "path"
-    fullname = fullname * "path_" * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus_" * string(aa) * "aa"
+    fullname = fullname * "path_" * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus" * aatype
+elseif renderertype == "point"
+    fullname = fullname * "point_" * string(width) * "x" * string(height) * aatype
 else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end
@@ -92,7 +98,30 @@ push!(S, Ci1)
 push!(S, R1)
 push!(S, Plane(Mat5))
 
-world = World(S)
+factor = 100.0
+
+lights = Vector{LightSource}()
+light1 = LightSource(Point(2.0, 2.0, 2.0), RGB(0.1, 0.0, 0.0), factor)
+light2 = LightSource(Point(2.0, -2.0, 2.0), RGB(0.0, 0.1, 0.0), factor)
+light3 = LightSource(Point(0.0, 0.0, 3.0), RGB(0.0, 0.0, 0.1), factor)
+light4 = LightSource(Point(0.0, 0.0, 6.90), RGB(0.5, 0.5, 0.5), factor)
+push!(lights, light1)
+push!(lights, light2)
+push!(lights, light3)
+push!(lights, light4)
+
+push!(S, S_back)
+push!(S, axisBox)
+push!(S, axisBox3)
+push!(S, T1)
+push!(S, Para1)
+push!(S, axisBox2)
+push!(S, Co1)
+push!(S, Ci1)
+push!(S, R1)
+push!(S, Plane(Mat5))
+
+world = World(S, lights)
 #cam = Orthogonal(t = R_cam ⊙ Translation(-1.0, 0.0, 0.0), a_ratio = convert(Float64, 16 // 9))
 cam = Perspective(d=2.0, t=Translation(-3.25, 0.0, 1.5) ⊙ Ry(π / 6.0))
 hdr = hdrimg(width, height)
@@ -103,11 +132,18 @@ if renderertype == "flat"
     renderer = Flat(world)
 elseif renderertype == "path"
     renderer = PathTracer(world, gray, pcg, n_rays, depth, russian)
+elseif renderertype == "point"
+    renderer = PointLight(world)
 else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end
-ImgTr(renderer, aa, pcg)
-toned_img = tone_mapping(hdr; a=0.5, γ=1.3)
+if aa != 0
+    ImgTr(renderer, aa, pcg)
+else
+    ImgTr(renderer)
+end
+luminosity = jujutracer._average_luminosity(hdr; type="W")
+toned_img = tone_mapping(hdr; lum=luminosity)
 # Save the LDR image
 save_ldrimage(get_matrix(toned_img), png_output)
 write_pfm_image(hdr, pfm_output)
