@@ -57,16 +57,23 @@ end
 OnOff renderer of the scene. Returns white if the ray hits something, balck otherwise
 # Fields
 - `world::World` the world containing the scene
+- `background_color::RGB` the color of the background when the ray doesn't hit anything
+- `foreground_color::RGB` the color of the foreground when the ray hits something
 # Functional Usage
 `OnOff(ray::Ray)` functional renderer on a ray
 """
 struct OnOff <: Function
     world::World
+    background_color::RGB
+    foreground_color::RGB
+    function OnOff(world::World, background_color::RGB=RGB(0.0, 0.0, 0.0), foreground_color::RGB=RGB(1.0, 1.0, 1.0))
+        new(world, background_color, foreground_color)
+    end
 end
 
 function (OF::OnOff)(ray::Ray)
     repo = ray_intersection(OF.world, ray)
-    return (isnothing(repo)) ? RGB(0.0, 0.0, 0.0) : RGB(1.0, 1.0, 1.0)
+    return (isnothing(repo)) ? OF.background_color : OF.foreground_color
 end
 
 #---------------------------------------------------------
@@ -83,11 +90,15 @@ Flat renderer of the scene. Returns the Emition pigment of the hitten shapes
 """
 struct Flat <: Function
     world::World
+    background_color::RGB
+    function Flat(world::World, background_color::RGB=RGB(0.0, 0.0, 0.0))
+        new(world, background_color)
+    end
 end
 
 function (F::Flat)(ray::Ray)
     repo = ray_intersection(F.world, ray)
-    return (isnothing(repo)) ? RGB(0.0, 0.0, 0.0) : repo.shape.Mat.Emition(repo.surface_P) + repo.shape.Mat.BRDF.Pigment(repo.surface_P)
+    return (isnothing(repo)) ? F.background_color : repo.shape.Mat.Emition(repo.surface_P) + repo.shape.Mat.BRDF.Pigment(repo.surface_P)
 end
 
 #---------------------------------------------------------
@@ -109,7 +120,7 @@ Path Tracer renderer of the scene.
 """
 struct PathTracer <: Function
     world::World
-    backg::RGB
+    background_color::RGB
     rnd::PCG
     n_rays::Int64
     depth::Int64
@@ -124,7 +135,7 @@ function (P::PathTracer)(ray::Ray)
     repo = ray_intersection(P.world, ray)
 
     if isnothing(repo)
-        return P.backg
+        return P.background_color
     end
 
     hit_material = repo.shape.Mat
@@ -162,39 +173,65 @@ struct PointLight <: Function
     world::World
     background_color::RGB
     ambient_color::RGB
-    scale::Float64
+    max_depth::Int64
 
-    function PointLight(world::World, background::RGB=RGB(0.0, 0.0, 0.0), ambient=RGB(0.2, 0.2, 0.2), scale::Float64=1.0)
-        if scale <= 0.0
-            throw(ArgumentError("Scale must be positive"))
-        end
-        new(world, background, ambient, scale)
+    function PointLight(world::World, background::RGB=RGB(0.0, 0.0, 0.0), ambient=RGB(0.2, 0.2, 0.2), max_depth::Int64=0)
+        new(world, background, ambient, max_depth)
     end
 end
 
 function (PL::PointLight)(ray::Ray)
-    hit_record = ray_intersection(PL.world, ray)
-    if isnothing(hit_record)
+    repo = ray_intersection(PL.world, ray)
+    if isnothing(repo)
+        return PL.background_color
+    end
+    if ray.depth > PL.max_depth
         return PL.background_color
     end
 
-    hit_material = hit_record.shape.Mat
-    emitted_color = hit_material.Emition(hit_record.surface_P)
-    result_color = PL.ambient_color + emitted_color
+    hit_material = repo.shape.Mat
+    emitted_color = hit_material.Emition(repo.surface_P)
+    result_color = RGB(0.0, 0.0, 0.0)
 
-    for cur_light in PL.world.lights
-        if is_point_visible(PL.world, cur_light.position, hit_record.world_P)
-            distance_vec = hit_record.world_P - cur_light.position
-            distance = norm(distance_vec)
-            in_dir = distance_vec / distance
-            cos_theta = max(0.0, -normalize(distance_vec) ⋅ hit_record.normal)
+    if ray.depth == 0
+        result_color += emitted_color + PL.ambient_color
+    end
 
-            distance_factor = (cur_light.scale / distance)^2
-            brdf_color = hit_material.BRDF.Pigment(hit_record.surface_P) *(1.0/π)
+    if hit_material.BRDF isa DiffusiveBRDF
+        for cur_light in PL.world.lights
+            if is_point_visible(PL.world, cur_light.position, repo.world_P)
+                light_effect = _light_modulation(cur_light, repo)
+                brdf_color = hit_material.BRDF.Pigment(repo.surface_P) *(1.0/π)
 
-            result_color += brdf_color * cur_light.emission * cos_theta * distance_factor
+                result_color += brdf_color * light_effect
+            end
         end
     end
 
+    if hit_material.BRDF isa SpecularBRDF
+        reflected_ray = _reflect_ray(ray, repo.normal)
+        reflected_color = PL(reflected_ray)
+        brdf_color = hit_material.BRDF.Pigment(repo.surface_P)
+        result_color += reflected_color * brdf_color
+    end
+
     return result_color
+end
+
+function _reflect_ray(ray::Ray, normal::Normal)
+    incoming_dir = ray.dir
+    reflected_dir = incoming_dir - 2 * normal * (normal ⋅ incoming_dir)
+    # translate the reflected ray just a little bit to avoid self-intersection
+    reflected_origin = ray.origin + 1e-5 * reflected_dir
+    return Ray(origin=reflected_origin, dir=reflected_dir, tmin=1e-5, depth=ray.depth + 1)
+end
+
+function _light_modulation(light::LightSource, repo::HitRecord)
+    distance_vec = repo.world_P - light.position
+    distance = norm(distance_vec)
+    cos_theta = max(0.0, -normalize(distance_vec) ⋅ repo.normal)
+
+    distance_factor = (light.scale / distance)^2
+    
+    return light.emission * cos_theta * distance_factor
 end

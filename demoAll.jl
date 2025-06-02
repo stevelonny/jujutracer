@@ -9,7 +9,7 @@ using TerminalLoggers
 using LoggingExtras
 
 # Create a filtered logger
-module_filter(log) = log._module == jujutracer || log.level > Logging.Debug
+module_filter(log) = log._module == jujutracer
 filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logging.Debug))
 
 # Set as the global logger
@@ -18,13 +18,14 @@ global_logger(filtered_logger)
 # Welcome to steve's playground
 
 filename = "all_"
-renderertype = "point" # "path" or "flat" or "point"
-width = 800
-height = 450
+renderertype = "flat" # "path" or "flat" or "point"
+width = 1920
+height = 1080
 n_rays = 3
 depth = 3
 russian = 2
-aa = 2
+point_depth = 5
+aa = 4
 aatype = ""
 if aa != 0
     aatype = "_" * string(aa) * "aa"
@@ -33,9 +34,9 @@ fullname = filename
 if renderertype == "flat"
     fullname = fullname * "flat_" * string(width) * "x" * string(height) * aatype
 elseif renderertype == "path"
-    fullname = fullname * "path_" * string(width) * "x" * string(height) * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus" * aatype
+    fullname = fullname * "path_" * string(width) * "x" * string(height) * aatype * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus" * aatype
 elseif renderertype == "point"
-    fullname = fullname * "point_" * string(width) * "x" * string(height) * aatype
+    fullname = fullname * "point_" * string(width) * "x" * string(height) * aatype * "_" * string(point_depth) * "depth"
 else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end
@@ -87,24 +88,13 @@ Co1 = Cone(Scaling(1.0 / 2.5, 1.0 / 2.5, 1.0 / 2.5) ⊙ Translation(-2.0 * 2.5, 
 Ci1 = Circle(Translation(0.0, 0.0, 0.01), MatRect)
 R1 = Rectangle(Translation(-2.5, 0.0, 0.01), MatRect)
 
-push!(S, S_back)
-push!(S, axisBox)
-push!(S, axisBox3)
-push!(S, T1)
-push!(S, Para1)
-push!(S, axisBox2)
-push!(S, Co1)
-push!(S, Ci1)
-push!(S, R1)
-push!(S, Plane(Mat5))
-
 factor = 100.0
 
 lights = Vector{LightSource}()
-light1 = LightSource(Point(2.0, 2.0, 2.0), RGB(0.1, 0.0, 0.0), factor)
-light2 = LightSource(Point(2.0, -2.0, 2.0), RGB(0.0, 0.1, 0.0), factor)
-light3 = LightSource(Point(0.0, 0.0, 3.0), RGB(0.0, 0.0, 0.1), factor)
-light4 = LightSource(Point(0.0, 0.0, 6.90), RGB(0.5, 0.5, 0.5), factor)
+light1 = LightSource(Point(2.0, 2.0, 2.0), RGB(0.5, 0.0, 0.0), factor)
+light2 = LightSource(Point(2.0, -2.0, 2.0), RGB(0.0, 0.5, 0.0), factor)
+light3 = LightSource(Point(-2.0, 0.0, 3.0), RGB(0.0, 0.0, 0.5), factor)
+light4 = LightSource(Point(-5.00, 0.0, 6.90), RGB(0.1, 0.1, 0.1), 50.0)
 push!(lights, light1)
 push!(lights, light2)
 push!(lights, light3)
@@ -133,7 +123,7 @@ if renderertype == "flat"
 elseif renderertype == "path"
     renderer = PathTracer(world, gray, pcg, n_rays, depth, russian)
 elseif renderertype == "point"
-    renderer = PointLight(world)
+    renderer = PointLight(world, RGB(0.0, 0.0, 0.0), RGB(0.1, 0.1, 0.1), point_depth)
 else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end

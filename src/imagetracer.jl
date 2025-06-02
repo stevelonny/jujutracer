@@ -59,8 +59,14 @@ function (it::ImageTracer)(fun::Function)
     update_interval = max(1, div(total, 200)) # update progress every 0.5% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
     @info "Starting rendering with $(renderer_type) renderer"
-    if fun isa PathTracer
-        @debug "PathTracer parameters" n_rays=fun.n_rays depth=fun.depth russian=fun.russian
+    if fun isa OnOff
+        @debug "OnOff renderer parameters" bg_color=fun.background_color fg_color=fun.foreground_color
+    elseif fun isa Flat
+        @debug "Flat renderer parameters" bg_color=fun.background_color
+    elseif fun isa PathTracer
+        @debug "PathTracer parameters" bg_color=fun.background_color n_rays=fun.n_rays depth=fun.depth russian=fun.russian
+    elseif fun isa PointLight
+        @debug "PointLight parameters" bg_color=fun.background_color amb_color=fun.ambient_color point_depth=fun.max_depth
     end
     @info "Starting image tracing with $(Threads.nthreads()) threads."
     @info "Starting time: $(time())"
@@ -101,8 +107,14 @@ function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
     @info "Starting rendering with $(renderer_type) renderer"
     @info "Anti-Aliasing factor: $(AA)"
-    if fun isa PathTracer
-        @debug "PathTracer parameters" n_rays=fun.n_rays depth=fun.depth russian=fun.russian
+    if fun isa OnOff
+        @debug "OnOff renderer parameters" bg_color=fun.background_color fg_color=fun.foreground_color
+    elseif fun isa Flat
+        @debug "Flat renderer parameters" bg_color=fun.background_color
+    elseif fun isa PathTracer
+        @debug "PathTracer parameters" bg_color=fun.background_color n_rays=fun.n_rays depth=fun.depth russian=fun.russian
+    elseif fun isa PointLight
+        @debug "PointLight parameters" bg_color=fun.background_color amb_color=fun.ambient_color point_depth=fun.max_depth
     end
     @info "Starting image tracing with $(Threads.nthreads()) threads."
     @info "Starting time: $(time())"
