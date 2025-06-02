@@ -13,7 +13,6 @@ Uniform Pigment for Shapes
 
 # Functional Usage
 `UniformPigment(p::SurfacePoint)` return the `RGB` associated to the `(u, v)` coordinates of the `SurfacePoint`
-Methods in [`renderer.jl`](@ref)
 """
 struct UniformPigment <: AbstractPigment
     color::RGB
@@ -40,8 +39,6 @@ Checkered pigment for a Shape, subdiveded in `row` rows and `col` columns with a
 
 # Functional Usage
 `CheckeredPigment(p::SurfacePoint)` return the `RGB` associated to the `(u, v)` coordinates of the `SurfacePoint` 
-
-Methods in [`renderer.jl`](@ref)
 """
 struct CheckeredPigment <: AbstractPigment
     col::Int32
@@ -88,8 +85,6 @@ Specular BRDF with reflective pigment `Pigment`.
 struct SpecularBRDF <: AbstractBRDF
     Pigment::AbstractPigment
 end
-
-# Pigment and BRDF methods are in [`renderer.jl`](@ref)
 
 #---------------------------------------------------------
 # Material
