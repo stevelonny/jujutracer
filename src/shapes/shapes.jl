@@ -32,7 +32,7 @@ include("meshes.jl")
 export Triangle, Parallelogram
 
 include("light.jl")
-export LightSource
+export AbstractLight, LightSource, SpotLight
 
 include("world.jl")
 export World

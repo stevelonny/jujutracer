@@ -199,7 +199,7 @@ function (PL::PointLight)(ray::Ray)
 
     if hit_material.BRDF isa DiffusiveBRDF
         for cur_light in PL.world.lights
-            if is_point_visible(PL.world, cur_light.position, repo.world_P)
+            if is_light_visible(PL.world, cur_light, repo.world_P)
                 light_effect = _light_modulation(cur_light, repo)
                 brdf_color = hit_material.BRDF.Pigment(repo.surface_P) *(1.0/π)
 
@@ -226,6 +226,22 @@ function _reflect_ray(ray::Ray, normal::Normal)
     return Ray(origin=reflected_origin, dir=reflected_dir, tmin=1e-5, depth=ray.depth + 1)
 end
 
+function is_light_visible(world::World, light::LightSource, point::Point)
+    return is_point_visible(world, light.position, point)
+end
+
+function is_light_visible(world::World, light::SpotLight, point::Point)
+    # if the point is not in the light cone, return false
+    distance_vec = point - light.position
+    cos_angle = Normal(distance_vec) ⋅ Normal(light.direction)
+    if cos_angle < light.cos_total
+        return false
+    else
+        # if the point is in the light cone, check if there are any obstacles
+        return is_point_visible(world, light.position, point)
+    end
+end
+
 function _light_modulation(light::LightSource, repo::HitRecord)
     distance_vec = repo.world_P - light.position
     distance = norm(distance_vec)
@@ -234,4 +250,21 @@ function _light_modulation(light::LightSource, repo::HitRecord)
     distance_factor = (light.scale / distance)^2
     
     return light.emission * cos_theta * distance_factor
+end
+
+function _light_modulation(spot::SpotLight, repo::HitRecord)
+    distance_vec = repo.world_P - spot.position
+    distance = norm(distance_vec)
+    cos_theta = max(0.0, Normal(spot.direction) ⋅ Normal(distance_vec))
+
+    distance_factor = (spot.scale / distance)^2
+
+    smoothstep = _smooth_step(cos_theta, spot.cos_falloff, spot.cos_start)
+
+    return spot.emission * distance_factor * smoothstep
+end
+
+function _smooth_step(x, edge0, edge1)
+    t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0)
+    return t * t * (3 - 2 * t)
 end

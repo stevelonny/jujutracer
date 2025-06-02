@@ -19,13 +19,13 @@ A struct representing a collection of shapes (and lights) in a 3D world.
 """
 struct World
     shapes::Vector{AbstractShape}
-    lights::Vector{LightSource}
+    lights::Vector{AbstractLight}
 
     function World(shapes::Vector{AbstractShape})
-        @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))" shapes=shapes lights=LightSource[]
-        new(shapes, LightSource[])
+        @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))" shapes=shapes lights=AbstractLight[]
+        new(shapes, AbstractLight[])
     end
-    function World(shapes::Vector{AbstractShape}, lights::Vector{LightSource})
+    function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight})
         @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))" shapes=shapes lights=lights
         new(shapes, lights)
     end
