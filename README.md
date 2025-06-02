@@ -63,27 +63,31 @@ To showcase all the newly added shapes by [#18](https://github.com/stevelonny/ju
 <div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
 
 <div style="text-align: center; margin: 10px;">
-<img src="all_flat_800x450_2aa.png" alt="demoAll Flat" width="200"/>
+<img src="allFlat.png" alt="demoAll Flat" width="300"/>
 <br/>
 <strong>Flat renderer</strong>
 <br/>
-<em>800x450, AA=2</em>
+<em>800x450, AA=4</em>
 </div>
 
 <div style="text-align: center; margin: 10px;">
-<img src="all_path_800x450_3rays_3depth_2rus_2aa.png" alt="demoAll Path" width="200"/>
+<img src="allPath.png" alt="demoAll Path" width="300"/>
 <br/>
 <strong>Path Tracer</strong>
 <br/>
-<em>800x450, AA=2, 2 rays, 3 depth, 2 russian</em>
+<em>800x450, AA=2, 3 rays, 5 depth, 3 russian</em>
 </div>
 
+</div>
+
+<div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+
 <div style="text-align: center; margin: 10px;">
-<img src="all_point_800x450_2aa.png" alt="demoAll Point" width="200"/>
+<img src="allPoint.png" alt="demoAll Point" width="300"/>
 <br/>
 <strong>Point-Light Tracer</strong>
 <br/>
-<em>800x450, AA=2</em>
+<em>800x450, AA=4, depth=5</em>
 </div>
 
 </div>
