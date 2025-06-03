@@ -288,3 +288,37 @@ function boxed(S::Parallelogram)::Tuple{Point,Point}
     P2 = Point(max(A.x, B.x, C.x, D.x), max(A.y, B.y, C.y, D.y), max(A.z, B.z, C.z, D.z))
     return (P1, P2)
 end
+
+#---------------------------------------------------------
+# Meshes
+#---------------------------------------------------------
+
+struct mesh
+    file::String
+    shapes::Vector{AbstractShape}
+    points::Vector{Points}
+end
+
+function read_obj_file(io::IOBuffer)
+
+end
+
+function read_obj_file(filename::String)
+    # Check if the file extension is valid
+    if !(endswith(filename, ".obj"))
+        throw(InvalidPfmFileFormat("Invalid file extension. Only .obj is supported."))
+    end
+    io = IOBuffer()
+    @info("Reading OBJ file from file: $(abspath(filename))")
+    open(filename, "r") do file
+        write(io, file)
+    end
+    seekstart(io)
+    return read_obj_file(io)
+end
+
+function mesh(file::String)
+    read_obj_file(file)
+    # store points in points
+    # store shapes in shapes
+end
