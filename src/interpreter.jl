@@ -25,6 +25,137 @@ mutable struct SourceLocation
     end
 end
 
+function Base.:(==)(a::SourceLocation, b::SourceLocation)
+    return a.filename == b.filename && a.line == b.line && a.col == b.col
+end
+
+
+#---------------------------------------------------------
+# Token
+#---------------------------------------------------------
+
+abstract type AbstractToken end
+
+
+"""
+    IdentifierToken(location::SourceLocation, identifier::String)
+
+A token representing an identifier (variable, function, etc.) in the source code.
+"""
+struct IdentifierToken <: AbstractToken
+    location::SourceLocation
+    identifier::String
+
+    function IdentifierToken(location::SourceLocation, id::String)
+        new(location, id)
+    end
+end
+
+
+"""
+    StringToken(location::SourceLocation, s::String)
+
+A token representing a literal string in the source code.
+"""
+struct StringToken <: AbstractToken
+    location::SourceLocation
+    string::String
+
+    function StringToken(location::SourceLocation, s::String)
+        new(location, s)
+    end
+end
+
+
+"""
+    NumberToken(location::SourceLocation, value::Float64)
+
+A token representing a numeric literal in the source code.
+"""
+struct NumberToken <: AbstractToken
+    location::SourceLocation
+    value::Float64
+
+    function NumberToken(location::SourceLocation, value::Float64)
+        new(location, value)
+    end
+end
+
+"""
+    SymbolToken(location::SourceLocation, symbol::Char)
+
+A token representing a single character symbol in the source code.
+"""
+struct SymbolToken <: AbstractToken
+    location::SourceLocation
+    symbol::Char
+
+    function SymbolToken(location::SourceLocation, symbol::Char)
+        new(location, symbol)
+    end
+end
+
+
+@enum KeywordEnum begin
+    SPHERE
+    MATERIAL
+    DIFFUSE
+
+end
+
+const KEYWORDS = Dict(
+    "sphere" => SPHERE,
+    "material" => MATERIAL,
+    "diffuse" => DIFFUSE
+)
+
+
+"""
+    KeywordToken(location::SourceLocation, keyword::KeywordEnum)
+
+A token representing a keyword in the source code.
+"""
+struct KeywordToken <: AbstractToken
+    location::SourceLocation
+    keyword::KeywordEnum
+
+    function KeywordToken(location::SourceLocation, keyword::KeywordEnum)
+        new(location, keyword)
+    end
+end
+
+
+""" 
+    StopToken(location::SourceLocation)
+
+A special token that indicates the end of the file.
+"""
+struct StopToken <: AbstractToken
+    location::SourceLocation
+
+end
+
+#functions for comparing Tokens (useful for testing)
+function Base.:(==)(a::IdentifierToken, b::IdentifierToken)
+    return a.location == b.location && a.identifier == b.identifier
+end
+function Base.:(==)(a::StringToken, b::StringToken)
+    return a.location == b.location && a.string == b.string
+end
+function Base.:(==)(a::NumberToken, b::NumberToken)
+    return a.location == b.location && a.value == b.value
+end
+function Base.:(==)(a::SymbolToken, b::SymbolToken)
+    return a.location == b.location && a.symbol == b.symbol
+end
+function Base.:(==)(a::KeywordToken, b::KeywordToken)
+    return a.location == b.location && a.keyword == b.keyword
+end
+function Base.:(==)(a::StopToken, b::StopToken)
+    return a.location == b.location
+end
+
+
 #---------------------------------------------------------
 # InputStream
 #---------------------------------------------------------
@@ -49,12 +180,14 @@ mutable struct InputStream
     saved_c::Char
     saved_loc::SourceLocation
     tablature::Int64
+    saved_token::Union{AbstractToken, Nothing}
 
     function InputStream(stream::IOBuffer, file_name="", tablature=8)
         loc = SourceLocation(file_name, 1, 1)
-        new(stream, loc, '\0', loc, tablature)
+        new(stream, loc, '\0', loc, tablature, nothing)
     end
 end
+
 
 """
     struct InputStreamError <: Exception
@@ -197,10 +330,137 @@ function skip_whitespaces_and_comments!(input::InputStream)
     unread_char!(input, ch)
 end
 
-#---------------------------------------------------------
-# Token
-#---------------------------------------------------------
 
-struct Token
+#---------------------------------------------------------
+# Reading Tokens
+#---------------------------------------------------------
+struct GrammarError <: Exception
+    location::SourceLocation
+    msg::String
+end
+# Personalization
+function Base.showerror(io::IO, err::GrammarError)
+    print(io, "GrammarError at ", err.location, ": ", err.msg)
+end
+
+const SYMBOLS = ['(', ')', '<', '>', ','] #Add here if some missing 
+
+""" 
+    _parse_string_token(input::InputStream)
+
+Parses a string token from the `InputStream`, reading characters until a closing quote is found.
+"""
+function _parse_string_token(input::InputStream, token_location::SourceLocation)
+    token = ""
+    while true
+        ch = read_char(input)
+        if ch == '\0'
+            # End of file reached before closing quote
+            throw(GrammarError(token_location, "Unterminated string"))
+        elseif ch == '"'
+            # Closing quote found, return the string token
+            return StringToken(token_location, token)
+        else
+            # Accumulate characters in the string
+            token *= ch 
+        end
+    end
+end
+
+"""
+    _parse_float_token(input::InputStream, first_char::Char, token_location::SourceLocation)
+
+Parses a floating-point number token from the `InputStream`, starting with the given first character.
+"""
+function _parse_float_token(input::InputStream, first_char::Char, token_location::SourceLocation)
+    # Parse a number token from the input stream
+    token = first_char
+    while true
+        ch = read_char(input)
+        if !(isdigit(ch) || ch == '.' || ch in ['e', 'E'])
+            unread_char!(input, ch)
+            break
+        end
+        token *= ch
+    end
+
+    try
+        value = parse(Float64, token)
+        return NumberToken(token_location, value)
+    catch e
+        # If parsing fails, throw a GrammarError with the current location
+        throw(GrammarError(token_location, "Invalid floating-point number: $token"))
+    end 
+end
+
+"""
+    _parse_keyword_or_identifier_token(input::InputStream, first_char::Char, token_location::SourceLocation)
+
+Parses a keyword or identifier token from the `InputStream`, starting with the given first character.
+"""
+function _parse_keyword_or_identifier_token(input::InputStream, first_char::Char, token_location::SourceLocation)
+    token = first_char
+    while true 
+        ch = read_char(input)
+        if !(isletter(ch) || isdigit(ch) || ch == '_')
+            unread_char!(input, ch)
+            break
+        end
+        token *= ch
+    end
+
+    try
+        return KeywordToken(token_location, KEYWORDS[token])
+    catch KeyError  
+        return IdentifierToken(token_location, token)
+    end
+end
+
+"""
+    read_token(input::InputStream)::AbstractToken
+
+Reads a token from the `InputStream` and returns it.
+"""
+function read_token(input::InputStream)
+
+    if input.saved_token !== nothing
+        # Return the saved token if it exists
+        token = input.saved_token
+        input.saved_token = nothing
+        return token
+    end
+
+    skip_whitespaces_and_comments!(input)
+
+    ch = read_char(input)
+    if ch == '\0'
+        # End of file reached, return a StopToken
+        return StopToken(input.saved_loc)
+    end
+
+    if ch in SYMBOLS
+        # One-character symbol, like '(' or ','
+        return SymbolToken(input.saved_loc, ch)
+
+    elseif ch == '"'
+        #StrinkToken
+        return _parse_string_token(input, input.saved_loc)
+    
+    elseif isdigit(ch) || ch in ['+', '-', '.']
+        # NumberToken
+        return _parse_float_token(input, ch, input.saved_loc)
+    
+    elseif isletter(ch) || ch == '_'
+        #Since it begins with an alphabetic character, it must either be a keyword or a identifier
+        return _parse_keyword_or_identifier_token(input, ch,  input.saved_loc)
+    else
+        throw(GrammarError(input.saved_loc, "Invalid character $ch"))
+    end
+
 
 end
+
+
+
+
+

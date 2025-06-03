@@ -6,7 +6,7 @@ using Base.Threads
 
 # import
 import Base:
-    +, -, *, ≈, /, sort, sign
+    +, -, *, ≈, /, sort, sign, (==)
 import ColorTypes: ColorTypes, RGB
 import Colors
 
@@ -52,6 +52,6 @@ include("renderer.jl")
 export OnOff, Flat, PathTracer
 
 include("interpreter.jl")
-export SourceLocation, InputStream, InputStreamError, open_InputStream, _update_pos!, read_char, unread_char!, skip_whitespaces_and_comments!
+export SourceLocation, InputStream, InputStreamError, open_InputStream, _update_pos!, read_char, unread_char!, skip_whitespaces_and_comments!, AbstractToken, IdentifierToken, StringToken, NumberToken, SymbolToken, KeywordToken, StopToken, read_token
 
 end # module jujutracer

@@ -910,4 +910,39 @@ end
 
         @test read_char(stream) == '\0'  # End of file in Julia
     end
+
+    @testset "Token" begin
+        input = IOBuffer("""
+        # This is a comment
+        # This is another comment 
+        material sky_material(
+        diffuse(image("my file.pfm")),
+        <5.0, 500.0, 300.0>
+        ) # Comment at the end of the line
+        """)
+
+        stream = InputStream(input)
+        @test read_token(stream) == KeywordToken(SourceLocation("", 3, 1), jujutracer.MATERIAL)
+        @test read_token(stream) == IdentifierToken(SourceLocation("", 3, 10), "sky_material")
+        @test read_token(stream) == SymbolToken(SourceLocation("", 3, 22), '(')
+        @test read_token(stream) == KeywordToken(SourceLocation("", 4, 1), jujutracer.DIFFUSE)
+        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 8), '(')
+        @test read_token(stream) == IdentifierToken(SourceLocation("", 4, 9), "image")
+        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 14), '(')
+        @test read_token(stream) == StringToken(SourceLocation("", 4, 15), "my file.pfm")
+        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 28), ')')
+        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 29), ')')
+        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 30), ',')
+        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 1), '<')
+        @test read_token(stream) == NumberToken(SourceLocation("", 5, 2), 5.0)
+        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 5), ',')
+        @test read_token(stream) == NumberToken(SourceLocation("", 5, 7), 500.0)
+        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 12), ',')
+        @test read_token(stream) == NumberToken(SourceLocation("", 5, 14), 300.0)
+        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 19), '>')
+        @test read_token(stream) == SymbolToken(SourceLocation("", 6, 1), ')')
+        @test read_token(stream) == StopToken(SourceLocation("", 7, 1))
+    end
+        
+        
 end
