@@ -22,8 +22,7 @@ struct World
     lights::Vector{AbstractLight}
 
     function World(shapes::Vector{AbstractShape})
-        @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))" shapes=shapes lights=AbstractLight[]
-        new(shapes, AbstractLight[])
+        World(shapes, Vector{AbstractLight}())
     end
     function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight})
         @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))" shapes=shapes lights=lights
