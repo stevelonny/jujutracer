@@ -107,9 +107,9 @@ function quick_ray_intersection(pl::Plane, ray::Ray)::Bool
     d = inv_ray.dir
 
     t = -Oz / d.z
-    if t <= inv_ray.tmin || t >= inv_ray.tmax
-        return false
-    else
+    if t > inv_ray.tmin && t < inv_ray.tmax
         return true
+    else
+        return false
     end
 end
