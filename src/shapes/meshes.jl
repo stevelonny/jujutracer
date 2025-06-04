@@ -12,8 +12,19 @@ struct mesh <: AbstractShape
     end
 end
 
+"""
+    trianglize(P::Vector{Points}, Tr::AbstractTransformation, Mat::Material)
+    
+Works only convex poygons
+"""
 function trianglize(P::Vector{Points}, Tr::AbstractTransformation, Mat::Material)
     tr = Vector{Triangle}
+    p = P[1]
+    sort!(P, by=x -> squared_norm(x - p))
+    for i in 2:(length(P) - 2)
+        add = Triangle(Tr, p, P[i+1], P[i+2], Mat)
+        push!(tr, add)
+    end
     return tr
 end
 
