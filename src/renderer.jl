@@ -17,11 +17,7 @@ function (BRDF::DiffusiveBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, 
 end
 
 function (BRDF::SpecularBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)
-    ray_dir = Vec(Normal(in_dir))
-    return Ray(origin=p,
-        dir=ray_dir - 2 * normal * (normal ⋅ ray_dir),
-        tmin=10e-3,
-        depth=depth)
+    return _reflect_ray(in_dir, p, normal, depth)
 end
 
 function (U::UniformPigment)(p::SurfacePoint)
@@ -46,6 +42,15 @@ function (I::ImagePigment)(p::SurfacePoint)
     y = (y < I.img.h) ? y : I.img.h - 1
 
     return I.img[x, y]
+end
+
+"""
+    _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+"""
+function _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+    incoming_dir = Vec(Normal(in_dir))
+    reflected_dir = incoming_dir - 2 * normal * (normal ⋅ incoming_dir)
+    return Ray(origin=p, dir=reflected_dir, tmin=1e-5, depth=depth)
 end
 
 #---------------------------------------------------------
@@ -169,6 +174,17 @@ end
 # Point-light tracing
 #---------------------------------------------------------
 
+"""
+    PointLight(world::World, background::RGB, ambient::RGB, max_depth::Int64)
+PointLight renderer of the scene. It simulates a point light source illuminating the scene.
+# Fields
+- `world::World`: the world containing the scene
+- `background_color::RGB`: the color of the background when the ray doesn't hit anything
+- `ambient_color::RGB`: the ambient color of the scene
+- `max_depth::Int64`: the maximum depth of the ray tracing
+# Functional Usage
+`PointLight(ray::Ray)` functional renderer on a ray
+"""
 struct PointLight <: Function
     world::World
     background_color::RGB
@@ -209,7 +225,7 @@ function (PL::PointLight)(ray::Ray)
     end
 
     if hit_material.BRDF isa SpecularBRDF
-        reflected_ray = _reflect_ray(ray, repo.normal)
+        reflected_ray = _reflect_ray(ray.dir, repo.world_P, repo.normal, ray.depth + 1)
         reflected_color = PL(reflected_ray)
         brdf_color = hit_material.BRDF.Pigment(repo.surface_P)
         result_color += reflected_color * brdf_color
@@ -218,13 +234,7 @@ function (PL::PointLight)(ray::Ray)
     return result_color
 end
 
-function _reflect_ray(ray::Ray, normal::Normal)
-    incoming_dir = ray.dir
-    reflected_dir = incoming_dir - 2 * normal * (normal ⋅ incoming_dir)
-    # translate the reflected ray just a little bit to avoid self-intersection
-    reflected_origin = ray.origin + 1e-5 * reflected_dir
-    return Ray(origin=reflected_origin, dir=reflected_dir, tmin=1e-5, depth=ray.depth + 1)
-end
+# Helper functions for PointLight
 
 function is_light_visible(world::World, light::LightSource, point::Point)
     return is_point_visible(world, light.position, point)

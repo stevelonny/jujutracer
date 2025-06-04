@@ -87,7 +87,7 @@ To showcase all the newly added shapes by [#18](https://github.com/stevelonny/ju
 <br/>
 <strong>Point-Light Tracer</strong>
 <br/>
-<em>800x450, AA=4, depth=5</em>
+<em>1280x720, AA=4, depth=1000</em>
 </div>
 
 </div>

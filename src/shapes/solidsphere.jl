@@ -84,7 +84,9 @@ function ray_intersection(S::Sphere, ray::Ray)
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
 
-    Δrid <= 0.0 && return nothing
+    if Δrid <= 0.0
+        return nothing
+    end
 
     sqrot = sqrt(Δrid)
     t1 = (-O_dot_d - sqrot) / d_squared
@@ -135,7 +137,9 @@ function ray_intersection_list(S::Sphere, ray::Ray)
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
 
-    Δrid <= 0.0 && return nothing
+    if Δrid <= 0.0
+        return nothing
+    end
 
     sqrot = sqrt(Δrid)
     t1 = (-O_dot_d - sqrot) / d_squared
@@ -235,7 +239,15 @@ function quick_ray_intersection(S::Sphere, ray::Ray)::Bool
     if O_squared > 1.0 && O_dot_d > 0.0
         return false
     end
-
+    
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
-    return Δrid >= 0.0
+
+    if Δrid <= 0.0
+        return false
+    end
+
+    sqrot = sqrt(Δrid)
+    t1 = (-O_dot_d - sqrot) / d_squared
+    t2 = (-O_dot_d + sqrot) / d_squared
+    return (t1 > inv_ray.tmin && t1 < inv_ray.tmax) || (t2 > inv_ray.tmin && t2 < inv_ray.tmax)
 end

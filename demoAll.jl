@@ -19,12 +19,12 @@ global_logger(filtered_logger)
 
 filename = "all_"
 renderertype = "point" # "path" or "flat" or "point"
-width = 800
-height = 450
+width = 1280
+height = 720
 n_rays = 3
 depth = 5
 russian = 3
-point_depth = 5
+point_depth = 1000
 aa = 4
 aatype = ""
 if aa != 0
@@ -55,7 +55,11 @@ black = RGB(0.0, 0.0, 0.0)
 white = RGB(1.0, 1.0, 1.0)
 super_white = RGB(10.0, 10.0, 10.0)
 sky = read_pfm_image("sky.pfm")
-MatSky = Material(ImagePigment(sky), DiffusiveBRDF(UniformPigment(RGB(0.1, 0.1, 0.1))))
+MatSky = if renderertype == "point"
+    Material(UniformPigment(gray), DiffusiveBRDF(ImagePigment(sky)))
+else
+    Material(ImagePigment(sky), DiffusiveBRDF(UniformPigment(RGB(0.1, 0.1, 0.1))))
+end
 Mat1 = Material(UniformPigment(black), DiffusiveBRDF(CheckeredPigment(6, 6, gray, green)))
 Mat2 = Material(UniformPigment(black), DiffusiveBRDF(CheckeredPigment(12, 12, magenta, blue)))
 Mat3 = Material(UniformPigment(black), SpecularBRDF(UniformPigment(white)))
@@ -104,8 +108,8 @@ C = Point(-3.0, 0.0, 5.0)
 cos_total = cos(π / 8.0)
 cos_falloff = cos(π / 8.5)
 cos_start = cos(π / 9.0)
-spot1 = SpotLight(A, -Vec(A), RGB(0.5, 0.0, 0.0), factor, cos_total, cos_falloff, cos_start)
-spot2 = SpotLight(B, -Vec(B), RGB(0.0, 0.5, 0.0), factor, cos_total, cos_falloff, cos_start)
+spot1 = SpotLight(A, -Vec(A), RGB(0.0, 0.5, 0.0), factor, cos_total, cos_falloff, cos_start)
+spot2 = SpotLight(B, -Vec(B), RGB(0.5, 0.0, 0.0), factor, cos_total, cos_falloff, cos_start)
 spot3 = SpotLight(C, -Vec(C), RGB(0.0, 0.0, 0.5), factor, cos_total, cos_falloff, cos_start)
 #push!(lights, light1)
 #push!(lights, light2)
