@@ -80,7 +80,9 @@ function _average_luminosity(img::hdrimg; type = "LF", delta = 0.0001)
             sum += log10(_RGBluminosity(img.img[i, j], type) + d) #delta is useful to avoid log(0)
         end
     end
-    return 10^(sum / (img.h * img.w))
+    luminosity = 10^(sum / (img.h * img.w))
+    @debug "Average luminosity: $luminosity with type $type and delta $delta"
+    return luminosity
 end
 
 # we developed tone mapping functions which modify the input hdrimg, so a return img is not really necessary. how do we want to handle this?
@@ -107,7 +109,7 @@ function _normalize_img!(img::hdrimg; a=0.18 , lum = nothing)
     end
 
     a= a>0 ? a : throw(ArgumentError("Expected a positive value for a"))
-
+    @debug "Normalizing image with a = $a and luminosity = $lum"
     img.img .= map(x ->  x* (a / lum), img.img)
 end
 
@@ -145,6 +147,7 @@ function _γ_correction!(hdr::hdrimg; γ = 1.0)
     if !(γ isa Number) || γ <= 0
         throw(ArgumentError("Gamma must be a positive number"))
     end
+    @debug "Applying gamma correction with γ = $γ"
     hdr.img .= map(x -> RGB(x.r^(1.0/γ), x.g^(1.0/γ), x.b^(1.0/γ)), hdr.img)
 end
 

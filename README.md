@@ -57,9 +57,34 @@ julia demoPath.jl <output_file> <width> <height> <cam_angle>
 
 </div>
 
-### ~~Multi-thread support~~
-See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)
-<!-- The code leverages multi-threading in a clean way simply by parallelizing each ray fired using the `@threads` keyword. The following results have been obtained on a Windows 10 machine powered by an i5-10300H using julia 1.11.4, running both demo scenes illustrated previously at a resolution of `1920x1080`.
+### Steve's playground
+To showcase all the newly added shapes by [#18](https://github.com/stevelonny/jujutracer/pull/18) and [#23](https://github.com/stevelonny/jujutracer/pull/23) a demo script implmenting CSGs, AABBs, and flat shape is provided with [`demoAll.jl`](/demoAll.jl). Modify the script with the preferred method of rendering, resolution, antialiasing and path tracing parameters.
+
+<div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+
+<div style="text-align: center; margin: 10px;">
+<img src="all_flat_800x450_2aa.png" alt="demoAll Flat" width="400"/>
+<br/>
+<strong>Flat renderer</strong>
+<br/>
+<em>800x450, AA-factor = 2</em>
+</div>
+
+<div style="text-align: center; margin: 10px;">
+<img src="all_path_800x450_3rays_3depth_2rus_2aa.png" alt="demoAll Path" width="400"/>
+<br/>
+<strong>Path Tracer</strong>
+<br/>
+<em>800x450, AA-factor = 2, 2 rays, 3 depth, 2 russian</em>
+</div>
+
+</div>
+
+### Multi-thread support
+*See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)*
+
+The code leverages multi-threading in a clean way simply by parallelizing each ray fired using the `@threads` keyword.
+<!-- The following results have been obtained on a Windows 10 machine powered by an i5-10300H using julia 1.11.4, running both demo scenes illustrated previously at a resolution of `1920x1080`.
 ```powershell
 C:\Users\steve\projects\jujutracer> julia -t 1 bench.jl
   Activating project at `C:\Users\steve\projects\jujutracer`
@@ -76,14 +101,14 @@ Benchmarking demo...
 Benchmarking demoCSG...
   15.422 s (1248189455 allocations: 59.90 GiB)
 C:\Users\steve\projects\jujutracer> 
-```
+``` -->
 
 To leverage multi-thread, launch `julia` with the correct flag `t` and the number of threads to be assigned (or the `auto` keyword).
 ```bash
 julia -t auto demo.jl <output_file> <width> <height> <cam_angle>
 julia -t auto demoCSG.jl <output_file> <width> <height> <cam_angle>
 ```
- -->
+
 #### Animation
 `demogif.jl` creates 360 png images of the [`demo.jl`](#demo-version) scene by rotating the camera around the z-axis. The images can then be used as frames to generate a GIF. This script leverages multi-threading by paralallelizing the frame generation with the `@threads` macro. It will save into the `demo` folder, and won't overwrite existing frames, so that the process can be interrupted and recovered at a later moment. With the parallalization the generated frames won't be in order.
 To launch execute:
