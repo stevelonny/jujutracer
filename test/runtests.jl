@@ -1038,7 +1038,7 @@ end
         # This is another comment 
         material sky_material(
         diffuse(image("my file.pfm")),
-        <5.0, 500.0, 300.0>
+        <5, 500.0, 300.0>
         ) # Comment at the end of the line
         """)
 

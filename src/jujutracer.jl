@@ -47,7 +47,7 @@ include("shapes/shapes.jl")
 include("renderer.jl")
 export OnOff, Flat, PathTracer
 
-include("interpreter.jl")
+include("lexer.jl")
 export SourceLocation, InputStream, InputStreamError, open_InputStream, _update_pos!, read_char, unread_char!, skip_whitespaces_and_comments!, AbstractToken, IdentifierToken, StringToken, NumberToken, SymbolToken, KeywordToken, StopToken, read_token
 
 end # module jujutracer
