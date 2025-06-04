@@ -94,14 +94,14 @@ end
 # Path Tracer
 #---------------------------------------------------------
 """
-    Flat(world::World)
+    PathTracer(world::World, backg::RGB, rnd::PCG, n_rays::Int64, depth::Int64, russian::Int64)
 
-Flat renderer of the scene. Returns the Emition pigment of the hitten shapes
+Path Tracer renderer of the scene.
 # Fields
 - `world::World`: the world containing the scene
 - `backg::RGB`: the background color when the ray doesn't intersect anything
 - `rnd::PCG`: the random number generator
-- `n_rays::INt64`: the number of rays fired from the hitten point
+- `n_rays::Int64`: the number of rays fired from the hitten point
 - `depth::Int64`: the maximum depth to be reached by a ray
 - `russian::Int64`: number of iteration before playing with Russian Roulet
 # Functional Usage
