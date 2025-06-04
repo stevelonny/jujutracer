@@ -17,7 +17,7 @@ global_logger(filtered_logger)
 
 # Welcome to steve's playground
 
-filename = "all_"
+filename = "mesh_"
 renderertype = "flat" # "path" or "flat"
 width = 800
 height = 450
@@ -63,7 +63,9 @@ S_back = Sphere(Scaling(7.0, 7.0, 7.0) ⊙ Ry(-π / 4.0), Mat1)
 B1 = Box(Translation(-0.25, 0.0, 1.0) ⊙ Rz(π / 4.0), Mat5)
 S1 = Sphere(Translation(-0.25, 0.0, 1.0) ⊙ Sc, Mat3)
 S2 = Sphere(Translation(-0.25, 0.0, 1.0) ⊙ Scaling(1.0 / 2.5, 1.0 / 2.5, 1.0 / 2.5), Mat4)
-T1 = Triangle(Point(1.5, 1.5, 0.0), Point(0.5, 2.5, 0.0), Point(0.5, 2.0, 1.0), MatT)
+T1 = Triangle(Point(1.5, 1.5, 2.0), Point(0.5, 2.5, 2.0), Point(0.5, 2.0, 3.0), MatT)
+M1 = mesh("../humanoid_tri.obj", Translation(1.5, 2.5, 0.0) ⊙ Scaling(0.1, 0.1, 0.1) ⊙ Translation(0.0, 0.0, -3.05), MatBox)
+M2 = mesh("../humanoid_quad.obj", Translation(0.5, 1.5, 0.0) ⊙ Scaling(0.1, 0.1, 0.1) ⊙ Translation(0.0, 0.0, -3.05), MatPara)
 Para1 = Parallelogram(Point(1.5, -1.5, 0.0), Point(0.5, -2.5, 0.0), Point(0.5, -2.0, 1.0), MatPara)
 CSG = (B1 - S1) ∪ S2
 B2 = Box(Rz(π / 4.0), MatBox)
@@ -85,6 +87,8 @@ push!(S, S_back)
 push!(S, axisBox)
 push!(S, axisBox3)
 push!(S, T1)
+push!(S, M1)
+push!(S, M2)
 push!(S, Para1)
 push!(S, axisBox2)
 push!(S, Co1)

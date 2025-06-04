@@ -6,19 +6,39 @@ struct mesh <: AbstractShape
     file::String
     shapes::Vector{Triangle}
     points::Vector{Point}
+    box::AABB
 
-    function mesh(file::String, shapes::Vector{Trinagle}, points::Vector{Point})
-        new(file, shapes, points)
+    function mesh(file::String, shapes::Vector{Triangle}, points::Vector{Point})
+        new(file, shapes, points, AABB(shapes))
+    end
+    function mesh(file::String)
+        sh, p = read_obj_file(file)
+        new(file, sh, p, AABB(sh))
+    end
+
+    function mesh(file::String, Tr::AbstractTransformation)
+        sh, p = read_obj_file(file, Tr = Tr)
+        new(file, sh, p, AABB(sh))
+    end
+
+    function mesh(file::String, Mat::Material)
+        sh, p = read_obj_file(file, Mat = Mat)
+        new(file, sh, p, AABB(sh))
+    end
+
+    function mesh(file::String, Tr::AbstractTransformation, Mat::Material)
+        sh, p = read_obj_file(file, Tr = Tr, Mat = Mat)
+        new(file, sh, p, AABB(sh))
     end
 end
 
 """
     trianglize(P::Vector{Points}, Tr::AbstractTransformation, Mat::Material)
-    
+
 Works only convex poygons
 """
-function trianglize(P::Vector{Points}, Tr::AbstractTransformation, Mat::Material)
-    tr = Vector{Triangle}
+function trianglize(P::Vector{Point}, Tr::AbstractTransformation, Mat::Material)
+    tr = Vector{Triangle}()
     p = P[1]
     sort!(P, by=x -> squared_norm(x - p))
     for i in 2:(length(P) - 2)
@@ -29,11 +49,12 @@ function trianglize(P::Vector{Points}, Tr::AbstractTransformation, Mat::Material
 end
 
 function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
-    shapes = Vector{AbstractShape}()
-    points = Vector{AbstractShape}()
+    shapes = Vector{Triangle}()
+    points = Vector{Point}()
     
     while !eof(io)
         line = split(readline(io), ' ')
+        dim = length(line)
         
         if line[1] == "v"
             # add a point
@@ -44,18 +65,20 @@ function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation
         elseif line[1] == "f"
             # add a shape
             tr = nothing
-            if length(line) == 4
+            if dim == 4
                 tr = Triangle(Tr,
                               points[parse(Int, line[2])],
                               points[parse(Int, line[3])],
                               points[parse(Int, line[4])],
                               Mat)
-            else
-                P = Vector{Points}
-                for i in 1:length(line)
-                    push!(P, points[parse(Int, line[i+1])])
+            elseif dim > 4
+                P = Vector{Point}()
+                for i in 2:dim
+                    push!(P, points[parse(Int, line[i])])
                 end
                 tr = trianglize(P, Tr, Mat)
+            else
+                throw(ArgumentError("Invalid polygon declaration"))
             end
             push!(shapes, tr)
         end
@@ -75,25 +98,22 @@ function read_obj_file(filename::String; Tr::AbstractTransformation = Transforma
         write(io, file)
     end
     seekstart(io)
-    return read_obj_file(io)
+    return read_obj_file(io, Tr = Tr, Mat = Mat)
 end
 
-function mesh(file::String)
-    sh, p = read_obj_file(file)
-    return mesh(file, sh, p)
+function ray_intersection(S::mesh, ray::Ray)
+    return ray_intersection(S.box, ray)
 end
 
-function mesh(file::String, Tr::AbstractTransformation)
-    sh, p = read_obj_file(file, Tr = Tr)
-    return mesh(file, sh, p)
-end
+"""
+    boxed(m::mesh)
 
-function mesh(file::String, Mat::Material)
-    sh, p = read_obj_file(file, Mat = Mat)
-    return mesh(file, sh, p)
-end
-
-function mesh(file::String, Tr::AbstractTransformation, Mat::Material)
-    sh, p = read_obj_file(file, Tr = Tr, Mat = Mat)
-    return mesh(file, sh, p)
+Returns the two points defining the axis-aligned bounding box (AABB) that contains the mesh.
+# Arguments
+- `m::mesh`: the mesh to be boxed.
+# Returns
+- `Tuple{Point, Point}`: a tuple containing the two points defining the AABB, where the first point is the minimum corner and the second point is the maximum corner.
+"""
+function boxed(m::mesh)::Tuple{Point,Point}
+    return (m.box.P1, m.box.P2)
 end
