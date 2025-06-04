@@ -385,9 +385,11 @@ function _parse_float_token(input::InputStream, first_char::Char, token_location
     end
 
     try
-        value = parse(Float64, token)
+        value=parse(Float64, string(token))
+        #value = isa(token, String) ? parse(Float64, token) : parse(Float64, string(token))
         return NumberToken(token_location, value)
     catch e
+        show(e)
         # If parsing fails, throw a GrammarError with the current location
         throw(GrammarError(token_location, "Invalid floating-point number: $token"))
     end 
@@ -400,6 +402,10 @@ Parses a keyword or identifier token from the `InputStream`, starting with the g
 """
 function _parse_keyword_or_identifier_token(input::InputStream, first_char::Char, token_location::SourceLocation)
     token = first_char
+    if isdigit(first_char)
+        throw(GrammarError(token_location, "Identifiers cannot start with a number: $first_char"))
+    end
+
     while true 
         ch = read_char(input)
         if !(isletter(ch) || isdigit(ch) || ch == '_')
@@ -456,8 +462,6 @@ function read_token(input::InputStream)
     else
         throw(GrammarError(input.saved_loc, "Invalid character $ch"))
     end
-
-
 end
 
 
