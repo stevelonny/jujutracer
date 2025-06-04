@@ -61,6 +61,9 @@ struct Triangle <: AbstractShape
     function Triangle(A::Point, B::Point, C::Point, Mat::Material)
         new(Transformation(), A, B, C, Mat)
     end
+    function Triangle(Tr::AbstractTransformation, A::Point, B::Point, C::Point, Mat::Material)
+        new(Tr, A, B, C, Mat)
+    end
 end
 
 """

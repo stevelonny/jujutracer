@@ -2,50 +2,58 @@
 # Meshes
 #---------------------------------------------------------
 
-struct mesh
+struct mesh <: AbstractShape
     file::String
     shapes::Vector{Triangle}
-    points::Vector{Points}
+    points::Vector{Point}
+
+    function mesh(file::String, shapes::Vector{Trinagle}, points::Vector{Point})
+        new(file, shapes, points)
+    end
 end
 
-function read_obj_file(io::IOBuffer)
+function trianglize(P::Vector{Points}, Tr::AbstractTransformation, Mat::Material)
+    tr = Vector{Triangle}
+    return tr
+end
+
+function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     shapes = Vector{AbstractShape}()
     points = Vector{AbstractShape}()
     
-    while true
+    while !eof(io)
         line = split(readline(io), ' ')
         
         if line[1] == "v"
             # add a point
-            ch = spli
             p = Point(parse(Float64, line[2]),
                         parse(Float64, line[3]),
                         parse(Float64, line[4]))
             push!(points, p)
         elseif line[1] == "f"
-            # creo la shape
+            # add a shape
             tr = nothing
             if length(line) == 4
-                tr = Triangle(points[parse(Int, line[2])],
+                tr = Triangle(Tr,
+                              points[parse(Int, line[2])],
                               points[parse(Int, line[3])],
-                              points[parse(Int, line[4])])
+                              points[parse(Int, line[4])],
+                              Mat)
             else
                 P = Vector{Points}
                 for i in 1:length(line)
                     push!(P, points[parse(Int, line[i+1])])
                 end
-                tr = trianglize(P)
+                tr = trianglize(P, Tr, Mat)
             end
             push!(shapes, tr)
-        elseif line == ""
-            break
         end
     end
 
     return shapes, points
 end
 
-function read_obj_file(filename::String)
+function read_obj_file(filename::String; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     # Check if the file extension is valid
     if !(endswith(filename, ".obj"))
         throw(InvalidPfmFileFormat("Invalid file extension. Only .obj is supported."))
@@ -61,5 +69,20 @@ end
 
 function mesh(file::String)
     sh, p = read_obj_file(file)
+    return mesh(file, sh, p)
+end
+
+function mesh(file::String, Tr::AbstractTransformation)
+    sh, p = read_obj_file(file, Tr = Tr)
+    return mesh(file, sh, p)
+end
+
+function mesh(file::String, Mat::Material)
+    sh, p = read_obj_file(file, Mat = Mat)
+    return mesh(file, sh, p)
+end
+
+function mesh(file::String, Tr::AbstractTransformation, Mat::Material)
+    sh, p = read_obj_file(file, Tr = Tr, Mat = Mat)
     return mesh(file, sh, p)
 end
