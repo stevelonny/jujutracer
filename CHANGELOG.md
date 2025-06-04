@@ -1,6 +1,7 @@
 # HEAD
 - Implement `PathTracer` renderer [#20](https://github.com/stevelonny/jujutracer/pull/18)
 - Implement Antialiasing
+- Axis-Aligned Boundary Boxes
 - Add new shapes [#18](https://github.com/stevelonny/jujutracer/pull/18) and [#23](https://github.com/stevelonny/jujutracer/pull/23):
   - Rectangle
   - Triangle
@@ -9,7 +10,6 @@
   - Box
   - Cylinder
   - Cone
-- Axis-Aligned Boundary Boxes
 - PCG random generator implemented [#17](https://github.com/stevelonny/jujutracer/pull/17)
 - Add basic multi-threaded support [#19](https://github.com/stevelonny/jujutracer/pull/19) (See issue [#22](https://github.com/stevelonny/jujutracer/issues/22))
 - Constructive Solid Geometry [#10](https://github.com/stevelonny/jujutracer/pull/10)
