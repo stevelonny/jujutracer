@@ -1,8 +1,15 @@
 using jujutracer
 using Test
 using Logging
+using LoggingExtras
+using TerminalLoggers
 Logging.disable_logging(Logging.Info)
+# Create a filtered logger
+#= module_filter(log) = (log._module == jujutracer)
+filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logging.Debug))
 
+# Set as the global logger
+global_logger(filtered_logger) =#
 
 @testset "Colors arithmetics" begin
     # Put here the tests required for color sum and product
@@ -424,7 +431,7 @@ end
         HRlist = ray_intersection_list(S, ray1)
         @test HRlist[1] ≈ HR1
         @test HRlist[2].normal ≈ HR1.normal
-        @test quick_ray_intersection(S, ray1)
+        @test quick_ray_intersection(S, ray1) == true
 
         O2 = Point(3.0, 0.0, 0.0)
         ray2 = Ray(origin=O2, dir=-êx)
@@ -436,7 +443,7 @@ end
         HRlist = ray_intersection_list(S, ray2)
         @test HRlist[1] ≈ HR2
         @test HRlist[2].normal ≈ HR2.normal
-        @test quick_ray_intersection(S, ray2)
+        @test quick_ray_intersection(S, ray2) == true
 
         O3 = Point(0.0, 0.0, 0.0)
         ray3 = Ray(origin=O3, dir=êx)
@@ -447,7 +454,7 @@ end
         @test HR3.normal ≈ -Normal(êx)
         HRlist = ray_intersection_list(S, ray3)
         @test isnothing(HRlist)
-        @test quick_ray_intersection(S, ray3)
+        @test quick_ray_intersection(S, ray3) == true
 
         Tr = Translation(10.0, 0.0, 0.0)
         S = Sphere(Tr, Mat)
@@ -462,7 +469,7 @@ end
         HRlist = ray_intersection_list(S, ray4)
         @test HRlist[1] ≈ HR4
         @test HRlist[2].normal ≈ HR4.normal
-        @test quick_ray_intersection(S, ray4)
+        @test quick_ray_intersection(S, ray4) == true
 
         ray5 = Tr(ray2)
         HR5 = ray_intersection(S, ray5)
@@ -473,7 +480,7 @@ end
         HRlist = ray_intersection_list(S, ray5)
         @test HRlist[1] ≈ HR5
         @test HRlist[2].normal ≈ HR5.normal
-        @test quick_ray_intersection(S, ray5)
+        @test quick_ray_intersection(S, ray5) == true
 
         O6 = inverse(Tr)(O3)
         ray6 = Ray(origin=O6, dir=-êz)
@@ -481,11 +488,11 @@ end
         @test HR6 === nothing
         HRlist = ray_intersection_list(S, ray6)
         @test isnothing(HRlist)
-        @test !quick_ray_intersection(S, ray6)
+        @test quick_ray_intersection(S, ray6) == false
 
         HR7 = ray_intersection(S, ray1)
         @test HR7 === nothing
-        @test !quick_ray_intersection(S, ray1)
+        @test quick_ray_intersection(S, ray1) == false
 
         # Test internal sphere
         S = Sphere()
@@ -503,7 +510,7 @@ end
         @test HR8.t ≈ 1.0
         @test HR8 ≈ SurfacePoint(0.5, 0.5)
         @test HR8.normal ≈ Normal(êz)
-        @test quick_ray_intersection(P, ray8)
+        @test quick_ray_intersection(P, ray8) == true
 
         O9 = Point(0.2, 0.3, -2.0)
         ray9 = Ray(origin=O9, dir=êz)
@@ -512,19 +519,19 @@ end
         @test HR9.t ≈ 2.0
         @test HR9 ≈ SurfacePoint(0.2, 0.3)
         @test HR9.normal ≈ -Normal(êz)
-        @test quick_ray_intersection(P, ray9)
+        @test quick_ray_intersection(P, ray9) == true
 
         O10 = Point(1.0, 1.0, 1.0)
         ray10 = Ray(origin=O10, dir=êx)
         HR10 = ray_intersection(P, ray10)
         @test HR10 === nothing
-        @test !quick_ray_intersection(P, ray10)
+        @test quick_ray_intersection(P, ray10) == false
 
         O11 = Point(0.0, 0.0, 0.0)
         ray11 = Ray(origin=O11, dir=êx)
         HR11 = ray_intersection(P, ray11)
         @test HR11 === nothing
-        @test !quick_ray_intersection(P, ray11)
+        @test quick_ray_intersection(P, ray11) == false
 
         Tr2 = Translation(0.0, 0.0, 2.0)
         P2 = Plane(Tr2, Mat)
@@ -535,13 +542,13 @@ end
         @test HR12.t ≈ 1.0
         @test HR12 ≈ SurfacePoint(0.5, 0.5)
         @test HR12.normal ≈ Normal(-êz)
-        @test quick_ray_intersection(P2, ray12)
+        @test quick_ray_intersection(P2, ray12) == true
 
         O13 = Point(0.0, 0.0, 1.0)
         ray13 = Ray(origin=O13, dir=-êz)
         HR13 = ray_intersection(P2, ray13)
         @test HR13 === nothing
-        @test !quick_ray_intersection(P2, ray13)
+        @test quick_ray_intersection(P2, ray13) == false
     end
 
     # test for rectangle
@@ -555,7 +562,7 @@ end
         @test HR14.t ≈ 1.0
         @test HR14 ≈ SurfacePoint(0.5, 0.5)
         @test HR14.normal ≈ Normal(êz)
-        @test quick_ray_intersection(R, ray14)
+        @test quick_ray_intersection(R, ray14) == true
 
         O15 = Point(0.2, 0.3, -2.0)
         ray15 = Ray(origin=O15, dir=êz)
@@ -564,19 +571,19 @@ end
         @test HR15.t ≈ 2.0
         @test HR15 ≈ SurfacePoint(0.7, 0.8)
         @test HR15.normal ≈ -Normal(êz)
-        @test quick_ray_intersection(R, ray15)
+        @test quick_ray_intersection(R, ray15) == true
 
         O16 = Point(1.0, 1.0, 1.0)
         ray16 = Ray(origin=O16, dir=êx)
         HR16 = ray_intersection(R, ray16)
         @test HR16 === nothing
-        @test !quick_ray_intersection(R, ray16)
+        @test quick_ray_intersection(R, ray16) == false
 
         O17 = Point(1.5, 1.5, 1.0)
         ray17 = Ray(origin=O17, dir=-êz)
         HR17 = ray_intersection(R, ray17)
         @test HR17 === nothing
-        @test !quick_ray_intersection(R, ray17)
+        @test quick_ray_intersection(R, ray17) == false
 
     end
 
@@ -591,7 +598,7 @@ end
         @test HR18.t ≈ 1.0
         @test HR18 ≈ SurfacePoint(0.5, 0.5)
         @test HR18.normal ≈ Normal(êz)
-        @test quick_ray_intersection(T, ray18)
+        @test quick_ray_intersection(T, ray18) == true
 
         O19 = Point(0.2, 0.3, -2.0)
         ray19 = Ray(origin=O19, dir=êz)
@@ -600,13 +607,13 @@ end
         @test HR19.t ≈ 2.0
         @test HR19 ≈ SurfacePoint(0.2, 0.3)
         @test HR19.normal ≈ -Normal(êz)
-        @test quick_ray_intersection(T, ray19)
+        @test quick_ray_intersection(T, ray19) == true
 
         O20 = Point(1.0, 1.0, 1.0)
         ray20 = Ray(origin=O20, dir=êx)
         HR20 = ray_intersection(T, ray20)
         @test HR20 === nothing
-        @test !quick_ray_intersection(T, ray20)
+        @test quick_ray_intersection(T, ray20) == false
     end
 
     # test for Parallelogram
@@ -620,7 +627,7 @@ end
         @test HR21.t ≈ 1.0
         @test HR21 ≈ SurfacePoint(0.5, 0.5)
         @test HR21.normal ≈ Normal(êz)
-        @test quick_ray_intersection(Q, ray21)
+        @test quick_ray_intersection(Q, ray21) == true
 
         O22 = Point(0.2, 0.3, -2.0)
         ray22 = Ray(origin=O22, dir=êz)
@@ -629,13 +636,13 @@ end
         @test HR22.t ≈ 2.0
         @test HR22 ≈ SurfacePoint(0.2, 0.3)
         @test HR22.normal ≈ -Normal(êz)
-        @test quick_ray_intersection(Q, ray22)
+        @test quick_ray_intersection(Q, ray22) == true
 
         O23 = Point(1.0, 1.0, 1.0)
         ray23 = Ray(origin=O23, dir=êx)
         HR23 = ray_intersection(Q, ray23)
         @test HR23 === nothing
-        @test !quick_ray_intersection(Q, ray23)
+        @test quick_ray_intersection(Q, ray23) == false
     end
 
     # Box shape tests
@@ -659,7 +666,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(0.0, 0.0, 1.0)
         @test HRlist[1].t < HRlist[2].t
-        @test quick_ray_intersection(B, ray1)
+        @test quick_ray_intersection(B, ray1) == true
 
         # Ray from -z, should hit bottom face at (0,0,-0.5)
         O2 = Point(0.0, 0.0, -2.0)
@@ -677,7 +684,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(0.0, 0.0, -1.0)
         @test HRlist[1].t < HRlist[2].t
-        @test quick_ray_intersection(B, ray2)
+        @test quick_ray_intersection(B, ray2) == true
 
         # Ray from +x, should hit right face at (0.5,0,0)
         O3 = Point(2.0, 0.0, 0.0)
@@ -695,7 +702,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(1.0, 0.0, 0.0)
         @test HRlist[1].t < HRlist[2].t
-        @test quick_ray_intersection(B, ray3)
+        @test quick_ray_intersection(B, ray3) == true
 
         # Ray from -x, should hit left face at (-0.5,0,0)
         O4 = Point(-2.0, 0.0, 0.0)
@@ -713,7 +720,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(-1.0, 0.0, 0.0)
         @test HRlist[1].t < HRlist[2].t
-        @test quick_ray_intersection(B, ray4)
+        @test quick_ray_intersection(B, ray4) == true
 
         # Ray from +y, should hit back face at (0,0.5,0)
         O5 = Point(0.0, 2.0, 0.0)
@@ -731,7 +738,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(0.0, 1.0, 0.0)
         @test HRlist[1].t < HRlist[2].t
-        @test quick_ray_intersection(B, ray5)
+        @test quick_ray_intersection(B, ray5) == true
 
         # Ray from -y, should hit front face at (0,-0.5,0)
         O6 = Point(0.0, -2.0, 0.0)
@@ -749,7 +756,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(0.0, -1.0, 0.0)
         @test HRlist[1].t < HRlist[2].t
-        @test quick_ray_intersection(B, ray6)
+        @test quick_ray_intersection(B, ray6) == true
 
         # Ray missing the box
         O7 = Point(2.0, 2.0, 2.0)
@@ -758,7 +765,7 @@ end
         @test HR7 === nothing
         HRlist = ray_intersection_list(B, ray7)
         @test isnothing(HRlist)
-        @test !quick_ray_intersection(B, ray7)
+        @test quick_ray_intersection(B, ray7) == false
 
         # Internal point test
         @test internal(B, Point(0.0, 0.0, 0.0)) == true
@@ -778,14 +785,14 @@ end
         @test !isnothing(repo1)
         @test repo1[1].normal ≈ -ray1.dir
         @test repo1[2].normal ≈ -ray1.dir
-        @test quick_ray_intersection(C, ray1)
+        @test quick_ray_intersection(C, ray1) == true
 
         ray2 = Ray(origin=Point(0.0, 0.0, 3.0), dir=Vec(0.0, 0.0, -1.0))
         repo2 = ray_intersection_list(C, ray2)
         @test !isnothing(repo2)
         @test repo2[1].normal ≈ -ray2.dir
         @test repo2[2].normal ≈ -ray2.dir
-        @test quick_ray_intersection(C, ray2)
+        @test quick_ray_intersection(C, ray2) == true
 
         ray3 = Ray(origin=Point(0.0, 0.0, 3.0), dir=Vec(0.0, 0.0, 1.0))
         
@@ -803,7 +810,7 @@ end
         @test !isnothing(HR1)
         @test HR1 ≈ Point(0.0, 0.5, 0.5)
         @test HR1.normal ≈ Normal(0.0, 1.0 / sqrt(2.0), 1.0 / sqrt(2.0))
-        @test quick_ray_intersection(C, ray1)
+        @test quick_ray_intersection(C, ray1) == true
 
         # Ray from below, should hit the base at (0.5,0.5,0)
         O2 = Point(0.5, 0.5, -1.0)
@@ -812,7 +819,7 @@ end
         @test !isnothing(HR2)
         @test HR2 ≈ Point(0.5, 0.5, 0.0)
         @test HR2.normal ≈ Normal(0.0, 0.0, -1.0)
-        @test quick_ray_intersection(C, ray2)
+        @test quick_ray_intersection(C, ray2) == true
 
         # Ray from side, should hit side at (0.5,0,0.5)
         O4 = Point(2.0, 0.0, 0.5)
@@ -821,7 +828,7 @@ end
         @test !isnothing(HR4)
         @test HR4 ≈ Point(0.5, 0, 0.5)
         @test HR4.normal ≈ Normal(1.0 / sqrt(2.0), 0.0, 1.0 / sqrt(2.0))
-        @test quick_ray_intersection(C, ray4)
+        @test quick_ray_intersection(C, ray4) == true
 
         # Internal point test
         @test internal(C, Point(0.0, 0.0, 0.5)) == true
@@ -844,21 +851,21 @@ end
         @test HR2 ≈ Point(1.0, 0.0, 0.0)
         @test HR2.t ≈ 1.0
         @test HR2.normal ≈ Normal(0.0, 0.0, 1.0)
-        @test quick_ray_intersection(Ci, ray2)
+        @test quick_ray_intersection(Ci, ray2) == true
 
         # Ray outside circle, should miss
         O3 = Point(2.0, 0.0, 1.0)
         ray3 = Ray(origin=O3, dir=Vec(0.0, 0.0, -1.0))
         HR3 = ray_intersection(Ci, ray3)
         @test HR3 === nothing
-        @test !quick_ray_intersection(Ci, ray3)
+        @test quick_ray_intersection(Ci, ray3) == false
 
         # Ray parallel to plane, should miss
         O4 = Point(0.0, 0.0, 1.0)
         ray4 = Ray(origin=O4, dir=Vec(1.0, 0.0, 0.0))
         HR4 = ray_intersection(Ci, ray4)
         @test HR4 === nothing
-        @test !quick_ray_intersection(Ci, ray4)
+        @test quick_ray_intersection(Ci, ray4) == false
     end
 end
 

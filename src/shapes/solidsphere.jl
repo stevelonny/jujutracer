@@ -237,6 +237,5 @@ function quick_ray_intersection(S::Sphere, ray::Ray)::Bool
     end
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
-
-    return Δrid > 0.0
+    return Δrid >= 0.0
 end
