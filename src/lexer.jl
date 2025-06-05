@@ -29,6 +29,33 @@ function Base.:(==)(a::SourceLocation, b::SourceLocation)
     return a.filename == b.filename && a.line == b.line && a.col == b.col
 end
 
+#---------------------------------------------------------
+# Consts and Enums and alikes
+#---------------------------------------------------------
+
+const WHITESPACE = [' ', '\t', '\n', '\r']
+
+const SYMBOLS = ['(', ')', '[', ']', '<', '>', ','] #Add here if some missing
+
+@enum KeywordEnum begin
+    SPHERE
+    UNIFORM
+    CHECKERED
+    IMAGE
+    MATERIAL
+    DIFFUSE
+    SPECULAR
+end
+
+const KEYWORDS = Dict(
+    "sphere" => SPHERE,
+    "uniform" => UNIFORM,
+    "checkered" => CHECKERED,
+    "image" => IMAGE,
+    "material" => MATERIAL,
+    "diffuse" => DIFFUSE,
+    "specular" => SPECULAR
+)
 
 #---------------------------------------------------------
 # Token
@@ -96,20 +123,6 @@ struct SymbolToken <: AbstractToken
 end
 
 
-@enum KeywordEnum begin
-    SPHERE
-    MATERIAL
-    DIFFUSE
-
-end
-
-const KEYWORDS = Dict(
-    "sphere" => SPHERE,
-    "material" => MATERIAL,
-    "diffuse" => DIFFUSE
-)
-
-
 """
     KeywordToken(location::SourceLocation, keyword::KeywordEnum)
 
@@ -159,8 +172,6 @@ end
 #---------------------------------------------------------
 # InputStream
 #---------------------------------------------------------
-
-const WHITESPACE = [' ', '\t', '\n', '\r']
 
 """
     mutable struct InputStream
@@ -342,8 +353,6 @@ end
 function Base.showerror(io::IO, err::GrammarError)
     print(io, "GrammarError at ", err.location, ": ", err.msg)
 end
-
-const SYMBOLS = ['(', ')', '[', ']', '<', '>', ','] #Add here if some missing 
 
 """ 
     _parse_string_token(input::InputStream)

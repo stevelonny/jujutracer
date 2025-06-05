@@ -1,3 +1,6 @@
+#-----------------------------------------------------------------------
+# Scene
+#------------------------------------------------------------------------
 mutable struct Scene
     materials::Dict{String, Material}
     world::World
@@ -151,3 +154,48 @@ function parse_color(s::InputStream, dictionary::Dict{String, Float64})
     return RGB(r, g, b)
 end
 
+# parse_pigment and parse_brdf will be used in parse_material
+"""
+    parse_pigment(s::InputStream, dictionary::Dict{String, Float64})
+Parses a pigment from the input stream. The expected format is either:
+- `uniform(<color>)`
+- `checkered(<color1>, <color2>, <div>)`
+- `image(<image_path>)`
+#Arguments
+- `s::InputStream`: The input stream to read from.
+- `dictionary::Dict{String, Float64}`: A dictionary containing variable names and their values.
+#Returns
+- `Pigment`: A pigment object representing the parsed pigment type.
+"""
+function parse_pigment(s::InputStream, dictionary::Dict{String, Float64})
+    keyword = expected_keywords(s, [UNIFORM, CHECKERED, IMAGE])
+
+    expected_symbol(s, '(')
+    result = nothing
+    if keyword == UNIFORM
+        color = parse_color(s, dictionary)
+        result = UniformPigment(color)
+    elseif keyword == CHECKERED
+        color1 = parse_color(s, dictionary)
+        expected_symbol(s, ',')
+        color2 = parse_color(s, dictionary)
+        expected_symbol(s, ',')
+        # we should implement difference between expected_number and expected_integer!
+        div = expected_number(s, dictionary)
+        result = CheckeredPigment(convert(Int, div), convert(Int, div), color1, color2 )
+    elseif keyword == IMAGE
+        image_path = expected_string(s)
+        result = ImagePigment(image_path)
+    else
+        throw(GrammarError(s.location, "unexpected pigment type $keyword"))
+    end
+
+    expected_symbol(s, ')')
+    return result
+end
+
+
+function parse_brdf(s::InputStream, dictionary::Dict{String, Float64})
+    
+    
+end

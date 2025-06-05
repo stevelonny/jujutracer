@@ -1048,7 +1048,7 @@ end
         @test read_token(stream) == SymbolToken(SourceLocation("", 3, 22), '(')
         @test read_token(stream) == KeywordToken(SourceLocation("", 4, 1), jujutracer.DIFFUSE)
         @test read_token(stream) == SymbolToken(SourceLocation("", 4, 8), '(')
-        @test read_token(stream) == IdentifierToken(SourceLocation("", 4, 9), "image")
+        @test read_token(stream) == KeywordToken(SourceLocation("", 4, 9), jujutracer.IMAGE)
         @test read_token(stream) == SymbolToken(SourceLocation("", 4, 14), '(')
         @test read_token(stream) == StringToken(SourceLocation("", 4, 15), "my file.pfm")
         @test read_token(stream) == SymbolToken(SourceLocation("", 4, 28), ')')
@@ -1105,24 +1105,39 @@ end
     end
 
     @testset "parse_*" begin
-        input = IOBuffer("""
-        [5.0, 500.0, 300.0]
-        """)
-        stream = InputStream(input)
         dict = Dict{String, Float64}(
             "pippo" => 500.0,
             "pluto" => 300.0
         )
+        # parse_vector
+        input = IOBuffer("""
+        [5.0, 500.0, 300.0]
+        """)
+        stream = InputStream(input)
         vec = jujutracer.parse_vector(stream, dict)
         @test vec == Vec(5.0, 500.0, 300.0)
 
+        # parse_color
         input = IOBuffer("""
         <5.0, 500.0, 300.0>
         """)
         stream = InputStream(input)
-
         color = jujutracer.parse_color(stream, dict)
         @test color == RGB(5.0, 500.0, 300.0)
+
+        # parse_pigment
+        input = IOBuffer("""
+        uniform(<5.0, pippo, pluto>)
+        checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4)
+        image("my file.pfm")
+        """)
+        stream = InputStream(input)
+        pigment1 = jujutracer.parse_pigment(stream, dict)
+        @test pigment1 == UniformPigment(RGB(5.0, 500.0, 300.0))
+        pigment2 = jujutracer.parse_pigment(stream, dict)
+        @test pigment2 == CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))
+        #pigment3 = jujutracer.parse_pigment(stream, dict)
+        #@test pigment3 == ImagePigment("my file.pfm")
     end
         
 end
