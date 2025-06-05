@@ -1056,13 +1056,52 @@ end
         @test read_token(stream) == SymbolToken(SourceLocation("", 4, 30), ',')
         @test read_token(stream) == SymbolToken(SourceLocation("", 5, 1), '<')
         @test read_token(stream) == NumberToken(SourceLocation("", 5, 2), 5.0)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 5), ',')
-        @test read_token(stream) == NumberToken(SourceLocation("", 5, 7), 500.0)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 12), ',')
-        @test read_token(stream) == NumberToken(SourceLocation("", 5, 14), 300.0)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 19), '>')
+        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 3), ',')
+        @test read_token(stream) == NumberToken(SourceLocation("", 5, 5), 500.0)
+        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 10), ',')
+        @test read_token(stream) == NumberToken(SourceLocation("", 5, 12), 300.0)
+        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 17), '>')
         @test read_token(stream) == SymbolToken(SourceLocation("", 6, 1), ')')
         @test read_token(stream) == StopToken(SourceLocation("", 7, 1))
+    end
+
+    @testset "expected_*" begin
+        input = IOBuffer("""
+        material sky_material(
+        diffuse(image("my file.pfm")),
+        <5, pippo, pluto>
+        )
+        """)
+        stream = InputStream(input)
+
+        dictionary = Dict{String, Float64}(
+            "pippo" => 500.0,
+            "pluto" => 300.0
+        )
+
+        allowed_keywords = [jujutracer.SPHERE, jujutracer.MATERIAL, jujutracer.DIFFUSE]
+
+
+        @test jujutracer.expected_keywords(stream, allowed_keywords) == jujutracer.MATERIAL
+        @test jujutracer.expected_identifier(stream) == "sky_material"
+        @test jujutracer.expected_symbol(stream, '(') == '('
+        @test_throws jujutracer.GrammarError jujutracer.expected_number(stream, dictionary) # diffuse
+        @test_throws jujutracer.GrammarError jujutracer.expected_identifier(stream) #(
+        @test_throws jujutracer.GrammarError jujutracer.expected_symbol(stream, '(') # image
+        @test jujutracer.expected_symbol(stream, '(') == '('
+        @test jujutracer.expected_string(stream) == "my file.pfm"
+        @test_throws jujutracer.GrammarError jujutracer.expected_keywords(stream, allowed_keywords) # )
+        @test_throws jujutracer.GrammarError jujutracer.expected_string(stream) # )
+        @test jujutracer.expected_symbol(stream, ',') == ','
+        @test jujutracer.expected_symbol(stream, '<') == '<'
+        @test jujutracer.expected_number(stream, dictionary) == 5.0
+        @test_throws jujutracer.GrammarError jujutracer.expected_identifier(stream) # ,
+        @test jujutracer.expected_number(stream, dictionary) == 500.0
+        @test_throws jujutracer.GrammarError jujutracer.expected_number(stream, dictionary) #,
+        @test jujutracer.expected_number(stream, dictionary) == 300.0
+        @test jujutracer.expected_symbol(stream, '>') == '>'
+        @test jujutracer.expected_symbol(stream, ')') == ')'
+        
     end
         
         
