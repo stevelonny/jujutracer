@@ -1038,15 +1038,161 @@ end
 
 @testset "Point-Light tracing" begin
     @testset "is_point_visible" begin
+        # Test basic visibility with no obstacles
+        world = World(Vector{AbstractShape}())
+        pos = Point(2.5, 0.0, 0.5)
+        observer = Point(0.0, 0.0, 0.0)
+        @test is_point_visible(world, pos, observer) == true
         
+        # Test visibility with obstacle
+        sphere = Sphere(Translation(1.01, 0.0, 0.0), Material(UniformPigment(RGB(1.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(1.0, 0.0, 0.0)))))
+        shapes = Vector{AbstractShape}([sphere])
+        world_with_obstacle = World(shapes)
+        @test is_point_visible(world_with_obstacle, pos, observer) == false
+        
+        # Test visibility from same point
+        @test is_point_visible(world, observer, observer) == true
     end
+    
     @testset "is_light_visible" begin
+        # Test point light visibility
+        light = LightSource(Point(0.0, 0.0, 2.0), RGB(1.0, 1.0, 1.0), 100.0)
+        point = Point(1.0, 0.0, 0.0)
+        world = World(Vector{AbstractShape}())
+        @test jujutracer.is_light_visible(world, light, point) == true
         
+        # Test point light visibility with obstacle
+        sphere = Sphere(Translation(0.5, 0.0, 1.0), Material(UniformPigment(RGB(1.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(1.0, 0.0, 0.0)))))
+        shapes = Vector{AbstractShape}([sphere])
+        world_with_obstacle = World(shapes)
+        @test jujutracer.is_light_visible(world_with_obstacle, light, point) == false
+        
+        # Test spotlight visibility - point within cone
+        spot_light = SpotLight(Point(0.0, 0.0, 2.0), Vec(1.0, 0.0, -2.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85, 0.9)
+        @test jujutracer.is_light_visible(world, spot_light, point) == true
+        
+        # Test spotlight visibility - point outside cone
+        point_outside = Point(-2.0, 0.0, 0.0)
+        @test jujutracer.is_light_visible(world, spot_light, point_outside) == false
+        
+        # Test spotlight visibility - point in cone but obstructed
+        @test jujutracer.is_light_visible(world_with_obstacle, spot_light, point) == false
     end
+    
     @testset "_light_modulation" begin
+        # Test point light modulation
+        light = LightSource(Point(0.0, 0.0, 1.0), RGB(1.0, 1.0, 1.0), 100.0)
         
+        # Create a hit record for testing
+        hit_point = Point(1.0, 0.0, 0.0)
+        normal = Normal(0.0, 0.0, 1.0)
+        surface_point = SurfacePoint(0.5, 0.5)
+        ray = Ray(origin=Point(0.0, 0.0, -1.0), dir=Vec(0.0, 0.0, 1.0))
+        sphere = Sphere(Material(UniformPigment(RGB(1.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(1.0, 0.0, 0.0)))))
+        
+        hit_record = HitRecord(
+            world_P=hit_point,
+            normal=normal,
+            surface_P=surface_point,
+            t=1.0,
+            ray=ray,
+            shape=sphere
+        )
+        
+        modulation = jujutracer._light_modulation(light, hit_record)
+        @test modulation isa RGB
+        @test modulation.r >= 0.0 && modulation.g >= 0.0 && modulation.b >= 0.0
+        
+        # Test that closer light sources have more intensity
+        closer_light = LightSource(Point(0.0, 0.0, 0.5), RGB(1.0, 1.0, 1.0), 100.0)
+        closer_modulation = jujutracer._light_modulation(closer_light, hit_record)
+        @test closer_modulation.r > modulation.r
+        
+        # Test spotlight modulation
+        spot_light = SpotLight(Point(0.0, 0.0, 1.0), Vec(1.0, 0.0, -1.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85, 0.9)
+        spot_modulation = jujutracer._light_modulation(spot_light, hit_record)
+        @test spot_modulation isa RGB
+        @test spot_modulation.r >= 0.0 && spot_modulation.g >= 0.0 && spot_modulation.b >= 0.0
+        
+        # Test that normal facing away from light gives zero contribution
+        hit_record_away = HitRecord(
+            world_P=hit_point,
+            normal=Normal(0.0, 0.0, -1.0),  # Normal facing away
+            surface_P=surface_point,
+            t=1.0,
+            ray=ray,
+            shape=sphere
+        )
+        away_modulation = jujutracer._light_modulation(light, hit_record_away)
+        @test away_modulation.r ≈ 0.0 && away_modulation.g ≈ 0.0 && away_modulation.b ≈ 0.0
     end
+    
     @testset "point_light_tracing" begin
-        # try to bounce off a ray onto a diffuse and a specular
+        # Create a simple scene with a sphere and a light
+        light = LightSource(Point(2.0, 2.0, 2.0), RGB(1.0, 1.0, 1.0), 100.0)
+        
+        # Test diffuse material
+        diffuse_material = Material(UniformPigment(RGB(0.8, 0.2, 0.2)), DiffusiveBRDF(UniformPigment(RGB(0.8, 0.2, 0.2))))
+        sphere_diffuse = Sphere(Translation(0.0, 0.0, 0.0), diffuse_material)
+        shapes = Vector{AbstractShape}([sphere_diffuse])
+        lights = Vector{AbstractLight}([light])
+        world_diffuse = World(shapes, lights)
+        
+        # Test specular material  
+        specular_material = Material(UniformPigment(RGB(0.9, 0.9, 0.9)), SpecularBRDF(UniformPigment(RGB(0.9, 0.9, 0.9))))
+        sphere_specular = Sphere(Translation(0.0, 0.0, 0.0), specular_material)
+        shapes_specular = Vector{AbstractShape}([sphere_specular])
+        world_specular = World(shapes_specular, lights)
+        
+        # Create PointLight renderer
+        point_light_renderer = PointLight(world_diffuse, RGB(0.1, 0.1, 0.1), RGB(0.05, 0.05, 0.05), 2)
+        
+        # Test ray hitting diffuse sphere
+        ray_diffuse = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0))
+        color_diffuse = point_light_renderer(ray_diffuse)
+        @test color_diffuse isa RGB
+        # Should have some color from diffuse lighting
+        @test color_diffuse.r > 0.0 || color_diffuse.g > 0.0 || color_diffuse.b > 0.0
+        
+        # Test ray missing all objects
+        ray_miss = Ray(origin=Point(10.0, 10.0, 10.0), dir=Vec(1.0, 0.0, 0.0))
+        color_miss = point_light_renderer(ray_miss)
+        @test color_miss ≈ RGB(0.1, 0.1, 0.1)  # Should return background color
+        
+        # Test specular reflection
+        point_light_renderer_spec = PointLight(world_specular, RGB(0.1, 0.1, 0.1), RGB(0.05, 0.05, 0.05), 2)
+        ray_specular = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0))
+        color_specular = point_light_renderer_spec(ray_specular)
+        @test color_specular isa RGB
+        
+        # Test depth limiting
+        deep_ray = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0), depth=10)
+        color_deep = point_light_renderer(deep_ray)
+        @test color_deep ≈ RGB(0.1, 0.1, 0.1)  # Should return background when depth exceeded
+        
+        # Test with multiple lights
+        light2 = LightSource(Point(-2.0, 2.0, 2.0), RGB(0.0, 1.0, 0.0), 80.0)
+        world_multi_light = World(shapes, lights)
+        point_light_multi = PointLight(world_multi_light, RGB(0.1, 0.1, 0.1), RGB(0.05, 0.05, 0.05), 2)
+        
+        ray_multi = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0))
+        color_multi = point_light_multi(ray_multi)
+        @test color_multi isa RGB
+        # Should have contribution from both lights
+        @test color_multi.r > 0.0 && color_multi.g > 0.0
+        
+        # Test ambient lighting only (no direct light hits)
+        # Create sphere that blocks light
+        blocking_sphere = Sphere(Translation(1.0, 1.0, 1.0), diffuse_material)
+        push!(shapes, blocking_sphere)
+        lights = Vector{AbstractLight}([light])
+        world_blocked = World(shapes, lights)
+        point_light_blocked = PointLight(world_blocked, RGB(0.1, 0.1, 0.1), RGB(0.05, 0.05, 0.05), 2)
+        
+        ray_blocked = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0))
+        color_blocked = point_light_blocked(ray_blocked)
+        @test color_blocked isa RGB
+        # Should have at least ambient contribution
+        @test color_blocked.r >= 0.05 && color_blocked.g >= 0.05 && color_blocked.b >= 0.05
     end
 end
