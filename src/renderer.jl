@@ -16,6 +16,10 @@ function (BRDF::DiffusiveBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, 
         depth=depth)
 end
 
+function (BRDF::SpecularBRDF)(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+    return _reflect_ray(in_dir, p, normal, depth)
+end
+
 function (BRDF::SpecularBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)
     return _reflect_ray(in_dir, p, normal, depth)
 end
@@ -173,12 +177,11 @@ end
 #---------------------------------------------------------
 # Point-light tracing
 #---------------------------------------------------------
-
 """
     PointLight(world::World, background::RGB, ambient::RGB, max_depth::Int64)
-PointLight renderer of the scene. It simulates a point light source illuminating the scene.
+PointLight renderer of the scene. Backtraces the light from the point light sources.
 # Fields
-- `world::World`: the world containing the scene
+- `world::World`: the world containing the scene. Must contain at least one light source
 - `background_color::RGB`: the color of the background when the ray doesn't hit anything
 - `ambient_color::RGB`: the ambient color of the scene
 - `max_depth::Int64`: the maximum depth of the ray tracing
@@ -192,6 +195,9 @@ struct PointLight <: Function
     max_depth::Int64
 
     function PointLight(world::World, background::RGB=RGB(0.0, 0.0, 0.0), ambient=RGB(0.2, 0.2, 0.2), max_depth::Int64=0)
+        if isempty(world.lights)
+            throw(ArgumentError("World must contain at least one light source for PointLight renderer."))
+        end
         new(world, background, ambient, max_depth)
     end
 end
@@ -217,7 +223,8 @@ function (PL::PointLight)(ray::Ray)
         for cur_light in PL.world.lights
             if is_light_visible(PL.world, cur_light, repo.world_P)
                 light_effect = _light_modulation(cur_light, repo)
-                brdf_color = hit_material.BRDF.Pigment(repo.surface_P) *(1.0/π)
+                # lambertian reflectance
+                brdf_color = hit_material.BRDF.Pigment(repo.surface_P) * (1.0 / π)
 
                 result_color += brdf_color * light_effect
             end
@@ -225,56 +232,12 @@ function (PL::PointLight)(ray::Ray)
     end
 
     if hit_material.BRDF isa SpecularBRDF
-        reflected_ray = _reflect_ray(ray.dir, repo.world_P, repo.normal, ray.depth + 1)
+        reflected_ray = hit_material.BRDF(ray.dir, repo.world_P, repo.normal, ray.depth + 1)
         reflected_color = PL(reflected_ray)
+        # should it be multiplied by the specular color? where is / π?
         brdf_color = hit_material.BRDF.Pigment(repo.surface_P)
         result_color += reflected_color * brdf_color
     end
 
     return result_color
-end
-
-# Helper functions for PointLight
-
-function is_light_visible(world::World, light::LightSource, point::Point)
-    return is_point_visible(world, light.position, point)
-end
-
-function is_light_visible(world::World, light::SpotLight, point::Point)
-    # if the point is not in the light cone, return false
-    distance_vec = point - light.position
-    cos_angle = Normal(distance_vec) ⋅ Normal(light.direction)
-    if cos_angle < light.cos_total
-        return false
-    else
-        # if the point is in the light cone, check if there are any obstacles
-        return is_point_visible(world, light.position, point)
-    end
-end
-
-function _light_modulation(light::LightSource, repo::HitRecord)
-    distance_vec = repo.world_P - light.position
-    distance = norm(distance_vec)
-    cos_theta = max(0.0, -normalize(distance_vec) ⋅ repo.normal)
-
-    distance_factor = (light.scale / distance)^2
-    
-    return light.emission * cos_theta * distance_factor
-end
-
-function _light_modulation(spot::SpotLight, repo::HitRecord)
-    distance_vec = repo.world_P - spot.position
-    distance = norm(distance_vec)
-    cos_theta = max(0.0, Normal(spot.direction) ⋅ Normal(distance_vec))
-
-    distance_factor = (spot.scale / distance)^2
-
-    smoothstep = _smooth_step(cos_theta, spot.cos_falloff, spot.cos_start)
-
-    return spot.emission * distance_factor * smoothstep
-end
-
-function _smooth_step(x, edge0, edge1)
-    t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0)
-    return t * t * (3 - 2 * t)
 end
