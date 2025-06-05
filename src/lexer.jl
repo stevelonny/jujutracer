@@ -343,7 +343,7 @@ function Base.showerror(io::IO, err::GrammarError)
     print(io, "GrammarError at ", err.location, ": ", err.msg)
 end
 
-const SYMBOLS = ['(', ')', '<', '>', ','] #Add here if some missing 
+const SYMBOLS = ['(', ')', '[', ']', '<', '>', ','] #Add here if some missing 
 
 """ 
     _parse_string_token(input::InputStream)

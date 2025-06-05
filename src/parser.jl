@@ -102,3 +102,52 @@ function expected_identifier(s::InputStream)
     return token.identifier
 end
 
+#------------------------------------------------------------------------
+# parse_* functions
+#------------------------------------------------------------------------
+
+# as expected_number we pass a dictionary instead of a Scene for testing purposes
+# remember to pass the correct dict in parse_scene
+
+"""
+    parse_vector(s::InputStream, dictionary::Dict{String, Float64})
+Parses a vector from the input stream. The expected format is `[x, y, z]`.
+#Arguments
+- `s::InputStream`: The input stream to read from.
+- `dictionary::Dict{String, Float64}`: A dictionary containing variable names and their values.
+#Returns
+- `Vec`: A vector object with the parsed x, y, and z components.
+"""
+function parse_vector(s::InputStream, dictionary::Dict{String, Float64})
+    expected_symbol(s, '[')
+    x = expected_number(s, dictionary)
+    expected_symbol(s, ',')
+    y = expected_number(s, dictionary)
+    expected_symbol(s, ',')
+    z = expected_number(s, dictionary)
+    expected_symbol(s, ']')
+
+    return Vec(x, y, z)
+end
+
+"""
+    parse_color(s::InputStream, dictionary::Dict{String, Float64})
+Parses a color from the input stream. The expected format is `<r, g, b>`.
+#Arguments
+- `s::InputStream`: The input stream to read from.
+- `dictionary::Dict{String, Float64}`: A dictionary containing variable names and their values.
+#Returns
+- `RGB`: An RGB color object with the parsed red, green, and blue components.
+"""
+function parse_color(s::InputStream, dictionary::Dict{String, Float64})
+    expected_symbol(s, '<')
+    r = expected_number(s, dictionary)
+    expected_symbol(s, ',')
+    g = expected_number(s, dictionary)
+    expected_symbol(s, ',')
+    b = expected_number(s, dictionary)
+    expected_symbol(s, '>')
+
+    return RGB(r, g, b)
+end
+

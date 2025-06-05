@@ -1103,6 +1103,26 @@ end
         @test jujutracer.expected_symbol(stream, ')') == ')'
         
     end
-        
+
+    @testset "parse_*" begin
+        input = IOBuffer("""
+        [5.0, 500.0, 300.0]
+        """)
+        stream = InputStream(input)
+        dict = Dict{String, Float64}(
+            "pippo" => 500.0,
+            "pluto" => 300.0
+        )
+        vec = jujutracer.parse_vector(stream, dict)
+        @test vec == Vec(5.0, 500.0, 300.0)
+
+        input = IOBuffer("""
+        <5.0, 500.0, 300.0>
+        """)
+        stream = InputStream(input)
+
+        color = jujutracer.parse_color(stream, dict)
+        @test color == RGB(5.0, 500.0, 300.0)
+    end
         
 end
