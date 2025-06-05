@@ -6,6 +6,7 @@
     struct Sphere <: AbstractSolid
 
 A sphere.
+Unit radius sphere centered at the origin.
 This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `t::Transformation`: the transformation applied to the sphere.
