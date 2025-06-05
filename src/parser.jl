@@ -1,3 +1,14 @@
+const PIGMENTS = [
+    UNIFORM,
+    CHECKERED,
+    IMAGE
+]
+
+const BRDFS = [
+    DIFFUSE,
+    SPECULAR
+]
+
 #-----------------------------------------------------------------------
 # Scene
 #------------------------------------------------------------------------
@@ -168,7 +179,7 @@ Parses a pigment from the input stream. The expected format is either:
 - `Pigment`: A pigment object representing the parsed pigment type.
 """
 function parse_pigment(s::InputStream, dictionary::Dict{String, Float64})
-    keyword = expected_keywords(s, [UNIFORM, CHECKERED, IMAGE])
+    keyword = expected_keywords(s, PIGMENTS)
 
     expected_symbol(s, '(')
     result = nothing
@@ -194,8 +205,48 @@ function parse_pigment(s::InputStream, dictionary::Dict{String, Float64})
     return result
 end
 
-
+"""
+    parse_brdf(s::InputStream, dictionary::Dict{String, Float64})
+Parses a BRDF from the input stream. The expected format is either:
+- `diffuse(<pigment>)`
+- `specular(<pigment>)`
+#Arguments
+- `s::InputStream`: The input stream to read from.
+- `dictionary::Dict{String, Float64}`: A dictionary containing variable names and their values.
+#Returns
+- `BRDF`: A BRDF object representing the parsed BRDF type.
+"""
 function parse_brdf(s::InputStream, dictionary::Dict{String, Float64})
-    
-    
+    brdf_keyword = expected_keywords(s, BRDFS)
+
+    expected_symbol(s, '(')
+    pigment = parse_pigment(s, dictionary)
+    expected_symbol(s, ')')
+    if brdf_keyword == DIFFUSE
+        return DiffusiveBRDF(pigment)
+    elseif brdf_keyword == SPECULAR
+        return SpecularBRDF(pigment)
+    else
+        throw(GrammarError(s.location, "unexpected BRDF type $brdf_keyword"))
+    end
+end
+
+"""
+    parse_material(s::InputStream, dictionary::Dict{String, Float64})
+Parses a material from the input stream. The expected format is `material(<emission::pigment>, <brdf>)`.
+#Arguments
+- `s::InputStream`: The input stream to read from.
+- `dictionary::Dict{String, Float64}`: A dictionary containing variable names and their values.
+#Returns
+- `Material`: A material object with the parsed emission pigment and BRDF.
+"""
+function parse_material(s::InputStream, dictionary::Dict{String, Float64})
+    name = expected_identifier(s)
+
+    expected_symbol(s, '(')
+    brdf = parse_brdf(s, dictionary)
+    expected_symbol(s, ',')
+    emission_pigment = parse_pigment(s, dictionary)
+    expected_symbol(s, ')')
+    return name, Material(emission_pigment, brdf)
 end

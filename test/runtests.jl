@@ -1138,6 +1138,17 @@ end
         @test pigment2 == CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))
         #pigment3 = jujutracer.parse_pigment(stream, dict)
         #@test pigment3 == ImagePigment("my file.pfm")
+
+        # parse_brdf
+        input = IOBuffer("""
+        diffuse(uniform(<5.0, pippo, pluto>))
+        specular(checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4))
+        """)
+        stream = InputStream(input)
+        brdf1 = jujutracer.parse_brdf(stream, dict)
+        @test brdf1 == DiffusiveBRDF(UniformPigment(RGB(5.0, 500.0, 300.0)))
+        brdf2 = jujutracer.parse_brdf(stream, dict)
+        @test brdf2 == SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))
     end
         
 end
