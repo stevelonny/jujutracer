@@ -1239,6 +1239,39 @@ end
         plane3 = jujutracer.parse_plane(stream, dict, dict_mat)
         @test plane3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
         @test plane3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+    
+        # parse_camera
+        input = IOBuffer("""
+        (perspective, identity, 1.0, 2.0)
+        (perspective, translation([1.0, 2.0, pippo]), 1.0, 2.0)
+        (perspective, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]), 1.0, 2.0)
+        (orthogonal, identity, 1.0)
+        (orthogonal, translation([1.0, 2.0, pippo]), 1.0)
+        (orthogonal, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]), 1.0)
+        """)
+        stream = InputStream(input)
+        camera1 = jujutracer.parse_camera(stream, dict)
+        @test camera1.t ≈ Transformation()
+        @test camera1.a_ratio == 1.0
+        @test camera1.d == 2.0
+        camera2 = jujutracer.parse_camera(stream, dict)
+        @test camera2.t ≈ Translation(1.0, 2.0, 500.0)
+        @test camera2.a_ratio == 1.0
+        @test camera2.d == 2.0
+        camera3 = jujutracer.parse_camera(stream, dict)
+        @test camera3.t ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
+        @test camera3.a_ratio == 1.0
+        @test camera3.d == 2.0
+        camera4 = jujutracer.parse_camera(stream, dict)
+        @test camera4.t ≈ Transformation()
+        @test camera4.a_ratio == 1.0
+        camera5 = jujutracer.parse_camera(stream, dict)
+        @test camera5.t ≈ Translation(1.0, 2.0, 500.0)
+        @test camera5.a_ratio == 1.0
+        camera6 = jujutracer.parse_camera(stream, dict)
+        @test camera6.t ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
+        @test camera6.a_ratio == 1.0
+        
     end
 
 end

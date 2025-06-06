@@ -18,6 +18,11 @@ const TRANSFORMATIONS = [
     SCALING
 ]
 
+const CAMERAS = [
+    ORTHOGONAL,
+    PERSPECTIVE
+]
+
 #-----------------------------------------------------------------------
 # Scene
 #------------------------------------------------------------------------
@@ -372,5 +377,39 @@ function parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_mate
     expected_symbol(s, ')')
 
     return Plane(transformation, dict_material[material_name])
+
+end
+
+"""
+    parse_camera(s::InputStream, dict_float::Dict{String,Float64})
+Parses a camera from the input stream. The expected format is:
+- `orthogonal(<transformation>, <aspect_ratio>)`
+- `perspective(<transformation>, <aspect_ratio>, <screen_distance>)`
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
+# Returns
+- Either `Orthogonal` or `Perspective` camera object based on the parsed type.
+"""
+function parse_camera(s::InputStream, dict_float::Dict{String,Float64})
+    expected_symbol(s, '(')
+
+    camera_type = expected_keywords(s, CAMERAS)
+    expected_symbol(s, ',')
+    transformation = parse_transformation(s, dict_float)
+    expected_symbol(s, ',')
+    if camera_type == ORTHOGONAL
+        aspect_ratio = expected_number(s, dict_float)
+        expected_symbol(s, ')')
+        return Orthogonal(t=transformation, a_ratio=aspect_ratio)
+    elseif camera_type == PERSPECTIVE
+        aspect_ratio = expected_number(s, dict_float)
+        expected_symbol(s, ',')
+        screen_distance = expected_number(s, dict_float)
+        expected_symbol(s, ')')
+        return Perspective(d=screen_distance, t=transformation, a_ratio=aspect_ratio)
+    else
+        throw(GrammarError(s.location, "unexpected camera type $camera_type"))
+    end
 
 end
