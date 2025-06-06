@@ -309,7 +309,7 @@ function parse_transformation(s::InputStream, dictionary::Dict{String,Float64})
             expected_symbol(s, ')')
             result = result ⊙ Scaling(scale_vector.x, scale_vector.y, scale_vector.z)
         end
-        
+
         next_token = read_token(s)
         if !(next_token isa SymbolToken && next_token.symbol == '*')
             unread_token!(s, next_token)
@@ -319,4 +319,31 @@ function parse_transformation(s::InputStream, dictionary::Dict{String,Float64})
     end
 
     return result
+end
+
+"""
+    parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+Parses a sphere from the input stream. The expected format is:
+- `sphere(<material>, <transformation>)`
+`material` must be already defined in `dict_material`.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
+- `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
+# Returns
+- `Sphere`: A sphere object with the parsed material and transformation.
+"""
+function parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    expected_symbol(s, '(')
+
+    material_name = expected_identifier(s)
+    if !(haskey(dict_material, material_name))
+        throw(GrammarError(s.location, "material '$material_name' not defined"))
+    end
+
+    expected_symbol(s, ',')
+    transformation = parse_transformation(s, dict_float)
+    expected_symbol(s, ')')
+
+    return Sphere(transformation, dict_material[material_name])
 end
