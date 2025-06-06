@@ -28,14 +28,14 @@ const CAMERAS = [
 #------------------------------------------------------------------------
 mutable struct Scene
     materials::Dict{String,Material}
-    world::World
+    world::Union{World,Nothing}
     camera::Union{AbstractCamera,Nothing}
     float_variables::Dict{String,Float64}
     overridden_variables::Set{String}
 
     function Scene(;
         materials=Dict{String,Material}(),
-        world=World(),
+        world=nothing,
         camera=nothing,
         float_variables=Dict{String,Float64}(),
         overridden_variables=Set{String}()
@@ -412,4 +412,76 @@ function parse_camera(s::InputStream, dict_float::Dict{String,Float64})
         throw(GrammarError(s.location, "unexpected camera type $camera_type"))
     end
 
+end
+
+"""
+    parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String,Float64}())
+Parses a scene from the input stream.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `variables::Dict{String, Float64}`: A dictionary containing variable names and their values. Defaults to an empty dictionary.
+# Returns
+- `Scene`: A scene object containing the parsed materials, world, camera, and float variables.
+"""
+function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String,Float64}())
+    scene = Scene()
+    scene.float_variables = variables
+    scene.overridden_variables = Set(keys(variables))
+
+    shapes = Vector{AbstractShape}()
+
+    while true
+        token = read_token(s)
+        if token isa StopToken
+            break
+        end
+        if !(token isa KeywordToken)
+            throw(GrammarError(token.location, "expected a keyword or stop token, got $token"))
+        end
+        if token.keyword == FLOAT
+            variable_name = expected_identifier(s)
+
+            variable_location = s.location
+
+            expected_symbol(s, '(')
+            value = expected_number(s, scene.float_variables)
+            expected_symbol(s, ')')
+            
+            if haskey(scene.float_variables, variable_name) && !(variable_name in scene.overridden_variables)
+                throw(GrammarError(variable_location, "variable '$variable_name' already defined"))
+            end
+
+            if !(haskey(scene.float_variables, variable_name))
+                scene.float_variables[variable_name] = value     
+            end
+        elseif token.keyword == MATERIAL
+            material_name, material = parse_material(s, scene.float_variables)
+            scene.materials[material_name] = material
+        elseif token.keyword == SPHERE
+            sphere = parse_sphere(s, scene.float_variables, scene.materials)
+            push!(shapes, sphere)
+        elseif token.keyword == PLANE
+            plane = parse_plane(s, scene.float_variables, scene.materials)
+            push!(shapes, plane)
+        elseif token.keyword == CAMERA
+            if !isnothing(scene.camera)
+                throw(GrammarError(token.location, "camera already defined"))
+            end
+            scene.camera = parse_camera(s, scene.float_variables)
+        else 
+            throw(GrammarError(token.location, "unexpected keyword $token.keyword"))
+        end
+    end
+
+    if isnothing(scene.camera)
+        throw(GrammarError(s.location, "camera not defined"))
+    end
+    if isempty(scene.materials)
+        throw(GrammarError(s.location, "no materials defined"))
+    end
+    if isempty(shapes)
+        throw(GrammarError(s.location, "no shapes defined"))
+    end
+    scene.world = World(shapes)
+    return scene
 end

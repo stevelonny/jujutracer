@@ -38,6 +38,7 @@ const WHITESPACE = [' ', '\t', '\n', '\r']
 const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missing
 
 @enum KeywordEnum begin
+    FLOAT
     UNIFORM
     CHECKERED
     IMAGE
@@ -50,6 +51,7 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missi
     ROTATION_Y
     ROTATION_Z
     SCALING
+    CAMERA
     ORTHOGONAL
     PERSPECTIVE
     SPHERE
@@ -57,6 +59,7 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missi
 end
 
 const KEYWORDS = Dict(
+    "float" => FLOAT,
     "uniform" => UNIFORM,
     "checkered" => CHECKERED,
     "image" => IMAGE,
@@ -69,6 +72,7 @@ const KEYWORDS = Dict(
     "rotation_y" => ROTATION_Y,
     "rotation_z" => ROTATION_Z,
     "scaling" => SCALING,
+    "camera" => CAMERA,
     "orthogonal" => ORTHOGONAL,
     "perspective" => PERSPECTIVE,
     "sphere" => SPHERE,

@@ -1273,5 +1273,77 @@ end
         @test camera6.a_ratio == 1.0
         
     end
+    @testset "parse_world" begin
+        input = IOBuffer("""
+        float clock(150)
+        
+        material sky_material(
+            diffuse(uniform(<0, 0, 0>)),
+            uniform(<0.7, 0.5, 1>)
+        )
 
+        # Here is a comment
+
+        material ground_material(
+            diffuse(checkered(<0.3, 0.5, 0.1>,
+                              <0.1, 0.2, 0.5>, 4)),
+            uniform(<0, 0, 0>)
+        )
+
+        material sphere_material(
+            specular(uniform(<0.5, 0.5, 0.5>)),
+            uniform(<0, 0, 0>)
+        )
+
+        plane (sky_material, translation([0, 0, 100]) * rotation_y(clock))
+        plane (ground_material, identity)
+
+        sphere(sphere_material, translation([0, 0, 1]))
+
+        camera(perspective, rotation_z(30) * translation([-4, 0, 1]), 1.0, 2.0)
+        """)
+        stream = InputStream(input)
+
+        scene = parse_scene(stream)
+
+        @test length(scene.float_variables) == 1
+        @test haskey(scene.float_variables, "clock")
+        @test scene.float_variables["clock"] == 150.0
+
+        @test length(scene.materials) == 3
+        @test "sphere_material" in keys(scene.materials)
+        @test "sky_material" in keys(scene.materials)
+        @test "ground_material" in keys(scene.materials)
+
+        sphere_material = scene.materials["sphere_material"]
+        sky_material = scene.materials["sky_material"]
+        ground_material = scene.materials["ground_material"]
+
+        @test sphere_material == Material(
+            UniformPigment(RGB(0.0, 0.0, 0.0)),
+            SpecularBRDF(UniformPigment(RGB(0.5, 0.5, 0.5)))
+        )
+        @test sky_material == Material(
+            UniformPigment(RGB(0.7, 0.5, 1.0)),
+            DiffusiveBRDF(UniformPigment(RGB(0.0, 0.0, 0.0)))
+        )
+        @test ground_material == Material(
+            UniformPigment(RGB(0.0, 0.0, 0.0)),
+            DiffusiveBRDF(CheckeredPigment(4, 4, RGB(0.3, 0.5, 0.1), RGB(0.1, 0.2, 0.5)))
+        )
+        @test length(scene.world.shapes) == 3
+        @test scene.world.shapes[1] isa Plane
+        @test scene.world.shapes[1].Mat == sky_material
+        @test scene.world.shapes[1].Tr ≈ Translation(0.0, 0.0, 100.0) ⊙ Ry(150.0)
+        @test scene.world.shapes[2] isa Plane
+        @test scene.world.shapes[2].Mat == ground_material
+        @test scene.world.shapes[2].Tr ≈ Transformation()
+        @test scene.world.shapes[3] isa Sphere
+        @test scene.world.shapes[3].Mat == sphere_material
+        @test scene.world.shapes[3].Tr ≈ Translation(0.0, 0.0, 1.0)
+        @test scene.camera isa Perspective
+        @test scene.camera.t ≈ Rz(30.0) ⊙ Translation(-4.0, 0.0, 1.0)
+        @test scene.camera.a_ratio == 1.0
+        @test scene.camera.d == 2.0
+    end
 end

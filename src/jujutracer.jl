@@ -51,6 +51,6 @@ include("lexer.jl")
 export SourceLocation, InputStream, InputStreamError, open_InputStream, _update_pos!, read_char, unread_char!, skip_whitespaces_and_comments!, AbstractToken, IdentifierToken, StringToken, NumberToken, SymbolToken, KeywordToken, StopToken, read_token, KeywordEnum
 
 include("parser.jl")
-export Scene
+export Scene, parse_scene
 
 end # module jujutracer
