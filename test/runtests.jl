@@ -1,7 +1,7 @@
 using jujutracer
 using Test
 using Logging
-Logging.disable_logging(Logging.Info)   
+Logging.disable_logging(Logging.Info)
 
 
 @testset "Colors arithmetics" begin
@@ -274,7 +274,7 @@ end
         @test_throws MethodError p1 / 2
     end
 
-    @testset "Norm" begin 
+    @testset "Norm" begin
         v = Vec(1.0, 2.0, 3.0)
         n = Normal(10.0, 20.0, 30.0)
         p = Point(1.0, 2.0, 3.0)
@@ -448,7 +448,7 @@ end
 
         Tr = Translation(10.0, 0.0, 0.0)
         S = Sphere(Tr, Mat)
-        
+
         O4 = Tr(O1)
         ray4 = Ray(origin=O4, dir=-êz)
         HR4 = ray_intersection(S, ray4)
@@ -738,15 +738,15 @@ end
     @testset "Cylinder" begin
         C = Cylinder()
 
-        ray1 = Ray(origin = Point(2.0, 0.0, 0.0),
-                    dir = Vec(-1.0, 0.0, 0.0))
+        ray1 = Ray(origin=Point(2.0, 0.0, 0.0),
+            dir=Vec(-1.0, 0.0, 0.0))
         repo1 = ray_intersection_list(C, ray1)
         @test !isnothing(repo1)
         @test repo1[1].normal ≈ -ray1.dir
         @test repo1[2].normal ≈ -ray1.dir
 
-        ray2 = Ray(origin = Point(0.0, 0.0, 3.0),
-                    dir = Vec(0.0, 0.0, -1.0))
+        ray2 = Ray(origin=Point(0.0, 0.0, 3.0),
+            dir=Vec(0.0, 0.0, -1.0))
         repo2 = ray_intersection_list(C, ray2)
         @test !isnothing(repo2)
         @test repo2[1].normal ≈ -ray2.dir
@@ -761,7 +761,7 @@ end
         HR1 = ray_intersection(C, ray1)
         @test !isnothing(HR1)
         @test HR1 ≈ Point(0.0, 0.5, 0.5)
-        @test HR1.normal ≈ Normal(0.0, 1.0/sqrt(2.0), 1.0 / sqrt(2.0))
+        @test HR1.normal ≈ Normal(0.0, 1.0 / sqrt(2.0), 1.0 / sqrt(2.0))
 
         # Ray from below, should hit the base at (0.5,0.5,0)
         O2 = Point(0.5, 0.5, -1.0)
@@ -820,7 +820,7 @@ end
     pcg = PCG()
     @test pcg.state == 1753877967969059832
     @test pcg.inc == 109
-    for expected in [2707161783, 2068313097,3122475824, 2211639955, 3215226955, 3421331566]
+    for expected in [2707161783, 2068313097, 3122475824, 2211639955, 3215226955, 3421331566]
         @test expected == rand_pcg(pcg)
     end
 end
@@ -841,7 +841,7 @@ end
     S_2[3] = S3
     world1 = World(S_UD)
     world2 = World(S_2)
-    cam = Perspective(d = 2.0, t = Translation(-1.0, 0.0, 0.0))
+    cam = Perspective(d=2.0, t=Translation(-1.0, 0.0, 0.0))
     hdr1 = hdrimg(160, 90)
     hdr2 = hdrimg(160, 90)
     ImgTr1 = ImageTracer(hdr1, cam)
@@ -852,7 +852,7 @@ end
     ImgTr1(delta1)
     ImgTr2(delta2)
     @test all(hdr1[x_pixel, y_pixel] ≈ hdr2[x_pixel, y_pixel] for y_pixel in 0:(hdr1.h-1), x_pixel in 0:(hdr1.w-1))
-    
+
     # union
     S_U = Vector{AbstractShape}(undef, 1)
     S_1 = Vector{AbstractShape}(undef, 2)
@@ -903,19 +903,19 @@ end
 end
 
 @testset "ONB" begin
-    pcg=PCG()
+    pcg = PCG()
     for i in 1:10^4
         normal = Normal(rand_uniform(pcg), rand_uniform(pcg), rand_uniform(pcg))
 
         e1, e2, e3 = create_onb_from_z(normal)
         @test e3 ≈ normal
-        @test e3 ⋅ e1 ≈ 0.0 atol=1e-15
-        @test e3 ⋅ e2 ≈ 0.0 atol=1e-15
-        @test e1 ⋅ e2 ≈ 0.0 atol=1e-15
+        @test e3 ⋅ e1 ≈ 0.0 atol = 1e-15
+        @test e3 ⋅ e2 ≈ 0.0 atol = 1e-15
+        @test e1 ⋅ e2 ≈ 0.0 atol = 1e-15
 
         @test e1 × e2 ≈ e3
         @test e2 × e3 ≈ e1
-        @test e3 × e1 ≈ e2 
+        @test e3 × e1 ≈ e2
     end
 end
 
@@ -935,7 +935,7 @@ end
 
         O = Point(rand_uniform(pcg) * 0.5, rand_uniform(pcg) * 0.5, rand_uniform(pcg) * 0.5)
         v = Vec(rand_uniform(pcg), rand_uniform(pcg), rand_uniform(pcg))
-        ray = Ray(origin = O, dir = v)
+        ray = Ray(origin=O, dir=v)
         color = path(ray)
 
         exp = emitted_r / (1.0 - reflect)
@@ -1074,7 +1074,7 @@ end
         """)
         stream = InputStream(input)
 
-        dictionary = Dict{String, Float64}(
+        dictionary = Dict{String,Float64}(
             "pippo" => 500.0,
             "pluto" => 300.0
         )
@@ -1101,11 +1101,11 @@ end
         @test jujutracer.expected_number(stream, dictionary) == 300.0
         @test jujutracer.expected_symbol(stream, '>') == '>'
         @test jujutracer.expected_symbol(stream, ')') == ')'
-        
+
     end
 
     @testset "parse_*" begin
-        dict = Dict{String, Float64}(
+        dict = Dict{String,Float64}(
             "pippo" => 500.0,
             "pluto" => 300.0
         )
@@ -1149,6 +1149,22 @@ end
         @test brdf1 == DiffusiveBRDF(UniformPigment(RGB(5.0, 500.0, 300.0)))
         brdf2 = jujutracer.parse_brdf(stream, dict)
         @test brdf2 == SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))
+
+        # parse_material
+        #input = IOBuffer("""sky_material(specular(checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4)),uniform(<5.0, pippo, pluto>))""")
+        input = IOBuffer("""
+        sky_material(
+            specular(checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4)),
+            uniform(<5.0, pippo, pluto>)
+            )
+        """)
+        stream = InputStream(input)
+        name, material = jujutracer.parse_material(stream, dict)
+        @test name == "sky_material"
+        @test material == Material(
+            UniformPigment(RGB(5.0, 500.0, 300.0)),
+            SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))
+        )
     end
-        
+
 end
