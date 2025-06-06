@@ -20,7 +20,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Julia
         uses: julia-actions/setup-julia@v1
         with:
@@ -47,6 +48,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Julia
         uses: julia-actions/setup-julia@v1

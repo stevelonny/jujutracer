@@ -1,4 +1,6 @@
 # HEAD
+
+# Version 0.3.0
 - Implement `PathTracer` renderer [#20](https://github.com/stevelonny/jujutracer/pull/18)
 - Implement Antialiasing
 - Axis-Aligned Boundary Boxes
