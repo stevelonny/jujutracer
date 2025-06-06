@@ -1186,6 +1186,26 @@ end
             UniformPigment(RGB(5.0, 500.0, 300.0)),
             SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))
         )
+
+        # parse_transformation
+        input = IOBuffer("""
+        identity
+        translation([1.0, 2.0, pippo])
+        scaling([2.0, 3.0, 4.0])
+        rotation_x(0.5)
+        rotation_y(1.0)
+        rotation_z(1.5)
+        identity * translation([1.0, pluto, 3.0]) * scaling([2.0, 3.0, 4.0]) * rotation_x(0.5) * rotation_y(1.0) * rotation_z(1.5)
+        """)
+        stream = InputStream(input)
+        @test jujutracer.parse_transformation(stream, dict) ≈ Transformation()
+        @test jujutracer.parse_transformation(stream, dict) ≈ Translation(1.0, 2.0, 500.0)
+        @test jujutracer.parse_transformation(stream, dict) ≈ Scaling(2.0, 3.0, 4.0)
+        @test jujutracer.parse_transformation(stream, dict) ≈ Rx(0.5)
+        @test jujutracer.parse_transformation(stream, dict) ≈ Ry(1.0)
+        @test jujutracer.parse_transformation(stream, dict) ≈ Rz(1.5)
+        @test jujutracer.parse_transformation(stream, dict) ≈ Transformation() ⊙ Translation(1.0, 300.0, 3.0) ⊙ Scaling(2.0, 3.0, 4.0) ⊙ Rx(0.5) ⊙ Ry(1.0) ⊙ Rz(1.5)
+
     end
 
 end

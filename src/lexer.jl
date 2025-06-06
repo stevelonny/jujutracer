@@ -35,7 +35,7 @@ end
 
 const WHITESPACE = [' ', '\t', '\n', '\r']
 
-const SYMBOLS = ['(', ')', '[', ']', '<', '>', ','] #Add here if some missing
+const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missing
 
 @enum KeywordEnum begin
     SPHERE

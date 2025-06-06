@@ -9,6 +9,15 @@ const BRDFS = [
     SPECULAR
 ]
 
+const TRANSFORMATIONS = [
+    IDENTITY,
+    TRANSLATION,
+    ROTATION_X,
+    ROTATION_Y,
+    ROTATION_Z,
+    SCALING
+]
+
 #-----------------------------------------------------------------------
 # Scene
 #------------------------------------------------------------------------
@@ -249,4 +258,65 @@ function parse_material(s::InputStream, dictionary::Dict{String,Float64})
     emission_pigment = parse_pigment(s, dictionary)
     expected_symbol(s, ')')
     return name, Material(emission_pigment, brdf)
+end
+
+"""
+    parse_transformation(s::InputStream, dictionary::Dict{String, Float64})
+Parses a transformation from the input stream. The expected format is:
+- `identity`
+- `translation(<vector>)`
+- `rotation_x(<angle>)`
+- `rotation_y(<angle>)`
+- `rotation_z(<angle>)`
+- `scaling(<vector>)`
+- `*` to combine transformations.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dictionary::Dict{String, Float64}`: A dictionary containing variable names and their values.
+# Returns
+- `Transformation`: A transformation object representing the parsed transformation type.
+"""
+function parse_transformation(s::InputStream, dictionary::Dict{String,Float64})
+    result = Transformation()
+
+    while true
+        transformation_keyword = expected_keywords(s, TRANSFORMATIONS)
+        if transformation_keyword == IDENTITY
+            result = result ⊙ Transformation()
+        elseif transformation_keyword == TRANSLATION
+            expected_symbol(s, '(')
+            translation_vector = parse_vector(s, dictionary)
+            expected_symbol(s, ')')
+            result = result ⊙ Translation(translation_vector)
+        elseif transformation_keyword == ROTATION_X
+            expected_symbol(s, '(')
+            angle = expected_number(s, dictionary)
+            expected_symbol(s, ')')
+            result = result ⊙ Rx(angle)
+        elseif transformation_keyword == ROTATION_Y
+            expected_symbol(s, '(')
+            angle = expected_number(s, dictionary)
+            expected_symbol(s, ')')
+            result = result ⊙ Ry(angle)
+        elseif transformation_keyword == ROTATION_Z
+            expected_symbol(s, '(')
+            angle = expected_number(s, dictionary)
+            expected_symbol(s, ')')
+            result = result ⊙ Rz(angle)
+        elseif transformation_keyword == SCALING
+            expected_symbol(s, '(')
+            scale_vector = parse_vector(s, dictionary)
+            expected_symbol(s, ')')
+            result = result ⊙ Scaling(scale_vector.x, scale_vector.y, scale_vector.z)
+        end
+        
+        next_token = read_token(s)
+        if !(next_token isa SymbolToken && next_token.symbol == '*')
+            unread_token!(s, next_token)
+            break
+        end
+
+    end
+
+    return result
 end
