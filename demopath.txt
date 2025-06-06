@@ -1,0 +1,43 @@
+# Float variables
+float pi_quarter(-0.7853981633974483)  # -π/4
+float pi_tenth(-0.31415926535897931)   # -π/10
+
+# Material definitions
+material mat1(
+    diffuse(checkered(<0.5, 0.5, 0.5>, <1.0, 1.0, 0.0>, 8)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat2(
+    diffuse(checkered(<1.0, 0.0, 1.0>, <0.0, 0.0, 1.0>, 12)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat3(
+    specular(uniform(<1.0, 0.0, 0.0>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat4(
+    diffuse(uniform(<0.5, 0.5, 0.5>)),
+    image("sky.pfm")
+)
+
+# Shape definitions
+# S[1] = Sphere(Scaling(7.0, 7.0, 7.0) ⊙ Ry(-π / 4.0), Mat4)
+sphere(mat4, scaling([7.0, 7.0, 7.0]) * rotation_y(pi_quarter))
+
+# S[2] = Sphere(Translation(0.0, 0.0, 1.0), Mat2)
+sphere(mat2, translation([0.0, 0.0, 1.0]))
+
+# S[3] = Sphere(Translation(0.0, 2.0, 0.0) ⊙ Sc, Mat3)
+# where Sc = Scaling(1.0 / 1.5, 1.0 / 1.5, 1.0 / 1.5)
+sphere(mat3, translation([0.0, 2.0, 0.0]) * scaling([0.6666666666666666, 0.6666666666666666, 0.6666666666666666]))
+
+# S[4] = Plane(Mat1)
+plane(mat1, identity)
+
+# Camera definition
+# cam = Perspective(d=2.0, t=R_cam ⊙ Translation(-1.5, 0.0, 1.0) ⊙ Ry(-π / 10.0))
+# where R_cam = Rz(0) = identity
+camera(perspective, translation([-1.5, 0.0, 1.0]) * rotation_y(pi_tenth), 1.7777777777777, 2.0)

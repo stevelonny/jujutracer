@@ -210,7 +210,11 @@ function parse_pigment(s::InputStream, dictionary::Dict{String,Float64})
         result = CheckeredPigment(convert(Int, div), convert(Int, div), color1, color2)
     elseif keyword == IMAGE
         image_path = expected_string(s)
-        result = ImagePigment(image_path)
+        if !isfile(image_path)
+            throw(GrammarError(s.location, "image file '$image_path' does not exist"))
+        end
+        image = read_pfm_image(image_path)
+        result = ImagePigment(image)
     else
         throw(GrammarError(s.location, "unexpected pigment type $keyword"))
     end
