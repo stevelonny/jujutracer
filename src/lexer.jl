@@ -45,6 +45,12 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ','] #Add here if some missing
     MATERIAL
     DIFFUSE
     SPECULAR
+    IDENTITY
+    TRANSLATION
+    ROTATION_X
+    ROTATION_Y
+    ROTATION_Z
+    SCALING
 end
 
 const KEYWORDS = Dict(
@@ -54,7 +60,13 @@ const KEYWORDS = Dict(
     "image" => IMAGE,
     "material" => MATERIAL,
     "diffuse" => DIFFUSE,
-    "specular" => SPECULAR
+    "specular" => SPECULAR,
+    "identity" => IDENTITY,
+    "translation" => TRANSLATION,
+    "rotation_x" => ROTATION_X,
+    "rotation_y" => ROTATION_Y,
+    "rotation_z" => ROTATION_Z,
+    "scaling" => SCALING
 )
 
 #---------------------------------------------------------
@@ -473,7 +485,22 @@ function read_token(input::InputStream)
     end
 end
 
-
-
+"""
+    unread_token!(input::InputStream, token::AbstractToken)
+Unreads a token by saving it in the `InputStream`, allowing it to be read again later.
+# Arguments
+- `input::InputStream`: The input stream to which the token should be unread.
+- `token::AbstractToken`: The token to unread.
+# Throws
+- `InputStreamError`: If there is already a saved token in the input stream, indicating that it cannot unread another token.
+"""
+function unread_token!(input::InputStream, token::AbstractToken)
+    # Unread a token by saving it in the input stream
+    if input.saved_token !== nothing
+        throw(InputStreamError("Cannot unread: `saved_token` is not empty", input))
+    end
+    input.saved_token = token
+    input.saved_loc = token.location
+end
 
 
