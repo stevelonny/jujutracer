@@ -347,3 +347,30 @@ function parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_mat
 
     return Sphere(transformation, dict_material[material_name])
 end
+
+
+"""
+    parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+Parses a plane from the input stream. The expected format is:
+- `plane(<material>, <transformation>)`
+`material` must be already defined in `dict_material`.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
+- `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
+"""
+function parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    expected_symbol(s, '(')
+
+    material_name = expected_identifier(s)
+    if !(haskey(dict_material, material_name))
+        throw(GrammarError(s.location, "material '$material_name' not defined"))
+    end
+
+    expected_symbol(s, ',')
+    transformation = parse_transformation(s, dict_float)
+    expected_symbol(s, ')')
+
+    return Plane(transformation, dict_material[material_name])
+
+end
