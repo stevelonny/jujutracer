@@ -615,6 +615,12 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
             shape_constructor = shapes_constructors[token.keyword]
             shape = _parse_shape(shape_constructor, s, scene.float_variables, scene.materials)
             push!(shapes, shape)
+        elseif token.keyword == TRIANGLE
+            triangle = _parse_triangle(s, scene.float_variables, scene.materials)
+            push!(shapes, triangle)
+        elseif token.keyword == PARALLELOGRAM
+            parallelogram = _parse_parallelogram(s, scene.float_variables, scene.materials)
+            push!(shapes, parallelogram)
         elseif token.keyword == CAMERA
             if !isnothing(scene.camera)
                 throw(GrammarError(token.location, "camera already defined"))

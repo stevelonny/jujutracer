@@ -1309,6 +1309,16 @@ end
 
         sphere(sphere_material, translation([0, 0, 1]))
 
+        box(sphere_material, translation([-1, -1, 0]) * scaling([2, 2, 2]))
+
+        cone(sphere_material, translation([-2, -2, 0]) * scaling([1, 1, 1]))
+
+        cylinder(sphere_material, translation([-3, -3, 0]) * scaling([1, 1, 1]))
+
+        triangle(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
+
+        parallelogram(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
+
         camera(perspective, rotation_z(30) * translation([-4, 0, 1]), 1.0, 2.0)
         """)
         stream = InputStream(input)
@@ -1340,7 +1350,7 @@ end
             UniformPigment(RGB(0.0, 0.0, 0.0)),
             DiffusiveBRDF(CheckeredPigment(4, 4, RGB(0.3, 0.5, 0.1), RGB(0.1, 0.2, 0.5)))
         )
-        @test length(scene.world.shapes) == 3
+        @test length(scene.world.shapes) == 8
         @test scene.world.shapes[1] isa Plane
         @test scene.world.shapes[1].Mat == sky_material
         @test scene.world.shapes[1].Tr ≈ Translation(0.0, 0.0, 100.0) ⊙ Ry(150.0)
@@ -1350,6 +1360,25 @@ end
         @test scene.world.shapes[3] isa Sphere
         @test scene.world.shapes[3].Mat == sphere_material
         @test scene.world.shapes[3].Tr ≈ Translation(0.0, 0.0, 1.0)
+        @test scene.world.shapes[4] isa Box
+        @test scene.world.shapes[4].Mat == sphere_material
+        @test scene.world.shapes[4].Tr ≈ Translation(-1.0, -1.0, 0.0) ⊙ Scaling(2.0, 2.0, 2.0)
+        @test scene.world.shapes[5] isa Cone
+        @test scene.world.shapes[5].Mat == sphere_material
+        @test scene.world.shapes[5].Tr ≈ Translation(-2.0, -2.0, 0.0) ⊙ Scaling(1.0, 1.0, 1.0)
+        @test scene.world.shapes[6] isa Cylinder
+        @test scene.world.shapes[6].Mat == sphere_material
+        @test scene.world.shapes[6].Tr ≈ Translation(-3.0, -3.0, 0.0) ⊙ Scaling(1.0, 1.0, 1.0)
+        @test scene.world.shapes[7] isa Triangle
+        @test scene.world.shapes[7].Mat == sphere_material
+        @test scene.world.shapes[7].A ≈ Point(0.0, 0.0, 0.0)
+        @test scene.world.shapes[7].B ≈ Point(1.0, 0.0, 0.0)
+        @test scene.world.shapes[7].C ≈ Point(0.0, 1.0, 0.0)
+        @test scene.world.shapes[8] isa Parallelogram
+        @test scene.world.shapes[8].Mat == sphere_material
+        @test scene.world.shapes[8].A ≈ Point(0.0, 0.0, 0.0)
+        @test scene.world.shapes[8].B ≈ Point(1.0, 0.0, 0.0)
+        @test scene.world.shapes[8].C ≈ Point(0.0, 1.0, 0.0)
         @test scene.camera isa Perspective
         @test scene.camera.t ≈ Rz(30.0) ⊙ Translation(-4.0, 0.0, 1.0)
         @test scene.camera.a_ratio == 1.0
