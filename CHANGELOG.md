@@ -1,7 +1,9 @@
 # HEAD
+- Implement `PointLight` renderer [#20](https://github.com/stevelonny/jujutracer/pull/30)
+  - Point and spotlight sources
 
 # Version 0.3.0
-- Implement `PathTracer` renderer [#20](https://github.com/stevelonny/jujutracer/pull/18)
+- Implement `PathTracer` renderer [#20](https://github.com/stevelonny/jujutracer/pull/20)
 - Implement Antialiasing
 - Axis-Aligned Boundary Boxes
 - Add new shapes [#18](https://github.com/stevelonny/jujutracer/pull/18) and [#23](https://github.com/stevelonny/jujutracer/pull/23):

@@ -305,3 +305,72 @@ function boxed(CSG::Union{CSGUnion,CSGDifference,CSGIntersection})::Tuple{Point,
     Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
     return (Pmin, Pmax)
 end
+
+"""
+    quick_ray_intersection(S::CSGUnion, ray::Ray)::Bool
+Checks if a ray intersects with the CSG figure without calculating the exact intersection point.
+# Arguments
+- `S::CSGUnion`: The CSG figure to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the CSG figure.
+# Returns
+- `Bool`: `true` if the ray intersects with the CSG figure, `false` otherwise.
+"""
+function quick_ray_intersection(S::CSGUnion, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray) # ray in the un-transformed CSG system
+    return quick_ray_intersection(S.Sh1, inv_ray) || quick_ray_intersection(S.Sh2, inv_ray)
+end
+
+"""
+    quick_ray_intersection(S::CSGDifference, ray::Ray)::Bool
+Checks if a ray intersects with the CSG figure without calculating the exact intersection point.
+# Arguments
+- `S::CSGDifference`: The CSG figure to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the CSG figure.
+# Returns
+- `Bool`: `true` if the ray intersects with the CSG figure, `false` otherwise.
+# Note
+This is not very quick...
+"""
+function quick_ray_intersection(S::CSGDifference, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    
+    if !quick_ray_intersection(S.Sh1, inv_ray)
+        return false
+    end
+    
+    HR1_list = ray_intersection_list(S.Sh1, inv_ray)    
+    if isnothing(HR1_list)
+        return false
+    end
+    for hit in HR1_list
+        if !internal(S.Sh2, hit.world_P)
+            return true
+        end
+    end
+    
+    HR2_list = ray_intersection_list(S.Sh2, inv_ray)
+    if !isnothing(HR2_list)
+        for hit in HR2_list
+            if internal(S.Sh1, hit.world_P)
+                return true
+            end
+        end
+    end
+    
+    return false
+end
+
+"""
+    quick_ray_intersection(S::CSGDifference, ray::Ray)::Bool
+Checks if a ray intersects with the CSG figure without calculating the exact intersection point.
+# Arguments
+- `S::CSGDifference`: The CSG figure to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the CSG figure.
+# Returns
+- `Bool`: `true` if the ray intersects with the CSG figure, `false` otherwise.
+"""
+function quick_ray_intersection(S::CSGIntersection, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    # ray must hit both shapes!
+    return quick_ray_intersection(S.Sh1, inv_ray) && quick_ray_intersection(S.Sh2, inv_ray)
+end

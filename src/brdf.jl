@@ -69,7 +69,7 @@ end
 abstract type AbstractBRDF end
 
 """
-    DiffusiveBRDF(Pigment::AbstractPigment, R::Float64)
+    DiffusiveBRDF(Pigment::AbstractPigment)
 
 Diffusive BRDF with reflective pigment `Pigment`.
 """
@@ -78,7 +78,7 @@ struct DiffusiveBRDF <: AbstractBRDF
 end
 
 """
-    SpecularBRDF(Pigment::AbstractPigment, R::Float64)
+    SpecularBRDF(Pigment::AbstractPigment)
 
 Specular BRDF with reflective pigment `Pigment`.
 """

@@ -1,7 +1,6 @@
 #----------------------------------------------------
 #ImageTracer 
 #----------------------------------------------------
-
 """
     struct ImageTracer
 
@@ -56,18 +55,21 @@ Apply a function to each pixel in the image. Leverage parallel processing for pe
 function (it::ImageTracer)(fun::Function)
     total = length(it.img.img)
     progress = Threads.Atomic{Int}(0)
-    update_interval = max(1, div(total, 200)) # update progress every 0.5% of total
+    update_interval = max(1, div(total, 500)) # update progress every 0.2% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
-    @info "Starting rendering with $(renderer_type) renderer"
-    @info "Anti-Aliasing factor: $(AA)"
-    if fun isa PathTracer
-        @debug "PathTracer parameters" n_rays=fun.n_rays depth=fun.depth russian=fun.russian
+    @info "Starting image tracing with $(Threads.nthreads()) threads.\nStarting rendering with $(renderer_type) renderer\nImage size: $(it.img.w) x $(it.img.h)\nNo antialising applied."
+    if fun isa OnOff
+        @debug "OnOff renderer parameters" bg_color = fun.background_color fg_color = fun.foreground_color
+    elseif fun isa Flat
+        @debug "Flat renderer parameters" bg_color = fun.background_color
+    elseif fun isa PathTracer
+        @debug "PathTracer parameters" bg_color = fun.background_color n_rays = fun.n_rays depth = fun.depth russian = fun.russian
+    elseif fun isa PointLight
+        @debug "PointLight parameters" bg_color = fun.background_color amb_color = fun.ambient_color point_depth = fun.max_depth
     end
-    @info "Starting image tracing with $(Threads.nthreads()) threads."
-    @info "Starting time: $(time())"
     starting_time = time_ns()
     # remember: julia is column-major order
-    @withprogress name="Rendering" begin
+    @withprogress name = "Rendering" begin
         @threads for i in eachindex(IndexCartesian(), it.img.img)
             col_pixel = i[2] - 1
             row_pixel = i[1] - 1
@@ -76,7 +78,7 @@ function (it::ImageTracer)(fun::Function)
             # we could remove boundary checks with @inbounds
             it.img[col_pixel, row_pixel] = color
             count = Threads.atomic_add!(progress, 1)
-            if count % update_interval == 0 && Threads.threadid() == 1
+            if count % update_interval == 0
                 @logprogress count / total
             end
         end # forloop
@@ -98,17 +100,20 @@ Apply a function to each pixel in the image with Anti-Aliasing (AA) leveraging s
 function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
     total = length(it.img.img)
     progress = Threads.Atomic{Int}(0)
-    update_interval = max(1, div(total, 200)) # update progress every 0.5% of total
+    update_interval = max(1, div(total, 500)) # update progress every 0.2% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
-    @info "Starting rendering with $(renderer_type) renderer"
-    @info "Anti-Aliasing factor: $(AA)"
-    if fun isa PathTracer
-        @debug "PathTracer parameters" n_rays=fun.n_rays depth=fun.depth russian=fun.russian
+    @info "Starting image tracing with $(Threads.nthreads()) threads.\nStarting rendering with $(renderer_type) renderer\nImage size: $(it.img.w) x $(it.img.h)\nAnti-Aliasing factor: $(AA)"
+    if fun isa OnOff
+        @debug "OnOff renderer parameters" bg_color = fun.background_color fg_color = fun.foreground_color
+    elseif fun isa Flat
+        @debug "Flat renderer parameters" bg_color = fun.background_color
+    elseif fun isa PathTracer
+        @debug "PathTracer parameters" bg_color = fun.background_color n_rays = fun.n_rays depth = fun.depth russian = fun.russian
+    elseif fun isa PointLight
+        @debug "PointLight parameters" bg_color = fun.background_color amb_color = fun.ambient_color point_depth = fun.max_depth
     end
-    @info "Starting image tracing with $(Threads.nthreads()) threads."
-    @info "Starting time: $(time())"
     starting_time = time_ns()
-    @withprogress name="Rendering" begin
+    @withprogress name = "Rendering" begin
         @threads for i in eachindex(IndexCartesian(), it.img.img)
             col_pixel = i[2] - 1
             row_pixel = i[1] - 1
@@ -124,7 +129,7 @@ function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
             end
             it.img[col_pixel, row_pixel] = color / (AA^2)
             count = Threads.atomic_add!(progress, 1)
-            if count % update_interval == 0 && Threads.threadid() == 1
+            if count % update_interval == 0
                 @logprogress count / total
             end
         end # forloop

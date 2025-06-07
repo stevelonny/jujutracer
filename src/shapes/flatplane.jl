@@ -91,3 +91,25 @@ function ray_intersection(pl::Plane, ray::Ray)
         shape=pl
     )
 end
+
+"""
+    quick_ray_intersection(S::Plane, ray::Ray)::Bool
+Checks if a ray intersects with the plane without calculating the exact intersection point.
+# Arguments
+- `S::Plane`: The plane to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the plane.
+# Returns
+- `Bool`: `true` if the ray intersects with the plane, `false` otherwise.
+"""
+function quick_ray_intersection(pl::Plane, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(pl.Tr)(ray)
+    Oz = inv_ray.origin.z
+    d = inv_ray.dir
+
+    t = -Oz / d.z
+    if t > inv_ray.tmin && t < inv_ray.tmax
+        return true
+    else
+        return false
+    end
+end
