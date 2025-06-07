@@ -111,7 +111,7 @@ function main()
     #= elseif renderer == "point"
             render = Point(world, gray, pcg, depth) =#
     else
-        throw(ArgumentError("Invalid renderer type. Use 'path_tracer', 'flat', 'on_off', or 'point'."))
+        throw(ArgumentError("Invalid renderer type. Use 'path_tracer', 'flat', 'on_off'"))
     end
 
     hdr = hdrimg(width, height)
