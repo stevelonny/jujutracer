@@ -1206,40 +1206,27 @@ end
         @test jujutracer._parse_transformation(stream, dict) ≈ Rz(1.5)
         @test jujutracer._parse_transformation(stream, dict) ≈ Transformation() ⊙ Translation(1.0, 300.0, 3.0) ⊙ Scaling(2.0, 3.0, 4.0) ⊙ Rx(0.5) ⊙ Ry(1.0) ⊙ Rz(1.5)
 
-        # parse_sphere
-        input = IOBuffer("""
-        (sky_material, identity)
-        (sky_material, translation([1.0, 2.0, pippo]))
-        (sky_material, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]))
-        """)
-        stream = InputStream(input)
-        sphere1 = jujutracer._parse_sphere(stream, dict, dict_mat)
-        @test sphere1.Tr ≈ Transformation()
-        @test sphere1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-        sphere2 = jujutracer._parse_sphere(stream, dict, dict_mat)
-        @test sphere2.Tr ≈ Translation(1.0, 2.0, 500.0)
-        @test sphere2.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-        sphere3 = jujutracer._parse_sphere(stream, dict, dict_mat)
-        @test sphere3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
-        @test sphere3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+        # parse_shapes
 
-        # parse_plane
-        input = IOBuffer("""
-        (sky_material, identity)
-        (sky_material, translation([1.0, 2.0, pippo]))
-        (sky_material, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]))
-        """)
-        stream = InputStream(input)
-        plane1 = jujutracer._parse_plane(stream, dict, dict_mat)
-        @test plane1.Tr ≈ Transformation()
-        @test plane1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-        plane2 = jujutracer._parse_plane(stream, dict, dict_mat)
-        @test plane2.Tr ≈ Translation(1.0, 2.0, 500.0)
-        @test plane2.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-        plane3 = jujutracer._parse_plane(stream, dict, dict_mat)
-        @test plane3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
-        @test plane3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-
+        for SHAPE in jujutracer.SHAPES
+            shape_constructor = jujutracer.shapes_constructors[SHAPE]
+            input = IOBuffer("""
+            (sky_material, identity)
+            (sky_material, translation([1.0, 2.0, pippo]))
+            (sky_material, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]))
+            """)
+            stream = InputStream(input)
+            shape1 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test shape1.Tr ≈ Transformation()
+            @test shape1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+            shape2 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test shape2.Tr ≈ Translation(1.0, 2.0, 500.0)
+            @test shape2.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+            shape3 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test shape3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
+            @test shape3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+        end
+        
         # parse_camera
         input = IOBuffer("""
         (perspective, identity, 1.0, 2.0)

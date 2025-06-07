@@ -1,14 +1,32 @@
+"""
+    PIGMENTS
+
+A vector of all supported pigment types in the scene description language.
+Used for validating pigment keywords in the parser.
+"""
 const PIGMENTS = [
     UNIFORM,
     CHECKERED,
     IMAGE
 ]
 
+"""
+    BRDFS
+
+A vector of all supported BRDF (Bidirectional Reflectance Distribution Function) types
+in the scene description language. Used for validating BRDF keywords in the parser.
+"""
 const BRDFS = [
     DIFFUSE,
     SPECULAR
 ]
 
+"""
+    TRANSFORMATIONS
+
+A vector of all supported transformation types in the scene description language.
+Used for validating transformation keywords in the parser.
+"""
 const TRANSFORMATIONS = [
     IDENTITY,
     TRANSLATION,
@@ -18,10 +36,56 @@ const TRANSFORMATIONS = [
     SCALING
 ]
 
+"""
+    CAMERAS
+
+A vector of all supported camera types in the scene description language.
+Used for validating camera keywords in the parser.
+"""
 const CAMERAS = [
     ORTHOGONAL,
     PERSPECTIVE
 ]
+
+"""
+    SHAPES
+
+A vector of all supported shape types in the scene description language.
+Used for validating shape keywords in the parser.
+"""
+const SHAPES = [
+    SPHERE,
+    BOX,
+    CYLINDER,
+    CONE,
+    PLANE,
+    CIRCLE,
+    RECTANGLE
+]
+
+"""
+    shapes_constructors
+
+A dictionary mapping shape keywords to their respective constructor types.
+Used to instantiate the appropriate shape object when parsing a scene description.
+"""
+const shapes_constructors = Dict(
+    SPHERE => Sphere(),
+    BOX => Box(),
+    CYLINDER => Cylinder(),
+    CONE => Cone(),
+    PLANE => Plane(),
+    CIRCLE => Circle(),
+    RECTANGLE => Rectangle()
+)
+
+"""
+    typeshapes
+
+A Union type of all shape types supported in the scene description language.
+Used for type annotations and dispatch to ensure proper shape handling.
+"""
+const typeshapes = Union{Sphere, Box, Cylinder, Cone, Plane, Circle, Rectangle}
 
 #-----------------------------------------------------------------------
 # Scene
@@ -376,19 +440,28 @@ function _parse_transformation(s::InputStream, dictionary::Dict{String,Float64})
     return result
 end
 
+
 """
-    _parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
-Parses a sphere from the input stream. The expected format is:
-- `sphere(<material>, <transformation>)`
-`material` must be already defined in `dict_material`.
+    _parse_shape(shape::T, s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material}) where {T <: typeshapes}
+Parses a shape from the input stream. The expected format is:
+- `sphere(<material_name>, <transformation>)`
+- `box(<material_name>, <transformation>)`
+- `cylinder(<material_name>, <transformation>)`
+- `cone(<material_name>, <transformation>)`
+- `plane(<material_name>, <transformation>)`
+- `circle(<material_name>, <transformation>)`
+- `rectangle(<material_name>, <transformation>)`
 # Arguments
+- `shape::T`: The type of shape to parse, which must be one of the defined shape types. See [`typeshapes`](@ref), [`shapes_constructors`](@ref) and [`SHAPES`](@ref).
 - `s::InputStream`: The input stream to read from.
 - `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
 - `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
 # Returns
-- `Sphere`: A sphere object with the parsed material and transformation.
+- `T`: An instance of the specified shape type with the parsed transformation and material.
+# Throws
+- `GrammarError`: If the input does not match the expected format or if a material is not defined.
 """
-function _parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+function _parse_shape(shape::T, s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material}) where {T <: typeshapes}
     _expect_symbol(s, '(')
 
     material_name = _expect_identifier(s)
@@ -399,38 +472,10 @@ function _parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_ma
     _expect_symbol(s, ',')
     transformation = _parse_transformation(s, dict_float)
     _expect_symbol(s, ')')
-
-    return Sphere(transformation, dict_material[material_name])
+    return T(transformation, dict_material[material_name])
 end
 
-
-"""
-    _parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
-Parses a plane from the input stream. The expected format is:
-- `plane(<material>, <transformation>)`
-`material` must be already defined in `dict_material`.
-# Arguments
-- `s::InputStream`: The input stream to read from.
-- `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
-- `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
-# Returns
-- `Plane`: A plane object with the parsed material and transformation.
-"""
-function _parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
-    _expect_symbol(s, '(')
-
-    material_name = _expect_identifier(s)
-    if !(haskey(dict_material, material_name))
-        throw(GrammarError(s.location, "material '$material_name' not defined"))
-    end
-
-    _expect_symbol(s, ',')
-    transformation = _parse_transformation(s, dict_float)
-    _expect_symbol(s, ')')
-
-    return Plane(transformation, dict_material[material_name])
-
-end
+#parse_triangle
 
 """
     _parse_camera(s::InputStream, dict_float::Dict{String,Float64})
@@ -509,12 +554,10 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
         elseif token.keyword == MATERIAL
             material_name, material = _parse_material(s, scene.float_variables)
             scene.materials[material_name] = material
-        elseif token.keyword == SPHERE
-            sphere = _parse_sphere(s, scene.float_variables, scene.materials)
-            push!(shapes, sphere)
-        elseif token.keyword == PLANE
-            plane = _parse_plane(s, scene.float_variables, scene.materials)
-            push!(shapes, plane)
+        elseif haskey(shapes_constructors, token.keyword)
+            shape_constructor = shapes_constructors[token.keyword]
+            shape = _parse_shape(shape_constructor, s, scene.float_variables, scene.materials)
+            push!(shapes, shape)
         elseif token.keyword == CAMERA
             if !isnothing(scene.camera)
                 throw(GrammarError(token.location, "camera already defined"))

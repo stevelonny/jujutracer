@@ -65,7 +65,15 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missi
     ORTHOGONAL
     PERSPECTIVE
     SPHERE
+    BOX
+    CYLINDER
+    CONE
+    TRIANGLE
+    # MESH
+    # PARALLELOGRAM
     PLANE
+    CIRCLE
+    RECTANGLE
 end
 
 const KEYWORDS = Dict(
@@ -86,7 +94,15 @@ const KEYWORDS = Dict(
     "orthogonal" => ORTHOGONAL,
     "perspective" => PERSPECTIVE,
     "sphere" => SPHERE,
-    "plane" => PLANE
+    "box" => BOX,
+    "cylinder" => CYLINDER,
+    "cone" => CONE,
+    "triangle" => TRIANGLE,
+    # "mesh" => MESH,
+    # "parallelogram" => PARALLELOGRAM,
+    "plane" => PLANE,
+    "circle" => CIRCLE,
+    "rectangle" => RECTANGLE
 )
 
 #---------------------------------------------------------
