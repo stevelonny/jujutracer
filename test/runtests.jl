@@ -1495,6 +1495,31 @@ end
         @test camera6.t ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
         @test camera6.a_ratio == 1.0
 
+        # parse_lightsource
+        input = IOBuffer("""
+        ([1.0, 2.0, pippo], <5.0, 500.0, 300.0>, 100.0)
+        """)
+        stream = InputStream(input)
+        light1 = jujutracer._parse_lightsource(stream, dict)
+        @test light1.position ≈ Point(1.0, 2.0, 500.0)
+        @test light1.emission == RGB(5.0, 500.0, 300.0)
+        @test light1.scale == 100.0
+
+        # parse_spotlight
+        input = IOBuffer("""
+        ([1.0, 2.0, pippo], [1.0, 0.0, pluto], <5.0, 500.0, 300.0>, 100.0, 0.8, 0.85, 0.9)
+        """)
+        stream = InputStream(input)
+        spot1 = jujutracer._parse_spotlight(stream, dict)
+        @test spot1.position ≈ Point(1.0, 2.0, 500.0)
+        @test spot1.direction ≈ Vec(1.0, 0.0, 300.0)
+        @test spot1.emission == RGB(5.0, 500.0, 300.0)
+        @test spot1.scale == 100.0
+        @test spot1.cos_total == 0.8
+        @test spot1.cos_falloff == 0.85
+        @test spot1.cos_start == 0.9
+
+
     end
     @testset "parse_world" begin
         input = IOBuffer("""
@@ -1532,6 +1557,10 @@ end
         triangle(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
 
         parallelogram(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
+
+        spotlight([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 0.8, 0.85, 0.9)
+
+        pointlight([2, 2, 2], <1, 1, 1>, 100)
 
         camera(perspective, rotation_z(30) * translation([-4, 0, 1]), 1.0, 2.0)
         """)
@@ -1593,6 +1622,19 @@ end
         @test scene.world.shapes[8].A ≈ Point(0.0, 0.0, 0.0)
         @test scene.world.shapes[8].B ≈ Point(1.0, 0.0, 0.0)
         @test scene.world.shapes[8].C ≈ Point(0.0, 1.0, 0.0)
+        @test length(scene.world.lights) == 2
+        @test scene.world.lights[1] isa SpotLight
+        @test scene.world.lights[1].position ≈ Point(0.0, 0.0, 0.0)
+        @test scene.world.lights[1].direction ≈ Vec(1.0, 0.0, 0.0)
+        @test scene.world.lights[1].emission == RGB(1.0, 1.0, 1.0)
+        @test scene.world.lights[1].scale == 100.0
+        @test scene.world.lights[1].cos_total == 0.8
+        @test scene.world.lights[1].cos_falloff == 0.85
+        @test scene.world.lights[1].cos_start == 0.9
+        @test scene.world.lights[2] isa LightSource
+        @test scene.world.lights[2].position ≈ Point(2.0, 2.0, 2.0)
+        @test scene.world.lights[2].emission == RGB(1.0, 1.0, 1.0)
+        @test scene.world.lights[2].scale == 100.0
         @test scene.camera isa Perspective
         @test scene.camera.t ≈ Rz(30.0) ⊙ Translation(-4.0, 0.0, 1.0)
         @test scene.camera.a_ratio == 1.0

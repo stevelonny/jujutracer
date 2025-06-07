@@ -27,9 +27,9 @@ function parse_cli()
         "--renderer", "-r"
         dest_name = "renderer"
         arg_type = String
-        range_tester = s -> s in ["path_tracer", "flat", "on_off"] #= , "point" =#
+        range_tester = s -> s in ["path_tracer", "flat", "on_off", "point"]
         default = "path_tracer"
-        help = "Renderer to use (path_tracer, flat, on_off)"
+        help = "Renderer to use (path_tracer, flat, on_off or point)"
         "--antialiasing", "-a"
         default = 2
         help = "Antialiasing level (default: 2)"
@@ -99,6 +99,7 @@ function main()
     camera = scene.camera
 
     gray = RGB(0.2, 0.2, 0.2)
+    ambient = RGB(0.1, 0.1, 0.1)
     render = nothing
     pcg = PCG()
 
@@ -108,10 +109,10 @@ function main()
         render = PathTracer(world, gray, pcg, n_rays, depth, russian)
     elseif renderer == "on_off"
         render = OnOff(world)
-    #= elseif renderer == "point"
-            render = Point(world, gray, pcg, depth) =#
+    elseif renderer == "point"
+        render = PointLight(world, gray, ambient, depth)
     else
-        throw(ArgumentError("Invalid renderer type. Use 'path_tracer', 'flat', 'on_off'"))
+        throw(ArgumentError("Invalid renderer type. Use 'path_tracer', 'flat', 'on_off', or 'point'."))
     end
 
     hdr = hdrimg(width, height)

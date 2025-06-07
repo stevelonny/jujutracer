@@ -64,6 +64,8 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missi
     CAMERA
     ORTHOGONAL
     PERSPECTIVE
+    POINTLIGHT
+    SPOTLIGHT
     SPHERE
     BOX
     CYLINDER
@@ -93,6 +95,8 @@ const KEYWORDS = Dict(
     "camera" => CAMERA,
     "orthogonal" => ORTHOGONAL,
     "perspective" => PERSPECTIVE,
+    "pointlight" => POINTLIGHT,
+    "spotlight" => SPOTLIGHT,
     "sphere" => SPHERE,
     "box" => BOX,
     "cylinder" => CYLINDER,

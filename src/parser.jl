@@ -569,6 +569,60 @@ function _parse_camera(s::InputStream, dict_float::Dict{String,Float64})
 end
 
 """
+    _parse_pointlight(s::InputStream, dict_float::Dict{String,Float64})
+Parses a point light source from the input stream. The expected format is:
+- `pointlight(<position>, <color>, <scale>)`
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
+# Returns
+- `LightSource`: A point light source object with the parsed position, color, and scale.
+"""
+function _parse_lightsource(s::InputStream, dict_float::Dict{String,Float64})
+    _expect_symbol(s, '(')
+
+    position = _parse_vector(s, dict_float)
+    _expect_symbol(s, ',')
+    color = _parse_color(s, dict_float)
+    _expect_symbol(s, ',')
+    scale = _expect_number(s, dict_float)
+    _expect_symbol(s, ')')
+
+    return LightSource(Point(position), color, scale)
+end
+
+"""
+    _parse_spotlight(s::InputStream, dict_float::Dict{String,Float64})
+Parses a spotlight source from the input stream. The expected format is:
+- `spotlight(<position>, <direction>, <color>, <scale>, <cos_total>, <cos_falloff>, <cos_start>)`
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
+# Returns
+- `SpotLight`: A spotlight object with the parsed position, direction, color, scale, and cosine values.
+"""
+function _parse_spotlight(s::InputStream, dict_float::Dict{String,Float64})
+    _expect_symbol(s, '(')
+
+    position = _parse_vector(s, dict_float)
+    _expect_symbol(s, ',')
+    direction = _parse_vector(s, dict_float)
+    _expect_symbol(s, ',')
+    color = _parse_color(s, dict_float)
+    _expect_symbol(s, ',')
+    scale = _expect_number(s, dict_float)
+    _expect_symbol(s, ',')
+    cos_total = _expect_number(s, dict_float)
+    _expect_symbol(s, ',')
+    cos_falloff = _expect_number(s, dict_float)
+    _expect_symbol(s, ',')
+    cos_start = _expect_number(s, dict_float)
+    _expect_symbol(s, ')')
+
+    return SpotLight(Point(position), direction, color, scale, cos_total, cos_falloff, cos_start)
+end
+
+"""
     parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String,Float64}())
 Parses a scene from the input stream.
 # Arguments
@@ -583,6 +637,7 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
     scene.overridden_variables = Set(keys(variables))
 
     shapes = Vector{AbstractShape}()
+    lights = Vector{AbstractLight}()
 
     while true
         token = _read_token(s)
@@ -621,6 +676,12 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
         elseif token.keyword == PARALLELOGRAM
             parallelogram = _parse_parallelogram(s, scene.float_variables, scene.materials)
             push!(shapes, parallelogram)
+        elseif token.keyword == POINTLIGHT
+            light_source = _parse_lightsource(s, scene.float_variables)
+            push!(lights, light_source)
+        elseif token.keyword == SPOTLIGHT
+            spot_light = _parse_spotlight(s, scene.float_variables)
+            push!(lights, spot_light)
         elseif token.keyword == CAMERA
             if !isnothing(scene.camera)
                 throw(GrammarError(token.location, "camera already defined"))
@@ -640,6 +701,6 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
     if isempty(shapes)
         throw(GrammarError(s.location, "no shapes defined"))
     end
-    scene.world = World(shapes)
+    scene.world = World(shapes, lights)
     return scene
 end
