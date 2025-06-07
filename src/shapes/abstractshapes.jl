@@ -16,3 +16,12 @@ Abstract type for solid shapes. Considered water-tight. Can be used to create CS
 Made concrete by [`Sphere`](@ref), [`Box`](@ref), [`Cylinder`](@ref), [`Cone`](@ref), [`CSGUnion`](@ref), [`CSGDifference`](@ref), and [`CSGIntersection`](@ref).
 """
 abstract type AbstractSolid <: AbstractShape end
+
+#---------------------------------------------------------
+# Lights
+#---------------------------------------------------------
+"""
+    abstract type AbstractLight
+Abstract type for light sources. Made concrete by [`LightSource`](@ref) and [`SpotLight`](@ref).
+"""
+abstract type AbstractLight end

@@ -10,15 +10,3 @@ Convert a `PFM` file into a LDR format such as `.png` or `.jpg`. Need ``a`` and 
 julia main.jl <pfm_file> <a> <gamma> <output_file>
 ```
 
-## Module Index
-
-```@index
-Modules = [jujutracer]
-Order   = [:constant, :type, :function, :macro]
-```
-## Detailed API
-
-```@autodocs
-Modules = [jujutracer]
-Order   = [:constant, :type, :function, :macro]
-```

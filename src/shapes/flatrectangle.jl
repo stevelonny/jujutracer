@@ -122,3 +122,26 @@ function boxed(S::Rectangle)::Tuple{Point,Point}
     Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
     return (Pmin, Pmax)
 end
+
+
+"""
+    quick_ray_intersection(S::Rectangle, ray::Ray)::Bool
+Checks if a ray intersects with the rectangle without calculating the exact intersection point.
+# Arguments
+- `S::Rectangle`: The triangle to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the triangle.
+# Returns
+- `Bool`: `true` if the ray intersects with the triangle, `false` otherwise.
+"""
+function quick_ray_intersection(S::Rectangle, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    O = inv_ray.origin
+    d = inv_ray.dir
+
+    t = -O.z / d.z
+    if t <= inv_ray.tmin || t >= inv_ray.tmax || abs(inv_ray(t).x) > 0.5 || abs(inv_ray(t).y) > 0.5
+        return false
+    else
+        return true
+    end
+end

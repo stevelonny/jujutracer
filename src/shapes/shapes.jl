@@ -1,5 +1,5 @@
 include("abstractshapes.jl")
-export AbstractShape, AbstractSolid
+export AbstractShape, AbstractSolid, AbstractLight
 
 include("flatcircle.jl")
 export Circle
@@ -37,7 +37,10 @@ export World
 include("hitrecord.jl")
 export SurfacePoint, HitRecord
 
-export ray_intersection, ray_intersection_list, internal, Eval, boxed
+include("light.jl")
+export LightSource, SpotLight
+
+export ray_intersection, ray_intersection_list, internal, boxed, quick_ray_intersection, is_point_visible
 
 import Base:
     ≈

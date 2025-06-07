@@ -45,7 +45,7 @@ export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBR
 include("shapes/shapes.jl")
 
 include("renderer.jl")
-export OnOff, Flat, PathTracer
+export OnOff, Flat, PathTracer, PointLight
 
 include("lexer.jl")
 export SourceLocation, InputStream, InputStreamError, open_InputStream, _update_pos!, AbstractToken, IdentifierToken, StringToken, NumberToken, SymbolToken, KeywordToken, StopToken, KeywordEnum

@@ -3,8 +3,10 @@
 # jujutracer
 ![Julia](https://img.shields.io/badge/-Julia-9558B2?style=for-the-badge&logo=julia&logoColor=white)
 [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENCE.md)
-[![Wiki](https://img.shields.io/badge/Docs-Dev?style=for-the-badge&color=blue&link=https%3A%2F%2Fstevelonny.github.io%2Fjujutracer%2Fdev)](https://stevelonny.github.io/jujutracer/dev/)
-[![Test](https://img.shields.io/github/actions/workflow/status/stevelonny/jujutracer/Test.yml?style=for-the-badge&label=Test&link=https%3A%2F%2Fgithub.com%2Fstevelonny%2Fjujutracer%2Factions%2Fworkflows%2FTest.yml)](https://github.com/stevelonny/jujutracer/actions/workflows/Test.yml)
+[![Docs stable](https://img.shields.io/badge/docs-stable-blue?style=for-the-badge&labelColor=grey&color=blue)](https://stevelonny.github.io/jujutracer/stable/)
+[![Docs dev](https://img.shields.io/badge/docs-dev-blue?style=for-the-badge&labelColor=grey&color=blue)](https://stevelonny.github.io/jujutracer/dev/)
+[![Test](https://img.shields.io/github/actions/workflow/status/stevelonny/jujutracer/TestOnMain.yml?branch=main&style=for-the-badge&label=test
+)](https://github.com/stevelonny/jujutracer/actions/workflows/TestOnMain.yml)
 
 <!-- ![GitHub branch check runs](https://img.shields.io/github/check-runs/stevelonny/jujutracer/main?style=for-the-badge) -->
 
@@ -63,19 +65,31 @@ To showcase all the newly added shapes by [#18](https://github.com/stevelonny/ju
 <div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
 
 <div style="text-align: center; margin: 10px;">
-<img src="all_flat_800x450_2aa.png" alt="demoAll Flat" width="400"/>
+<img src="allFlat.png" alt="demoAll Flat" width="300"/>
 <br/>
 <strong>Flat renderer</strong>
 <br/>
-<em>800x450, AA-factor = 2</em>
+<em>800x450, AA=4</em>
 </div>
 
 <div style="text-align: center; margin: 10px;">
-<img src="all_path_800x450_3rays_3depth_2rus_2aa.png" alt="demoAll Path" width="400"/>
+<img src="allPath.png" alt="demoAll Path" width="300"/>
 <br/>
 <strong>Path Tracer</strong>
 <br/>
-<em>800x450, AA-factor = 2, 2 rays, 3 depth, 2 russian</em>
+<em>800x450, AA=2, 3 rays, 5 depth, 3 russian</em>
+</div>
+
+</div>
+
+<div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+
+<div style="text-align: center; margin: 10px;">
+<img src="allPoint.png" alt="demoAll Point" width="300"/>
+<br/>
+<strong>Point-Light Tracer</strong>
+<br/>
+<em>1280x720, AA=4, depth=1000</em>
 </div>
 
 </div>

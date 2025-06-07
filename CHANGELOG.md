@@ -1,6 +1,10 @@
 # HEAD
 - Implement SceneLang interpreter [#28](https://github.com/stevelonny/jujutracer/pull/28)
 
+# Version 0.4.0
+- Implement `PointLight` renderer [#20](https://github.com/stevelonny/jujutracer/pull/30)
+  - Point and spotlight sources
+
 # Version 0.3.0
 - Implement `PathTracer` renderer [#20](https://github.com/stevelonny/jujutracer/pull/20)
 - Implement Antialiasing

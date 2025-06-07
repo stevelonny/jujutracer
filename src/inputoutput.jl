@@ -47,11 +47,11 @@ function save_ldrimage(img_matrix::Matrix, filename::String)
     end
     # Chek if the file already exists
     if isfile(filename)
-        @warn("File already exists. Overwriting: $(abspath(filename))")
+        @warn("File already exists. Overwriting: `$(abspath(filename))`")
     end
     # Save the image using FileIO
     save(filename, img_matrix)
-    @info("Image saved successfully to $(abspath(filename))")
+    @info("Image saved successfully to `$(abspath(filename))`")
     # Return the path to the saved file
     return filename
 end
@@ -228,7 +228,7 @@ function read_pfm_image(filename::String)
         throw(InvalidPfmFileFormat("Invalid file extension. Only .pfm is supported."))
     end
     io = IOBuffer()
-    @info("Reading PFM image from file: $(abspath(filename))")
+    @info("Reading PFM image from file: `$(abspath(filename))`")
     open(filename, "r") do file
         write(io, file)
     end
@@ -293,13 +293,13 @@ function write_pfm_image(img::hdrimg, filename::String, endianness::Bool=true)
     seekstart(io)  # Reset the buffer position to the beginning
     # Check if the file already exists
     if isfile(filename)
-        @warn("File already exists. Overwriting: $(abspath(filename))")
+        @warn("File already exists. Overwriting: `$(abspath(filename))`")
     end
     open(filename, "w") do file
         write(file, io)
     end
     # No need to close the IOBuffer as it does not hold external resources
-    @info("PFM image saved successfully to $(abspath(filename)) with endianness: $(endianness ? "little-endian" : "big-endian")")
+    @info("PFM image saved successfully to `$(abspath(filename))` with endianness: $(endianness ? "little-endian" : "big-endian")")
 end
 
 """
