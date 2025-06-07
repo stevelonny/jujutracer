@@ -85,7 +85,7 @@ const shapes_constructors = Dict(
 A Union type of all shape types supported in the scene description language.
 Used for type annotations and dispatch to ensure proper shape handling.
 """
-const typeshapes = Union{Sphere, Box, Cylinder, Cone, Plane, Circle, Rectangle}
+const typeshapes = Union{Sphere,Box,Cylinder,Cone,Plane,Circle,Rectangle}
 
 #-----------------------------------------------------------------------
 # Scene
@@ -461,7 +461,7 @@ Parses a shape from the input stream. The expected format is:
 # Throws
 - `GrammarError`: If the input does not match the expected format or if a material is not defined.
 """
-function _parse_shape(shape::T, s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material}) where {T <: typeshapes}
+function _parse_shape(shape::T, s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material}) where {T<:typeshapes}
     _expect_symbol(s, '(')
 
     material_name = _expect_identifier(s)
@@ -475,7 +475,64 @@ function _parse_shape(shape::T, s::InputStream, dict_float::Dict{String,Float64}
     return T(transformation, dict_material[material_name])
 end
 
-#parse_triangle
+"""
+    _parse_triangle(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+Parses a triangle from the input stream. The expected format is:
+- `triangle(<material_name>, <v1>, <v2>, <v3>)`
+# Arguments
+- `s::InputStream`: The input stream to read from.
+"""
+function _parse_triangle(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    _expect_symbol(s, '(')
+
+    material_name = _expect_identifier(s)
+    if !(haskey(dict_material, material_name))
+        throw(GrammarError(s.location, "material '$material_name' not defined"))
+    end
+
+    _expect_symbol(s, ',')
+    v1 = _parse_vector(s, dict_float)
+    _expect_symbol(s, ',')
+    v2 = _parse_vector(s, dict_float)
+    _expect_symbol(s, ',')
+    v3 = _parse_vector(s, dict_float)
+    _expect_symbol(s, ')')
+
+    return Triangle(Point(v1), Point(v2), Point(v3), dict_material[material_name])
+end
+
+"""
+    _parse_parallelogram(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+Parses a parallelogram from the input stream. The expected format is:
+- `parallelogram(<material_name>, <v1>, <v2>, <v3>)`
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
+- `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
+# Returns
+- `Parallelogram`: A parallelogram object with the parsed vertices and material.
+# Throws
+- `GrammarError`: If the input does not match the expected format or if a material is not defined.
+"""
+function _parse_parallelogram(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    _expect_symbol(s, '(')
+
+    material_name = _expect_identifier(s)
+    if !(haskey(dict_material, material_name))
+        throw(GrammarError(s.location, "material '$material_name' not defined"))
+    end
+
+    _expect_symbol(s, ',')
+    v1 = _parse_vector(s, dict_float)
+    _expect_symbol(s, ',')
+    v2 = _parse_vector(s, dict_float)
+    _expect_symbol(s, ',')
+    v3 = _parse_vector(s, dict_float)
+    _expect_symbol(s, ')')
+
+    return Parallelogram(Point(v1), Point(v2), Point(v3), dict_material[material_name])
+end
+
 
 """
     _parse_camera(s::InputStream, dict_float::Dict{String,Float64})

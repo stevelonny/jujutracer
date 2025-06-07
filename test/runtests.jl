@@ -1226,6 +1226,28 @@ end
             @test shape3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
             @test shape3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
         end
+
+        #parse_triangle
+        input = IOBuffer("""
+        (sky_material, [0.0, 0.0, 0.0], [1.0, pippo, 0.0], [0.0, 1.0, pluto])
+        """)
+        stream = InputStream(input)
+        triangle1 = jujutracer._parse_triangle(stream, dict, dict_mat)
+        @test triangle1.A ≈ Point(0.0, 0.0, 0.0)
+        @test triangle1.B ≈ Point(1.0, 500.0, 0.0)
+        @test triangle1.C ≈ Point(0.0, 1.0, 300.0)
+        @test triangle1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+    
+        #parse_parallelogram
+        input = IOBuffer("""
+        (sky_material, [0.0, 0.0, 0.0], [1.0, pippo, 0.0], [0.0, 1.0, pluto])
+        """)
+        stream = InputStream(input)
+        parallelogram1 = jujutracer._parse_parallelogram(stream, dict, dict_mat)
+        @test parallelogram1.A ≈ Point(0.0, 0.0, 0.0)
+        @test parallelogram1.B ≈ Point(1.0, 500.0, 0.0)
+        @test parallelogram1.C ≈ Point(0.0, 1.0, 300.0)
+        @test parallelogram1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
         
         # parse_camera
         input = IOBuffer("""

@@ -68,12 +68,12 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missi
     BOX
     CYLINDER
     CONE
-    TRIANGLE
     # MESH
-    # PARALLELOGRAM
     PLANE
     CIRCLE
     RECTANGLE
+    TRIANGLE
+    PARALLELOGRAM
 end
 
 const KEYWORDS = Dict(
@@ -97,12 +97,12 @@ const KEYWORDS = Dict(
     "box" => BOX,
     "cylinder" => CYLINDER,
     "cone" => CONE,
-    "triangle" => TRIANGLE,
     # "mesh" => MESH,
-    # "parallelogram" => PARALLELOGRAM,
     "plane" => PLANE,
     "circle" => CIRCLE,
-    "rectangle" => RECTANGLE
+    "rectangle" => RECTANGLE,
+    "triangle" => TRIANGLE,
+    "parallelogram" => PARALLELOGRAM,
 )
 
 #---------------------------------------------------------
