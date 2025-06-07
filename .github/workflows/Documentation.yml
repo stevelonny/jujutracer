@@ -7,7 +7,7 @@ on:
       - main
     tags: '*'
     paths:
-      - 'docs/src/**'
+      - 'docs/**'
       - 'src/**'
       - 'main.jl'
 
