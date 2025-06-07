@@ -1,21 +1,21 @@
-push!(LOAD_PATH,"../src/")
+push!(LOAD_PATH, "../src/")
 using Documenter
-using jujutracer
+using jujutracer  # Replace with your actual package name
 
 makedocs(
     sitename = "jujutracer",
-    format = Documenter.HTML(),
+    format = Documenter.HTML(
+        prettyurls = get(ENV, "CI", nothing) == "true"
+    ),
     modules = [jujutracer],
     pages = [
         "Home" => "index.md",
+        "Detailed API" => "detail.md"
+        # Add your other pages here
     ]
 )
 
-# Documenter can also automatically deploy documentation to gh-pages.
-# See "Hosting Documentation" and deploydocs() in the Documenter manual
-# for more information.
 deploydocs(
     repo = "github.com/stevelonny/jujutracer.git",
-    branch = "gh-pages",
-    devbranch = "main"
+    versions = ["stable" => "v^", "v#.#", "dev" => "main"]
 )
