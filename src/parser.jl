@@ -26,6 +26,19 @@ const CAMERAS = [
 #-----------------------------------------------------------------------
 # Scene
 #------------------------------------------------------------------------
+"""
+    mutable struct Scene
+
+Represents a complete scene to be rendered, containing materials, shapes, camera, and variables.
+# Fields
+- `materials::Dict{String,Material}`: A dictionary mapping material names to their definitions.
+- `world::Union{World,Nothing}`: The world object containing all shapes to be rendered, or `nothing` if not set.
+- `camera::Union{AbstractCamera,Nothing}`: The camera used to view the scene, or `nothing` if not set.
+- `float_variables::Dict{String,Float64}`: A dictionary mapping variable names to their floating-point values.
+- `overridden_variables::Set{String}`: A set of variable names that have been overridden and should not be redefined.
+# Constructors
+- `Scene(; materials=Dict{String,Material}(), world=nothing, camera=nothing, float_variables=Dict{String,Float64}(), overridden_variables=Set{String}())`: Creates a new `Scene` with the specified parameters.
+"""
 mutable struct Scene
     materials::Dict{String,Material}
     world::Union{World,Nothing}
@@ -48,12 +61,19 @@ end
 # Expected functions
 #------------------------------------------------------------------------
 """
-    expected_symbol(s::InputStream, symbol::Char)
+    expect_symbol(s::InputStream, symbol::Char)
 
 Checks if the next token in the input stream matches the expected symbol.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `symbol::Char`: The expected symbol character.
+# Returns
+- `Char`: The symbol character that was read.
+# Throws
+- `GrammarError`: If the next token is not a symbol or if it doesn't match the expected symbol.
 """
-function expected_symbol(s::InputStream, symbol::Char)
-    token = read_token(s)
+function _expect_symbol(s::InputStream, symbol::Char)
+    token = _read_token(s)
     if !(token isa SymbolToken) || token.symbol != symbol
         throw(GrammarError(token.location, "got $token instead of $symbol"))
     end
@@ -62,12 +82,19 @@ function expected_symbol(s::InputStream, symbol::Char)
 end
 
 """
-    expected_keywords(s::InputStream, keywords::Vector{KeywordEnum})
+    expect_keywords(s::InputStream, keywords::Vector{KeywordEnum})
 
 Checks if the next token in the input stream matches one of the expected keywords and returns it.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `keywords::Vector{KeywordEnum}`: A list of expected keywords.
+# Returns
+- `KeywordEnum`: The keyword that was read.
+# Throws
+- `GrammarError`: If the next token is not a keyword or if it doesn't match any of the expected keywords.
 """
-function expected_keywords(s::InputStream, keywords::Vector{KeywordEnum})
-    token = read_token(s)
+function _expect_keywords(s::InputStream, keywords::Vector{KeywordEnum})
+    token = _read_token(s)
 
     if !(token isa KeywordToken)
         throw(GrammarError(token.location, "expected a keyword instead of $token"))
@@ -80,12 +107,19 @@ function expected_keywords(s::InputStream, keywords::Vector{KeywordEnum})
 end
 
 """
-    expected_number(s::InputStream, dictionary::Dict{String, Float64})
+    expect_number(s::InputStream, dictionary::Dict{String, Float64})
 
-Check if the next token in the input stream is a number and returns it.
+Check if the next token in the input stream is a number and returns it. If it's an identifier, looks up its value in the dictionary.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dictionary::Dict{String, Float64}`: Dictionary to look up identifier values.
+# Returns
+- `Float64`: The numeric value read from the input stream, either directly or from a variable lookup.
+# Throws
+- `GrammarError`: If the next token is not a number or a defined identifier.
 """
-function expected_number(s::InputStream, dictionary::Dict{String,Float64})
-    token = read_token(s)
+function _expect_number(s::InputStream, dictionary::Dict{String,Float64})
+    token = _read_token(s)
 
     if token isa NumberToken
         return token.value
@@ -104,12 +138,18 @@ function expected_number(s::InputStream, dictionary::Dict{String,Float64})
 end
 
 """
-    expected_string(s::InputStream)
+    expect_string(s::InputStream)
 
 Check if the next token in the input stream is a string and returns it.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+# Returns
+- `String`: The string value read from the input stream.
+# Throws
+- `GrammarError`: If the next token is not a string.
 """
-function expected_string(s::InputStream)
-    token = read_token(s)
+function _expect_string(s::InputStream)
+    token = _read_token(s)
     if !(token isa StringToken)
         throw(GrammarError(token.location, "got $token instead of a StringToken"))
     end
@@ -117,12 +157,18 @@ function expected_string(s::InputStream)
 end
 
 """
-    expected_identifier(s::InputStream)
+    expect_identifier(s::InputStream)
 
 Check if the next token in the input stream is an identifier and returns it.
+# Arguments
+- `s::InputStream`: The input stream to read from.
+# Returns
+- `String`: The identifier name read from the input stream.
+# Throws
+- `GrammarError`: If the next token is not an identifier.
 """
-function expected_identifier(s::InputStream)
-    token = read_token(s)
+function _expect_identifier(s::InputStream)
+    token = _read_token(s)
     if !(token isa IdentifierToken)
         throw(GrammarError(token.location, "got $token instead of an IdentifierToken"))
     end
@@ -134,11 +180,11 @@ end
 # parse_* functions
 #------------------------------------------------------------------------
 
-# as expected_number we pass a dictionary instead of a Scene for testing purposes
-# remember to pass the correct dict in parse_scene
+# as _expect_number we pass a dictionary instead of a Scene for testing purposes
+# remember to pass the correct dict in _parse_scene
 
 """
-    parse_vector(s::InputStream, dictionary::Dict{String, Float64})
+    _parse_vector(s::InputStream, dictionary::Dict{String, Float64})
 Parses a vector from the input stream. The expected format is `[x, y, z]`.
 # Arguments
 - `s::InputStream`: The input stream to read from.
@@ -146,20 +192,20 @@ Parses a vector from the input stream. The expected format is `[x, y, z]`.
 # Returns
 - `Vec`: A vector object with the parsed x, y, and z components.
 """
-function parse_vector(s::InputStream, dictionary::Dict{String,Float64})
-    expected_symbol(s, '[')
-    x = expected_number(s, dictionary)
-    expected_symbol(s, ',')
-    y = expected_number(s, dictionary)
-    expected_symbol(s, ',')
-    z = expected_number(s, dictionary)
-    expected_symbol(s, ']')
+function _parse_vector(s::InputStream, dictionary::Dict{String,Float64})
+    _expect_symbol(s, '[')
+    x = _expect_number(s, dictionary)
+    _expect_symbol(s, ',')
+    y = _expect_number(s, dictionary)
+    _expect_symbol(s, ',')
+    z = _expect_number(s, dictionary)
+    _expect_symbol(s, ']')
 
     return Vec(x, y, z)
 end
 
 """
-    parse_color(s::InputStream, dictionary::Dict{String, Float64})
+    _parse_color(s::InputStream, dictionary::Dict{String, Float64})
 Parses a color from the input stream. The expected format is `<r, g, b>`.
 # Arguments
 - `s::InputStream`: The input stream to read from.
@@ -167,21 +213,21 @@ Parses a color from the input stream. The expected format is `<r, g, b>`.
 # Returns
 - `RGB`: An RGB color object with the parsed red, green, and blue components.
 """
-function parse_color(s::InputStream, dictionary::Dict{String,Float64})
-    expected_symbol(s, '<')
-    r = expected_number(s, dictionary)
-    expected_symbol(s, ',')
-    g = expected_number(s, dictionary)
-    expected_symbol(s, ',')
-    b = expected_number(s, dictionary)
-    expected_symbol(s, '>')
+function _parse_color(s::InputStream, dictionary::Dict{String,Float64})
+    _expect_symbol(s, '<')
+    r = _expect_number(s, dictionary)
+    _expect_symbol(s, ',')
+    g = _expect_number(s, dictionary)
+    _expect_symbol(s, ',')
+    b = _expect_number(s, dictionary)
+    _expect_symbol(s, '>')
 
     return RGB(r, g, b)
 end
 
-# parse_pigment and parse_brdf will be used in parse_material
+# _parse_pigment and _parse_brdf will be used in _parse_material
 """
-    parse_pigment(s::InputStream, dictionary::Dict{String, Float64})
+    _parse_pigment(s::InputStream, dictionary::Dict{String, Float64})
 Parses a pigment from the input stream. The expected format is either:
 - `uniform(<color>)`
 - `checkered(<color1>, <color2>, <div>)`
@@ -192,24 +238,24 @@ Parses a pigment from the input stream. The expected format is either:
 # Returns
 - `Pigment`: A pigment object representing the parsed pigment type.
 """
-function parse_pigment(s::InputStream, dictionary::Dict{String,Float64})
-    keyword = expected_keywords(s, PIGMENTS)
+function _parse_pigment(s::InputStream, dictionary::Dict{String,Float64})
+    keyword = _expect_keywords(s, PIGMENTS)
 
-    expected_symbol(s, '(')
+    _expect_symbol(s, '(')
     result = nothing
     if keyword == UNIFORM
-        color = parse_color(s, dictionary)
+        color = _parse_color(s, dictionary)
         result = UniformPigment(color)
     elseif keyword == CHECKERED
-        color1 = parse_color(s, dictionary)
-        expected_symbol(s, ',')
-        color2 = parse_color(s, dictionary)
-        expected_symbol(s, ',')
-        # we should implement difference between expected_number and expected_integer!
-        div = expected_number(s, dictionary)
+        color1 = _parse_color(s, dictionary)
+        _expect_symbol(s, ',')
+        color2 = _parse_color(s, dictionary)
+        _expect_symbol(s, ',')
+        # we should implement difference between _expect_number and _expect_integer!
+        div = _expect_number(s, dictionary)
         result = CheckeredPigment(convert(Int, div), convert(Int, div), color1, color2)
     elseif keyword == IMAGE
-        image_path = expected_string(s)
+        image_path = _expect_string(s)
         if !isfile(image_path)
             throw(GrammarError(s.location, "image file '$image_path' does not exist"))
         end
@@ -219,12 +265,12 @@ function parse_pigment(s::InputStream, dictionary::Dict{String,Float64})
         throw(GrammarError(s.location, "unexpected pigment type $keyword"))
     end
 
-    expected_symbol(s, ')')
+    _expect_symbol(s, ')')
     return result
 end
 
 """
-    parse_brdf(s::InputStream, dictionary::Dict{String, Float64})
+    _parse_brdf(s::InputStream, dictionary::Dict{String, Float64})
 Parses a BRDF from the input stream. The expected format is either:
 - `diffuse(<pigment>)`
 - `specular(<pigment>)`
@@ -234,12 +280,12 @@ Parses a BRDF from the input stream. The expected format is either:
 # Returns
 - `BRDF`: A BRDF object representing the parsed BRDF type.
 """
-function parse_brdf(s::InputStream, dictionary::Dict{String,Float64})
-    brdf_keyword = expected_keywords(s, BRDFS)
+function _parse_brdf(s::InputStream, dictionary::Dict{String,Float64})
+    brdf_keyword = _expect_keywords(s, BRDFS)
 
-    expected_symbol(s, '(')
-    pigment = parse_pigment(s, dictionary)
-    expected_symbol(s, ')')
+    _expect_symbol(s, '(')
+    pigment = _parse_pigment(s, dictionary)
+    _expect_symbol(s, ')')
     if brdf_keyword == DIFFUSE
         return DiffusiveBRDF(pigment)
     elseif brdf_keyword == SPECULAR
@@ -250,7 +296,7 @@ function parse_brdf(s::InputStream, dictionary::Dict{String,Float64})
 end
 
 """
-    parse_material(s::InputStream, dictionary::Dict{String, Float64})
+    _parse_material(s::InputStream, dictionary::Dict{String, Float64})
 Parses a material from the input stream. The expected format is `material(<emission::pigment>, <brdf>)`.
 #Arguments
 - `s::InputStream`: The input stream to read from.
@@ -258,19 +304,19 @@ Parses a material from the input stream. The expected format is `material(<emiss
 #Returns
 - `Material`: A material object with the parsed emission pigment and BRDF.
 """
-function parse_material(s::InputStream, dictionary::Dict{String,Float64})
-    name = expected_identifier(s)
+function _parse_material(s::InputStream, dictionary::Dict{String,Float64})
+    name = _expect_identifier(s)
 
-    expected_symbol(s, '(')
-    brdf = parse_brdf(s, dictionary)
-    expected_symbol(s, ',')
-    emission_pigment = parse_pigment(s, dictionary)
-    expected_symbol(s, ')')
+    _expect_symbol(s, '(')
+    brdf = _parse_brdf(s, dictionary)
+    _expect_symbol(s, ',')
+    emission_pigment = _parse_pigment(s, dictionary)
+    _expect_symbol(s, ')')
     return name, Material(emission_pigment, brdf)
 end
 
 """
-    parse_transformation(s::InputStream, dictionary::Dict{String, Float64})
+    _parse_transformation(s::InputStream, dictionary::Dict{String, Float64})
 Parses a transformation from the input stream. The expected format is:
 - `identity`
 - `translation(<vector>)`
@@ -285,43 +331,43 @@ Parses a transformation from the input stream. The expected format is:
 # Returns
 - `Transformation`: A transformation object representing the parsed transformation type.
 """
-function parse_transformation(s::InputStream, dictionary::Dict{String,Float64})
+function _parse_transformation(s::InputStream, dictionary::Dict{String,Float64})
     result = Transformation()
 
     while true
-        transformation_keyword = expected_keywords(s, TRANSFORMATIONS)
+        transformation_keyword = _expect_keywords(s, TRANSFORMATIONS)
         if transformation_keyword == IDENTITY
             result = result ⊙ Transformation()
         elseif transformation_keyword == TRANSLATION
-            expected_symbol(s, '(')
-            translation_vector = parse_vector(s, dictionary)
-            expected_symbol(s, ')')
+            _expect_symbol(s, '(')
+            translation_vector = _parse_vector(s, dictionary)
+            _expect_symbol(s, ')')
             result = result ⊙ Translation(translation_vector)
         elseif transformation_keyword == ROTATION_X
-            expected_symbol(s, '(')
-            angle = expected_number(s, dictionary)
-            expected_symbol(s, ')')
+            _expect_symbol(s, '(')
+            angle = _expect_number(s, dictionary)
+            _expect_symbol(s, ')')
             result = result ⊙ Rx(angle)
         elseif transformation_keyword == ROTATION_Y
-            expected_symbol(s, '(')
-            angle = expected_number(s, dictionary)
-            expected_symbol(s, ')')
+            _expect_symbol(s, '(')
+            angle = _expect_number(s, dictionary)
+            _expect_symbol(s, ')')
             result = result ⊙ Ry(angle)
         elseif transformation_keyword == ROTATION_Z
-            expected_symbol(s, '(')
-            angle = expected_number(s, dictionary)
-            expected_symbol(s, ')')
+            _expect_symbol(s, '(')
+            angle = _expect_number(s, dictionary)
+            _expect_symbol(s, ')')
             result = result ⊙ Rz(angle)
         elseif transformation_keyword == SCALING
-            expected_symbol(s, '(')
-            scale_vector = parse_vector(s, dictionary)
-            expected_symbol(s, ')')
+            _expect_symbol(s, '(')
+            scale_vector = _parse_vector(s, dictionary)
+            _expect_symbol(s, ')')
             result = result ⊙ Scaling(scale_vector.x, scale_vector.y, scale_vector.z)
         end
 
-        next_token = read_token(s)
+        next_token = _read_token(s)
         if !(next_token isa SymbolToken && next_token.symbol == '*')
-            unread_token!(s, next_token)
+            _unread_token!(s, next_token)
             break
         end
 
@@ -331,7 +377,7 @@ function parse_transformation(s::InputStream, dictionary::Dict{String,Float64})
 end
 
 """
-    parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    _parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
 Parses a sphere from the input stream. The expected format is:
 - `sphere(<material>, <transformation>)`
 `material` must be already defined in `dict_material`.
@@ -342,24 +388,24 @@ Parses a sphere from the input stream. The expected format is:
 # Returns
 - `Sphere`: A sphere object with the parsed material and transformation.
 """
-function parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
-    expected_symbol(s, '(')
+function _parse_sphere(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    _expect_symbol(s, '(')
 
-    material_name = expected_identifier(s)
+    material_name = _expect_identifier(s)
     if !(haskey(dict_material, material_name))
         throw(GrammarError(s.location, "material '$material_name' not defined"))
     end
 
-    expected_symbol(s, ',')
-    transformation = parse_transformation(s, dict_float)
-    expected_symbol(s, ')')
+    _expect_symbol(s, ',')
+    transformation = _parse_transformation(s, dict_float)
+    _expect_symbol(s, ')')
 
     return Sphere(transformation, dict_material[material_name])
 end
 
 
 """
-    parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    _parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
 Parses a plane from the input stream. The expected format is:
 - `plane(<material>, <transformation>)`
 `material` must be already defined in `dict_material`.
@@ -367,25 +413,27 @@ Parses a plane from the input stream. The expected format is:
 - `s::InputStream`: The input stream to read from.
 - `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
 - `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
+# Returns
+- `Plane`: A plane object with the parsed material and transformation.
 """
-function parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
-    expected_symbol(s, '(')
+function _parse_plane(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    _expect_symbol(s, '(')
 
-    material_name = expected_identifier(s)
+    material_name = _expect_identifier(s)
     if !(haskey(dict_material, material_name))
         throw(GrammarError(s.location, "material '$material_name' not defined"))
     end
 
-    expected_symbol(s, ',')
-    transformation = parse_transformation(s, dict_float)
-    expected_symbol(s, ')')
+    _expect_symbol(s, ',')
+    transformation = _parse_transformation(s, dict_float)
+    _expect_symbol(s, ')')
 
     return Plane(transformation, dict_material[material_name])
 
 end
 
 """
-    parse_camera(s::InputStream, dict_float::Dict{String,Float64})
+    _parse_camera(s::InputStream, dict_float::Dict{String,Float64})
 Parses a camera from the input stream. The expected format is:
 - `orthogonal(<transformation>, <aspect_ratio>)`
 - `perspective(<transformation>, <aspect_ratio>, <screen_distance>)`
@@ -395,22 +443,22 @@ Parses a camera from the input stream. The expected format is:
 # Returns
 - Either `Orthogonal` or `Perspective` camera object based on the parsed type.
 """
-function parse_camera(s::InputStream, dict_float::Dict{String,Float64})
-    expected_symbol(s, '(')
+function _parse_camera(s::InputStream, dict_float::Dict{String,Float64})
+    _expect_symbol(s, '(')
 
-    camera_type = expected_keywords(s, CAMERAS)
-    expected_symbol(s, ',')
-    transformation = parse_transformation(s, dict_float)
-    expected_symbol(s, ',')
+    camera_type = _expect_keywords(s, CAMERAS)
+    _expect_symbol(s, ',')
+    transformation = _parse_transformation(s, dict_float)
+    _expect_symbol(s, ',')
     if camera_type == ORTHOGONAL
-        aspect_ratio = expected_number(s, dict_float)
-        expected_symbol(s, ')')
+        aspect_ratio = _expect_number(s, dict_float)
+        _expect_symbol(s, ')')
         return Orthogonal(t=transformation, a_ratio=aspect_ratio)
     elseif camera_type == PERSPECTIVE
-        aspect_ratio = expected_number(s, dict_float)
-        expected_symbol(s, ',')
-        screen_distance = expected_number(s, dict_float)
-        expected_symbol(s, ')')
+        aspect_ratio = _expect_number(s, dict_float)
+        _expect_symbol(s, ',')
+        screen_distance = _expect_number(s, dict_float)
+        _expect_symbol(s, ')')
         return Perspective(d=screen_distance, t=transformation, a_ratio=aspect_ratio)
     else
         throw(GrammarError(s.location, "unexpected camera type $camera_type"))
@@ -435,7 +483,7 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
     shapes = Vector{AbstractShape}()
 
     while true
-        token = read_token(s)
+        token = _read_token(s)
         if token isa StopToken
             break
         end
@@ -443,36 +491,36 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
             throw(GrammarError(token.location, "expected a keyword or stop token, got $token"))
         end
         if token.keyword == FLOAT
-            variable_name = expected_identifier(s)
+            variable_name = _expect_identifier(s)
 
             variable_location = s.location
 
-            expected_symbol(s, '(')
-            value = expected_number(s, scene.float_variables)
-            expected_symbol(s, ')')
-            
+            _expect_symbol(s, '(')
+            value = _expect_number(s, scene.float_variables)
+            _expect_symbol(s, ')')
+
             if haskey(scene.float_variables, variable_name) && !(variable_name in scene.overridden_variables)
                 throw(GrammarError(variable_location, "variable '$variable_name' already defined"))
             end
 
             if !(haskey(scene.float_variables, variable_name))
-                scene.float_variables[variable_name] = value     
+                scene.float_variables[variable_name] = value
             end
         elseif token.keyword == MATERIAL
-            material_name, material = parse_material(s, scene.float_variables)
+            material_name, material = _parse_material(s, scene.float_variables)
             scene.materials[material_name] = material
         elseif token.keyword == SPHERE
-            sphere = parse_sphere(s, scene.float_variables, scene.materials)
+            sphere = _parse_sphere(s, scene.float_variables, scene.materials)
             push!(shapes, sphere)
         elseif token.keyword == PLANE
-            plane = parse_plane(s, scene.float_variables, scene.materials)
+            plane = _parse_plane(s, scene.float_variables, scene.materials)
             push!(shapes, plane)
         elseif token.keyword == CAMERA
             if !isnothing(scene.camera)
                 throw(GrammarError(token.location, "camera already defined"))
             end
-            scene.camera = parse_camera(s, scene.float_variables)
-        else 
+            scene.camera = _parse_camera(s, scene.float_variables)
+        else
             throw(GrammarError(token.location, "unexpected keyword $token.keyword"))
         end
     end

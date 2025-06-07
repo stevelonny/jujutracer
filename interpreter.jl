@@ -11,45 +11,45 @@ function parse_cli()
     s = ArgParseSettings()
     @add_arg_table! s begin
         "--width", "-W"
-            arg_type = Int
-            default = 640
-            help = "Image width"
+        arg_type = Int
+        default = 640
+        help = "Image width"
         "--height", "-H"
-            arg_type = Int
-            default = 360
-            help = "Image height"
+        arg_type = Int
+        default = 360
+        help = "Image height"
         "--output", "-o"
-            default = "output.png"
-            help = "Output image file"
+        default = "output.png"
+        help = "Output image file"
         "--pfm_output", "-p"
-            default = "output.pfm"
-            help = "Output PFM file"
+        default = "output.pfm"
+        help = "Output PFM file"
         "--renderer", "-r"
-            dest_name = "renderer"
-            arg_type = String
-            range_tester = s -> s in ["path_tracer", "flat", "on_off"#= , "point" =#]
-            default = "path_tracer"
-            help = "Renderer to use (path_tracer, flat, on_off)"
+        dest_name = "renderer"
+        arg_type = String
+        range_tester = s -> s in ["path_tracer", "flat", "on_off"] #= , "point" =#
+        default = "path_tracer"
+        help = "Renderer to use (path_tracer, flat, on_off)"
         "--antialiasing", "-a"
-            default = 2
-            help = "Antialiasing level (default: 2)"
+        default = 2
+        help = "Antialiasing level (default: 2)"
         "scene_file"
-            help = "Scene file to parse"
-            required = true
+        help = "Scene file to parse"
+        required = true
     end
     @add_arg_table! s begin
         "--n_rays"
-            arg_type = Int
-            default = 3
-            help = "Number of rays per pixel (for path tracer)"
+        arg_type = Int
+        default = 3
+        help = "Number of rays per pixel (for path tracer)"
         "--depth"
-            arg_type = Int
-            default = 3
-            help = "Ray depth (for path tracer and point)"
+        arg_type = Int
+        default = 3
+        help = "Ray depth (for path tracer and point)"
         "--russian"
-            arg_type = Int
-            default = 2
-            help = "Russian roulette level (for path tracer)"
+        arg_type = Int
+        default = 2
+        help = "Russian roulette level (for path tracer)"
     end
 
     return parse_args(s)
@@ -87,12 +87,11 @@ function main()
 
     # Set as the global logger
     global_logger(filtered_logger)
-    
-    
+
+
     if !isfile(scene_file)
         throw(ArgumentError("Scene file does not exist: $scene_file"))
     end
-    
     stream = open_InputStream(scene_file)
     scene = parse_scene(stream)
 
@@ -102,7 +101,7 @@ function main()
     gray = RGB(0.2, 0.2, 0.2)
     render = nothing
     pcg = PCG()
-    
+
     if renderer == "flat"
         render = Flat(world)
     elseif renderer == "path_tracer"
@@ -110,7 +109,7 @@ function main()
     elseif renderer == "on_off"
         render = OnOff(world)
     #= elseif renderer == "point"
-        render = Point(world, gray, pcg, depth) =#
+            render = Point(world, gray, pcg, depth) =#
     else
         throw(ArgumentError("Invalid renderer type. Use 'path_tracer', 'flat', 'on_off', or 'point'."))
     end

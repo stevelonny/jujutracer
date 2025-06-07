@@ -991,45 +991,45 @@ end
         @test stream.location.line == 1
         @test stream.location.col == 1
 
-        @test read_char(stream) == 'a'
+        @test jujutracer._read_char(stream) == 'a'
         @test stream.location.line == 1
         @test stream.location.col == 2
 
-        unread_char!(stream, 'A')
+        jujutracer._unread_char!(stream, 'A')
         @test stream.location.line == 1
         @test stream.location.col == 1
 
-        @test read_char(stream) == 'A'
+        @test jujutracer._read_char(stream) == 'A'
         @test stream.location.line == 1
         @test stream.location.col == 2
 
-        @test read_char(stream) == 'b'
+        @test jujutracer._read_char(stream) == 'b'
         @test stream.location.line == 1
         @test stream.location.col == 3
 
-        @test read_char(stream) == 'c'
+        @test jujutracer._read_char(stream) == 'c'
         @test stream.location.line == 1
         @test stream.location.col == 4
 
-        skip_whitespaces_and_comments!(stream)
+        jujutracer._skip_whitespaces_and_comments!(stream)
 
-        @test read_char(stream) == 'd'
+        @test jujutracer._read_char(stream) == 'd'
         @test stream.location.line == 2
         @test stream.location.col == 2
 
-        @test read_char(stream) == '\n'
+        @test jujutracer._read_char(stream) == '\n'
         @test stream.location.line == 3
         @test stream.location.col == 1
 
-        @test read_char(stream) == 'e'
+        @test jujutracer._read_char(stream) == 'e'
         @test stream.location.line == 3
         @test stream.location.col == 2
 
-        @test read_char(stream) == 'f'
+        @test jujutracer._read_char(stream) == 'f'
         @test stream.location.line == 3
         @test stream.location.col == 3
 
-        @test read_char(stream) == '\0'  # End of file in Julia
+        @test jujutracer._read_char(stream) == '\0'  # End of file in Julia
     end
 
     @testset "Token" begin
@@ -1043,50 +1043,50 @@ end
         """)
 
         stream = InputStream(input)
-        token = read_token(stream)
+        token = jujutracer._read_token(stream)
         @test token == KeywordToken(SourceLocation("", 3, 1), jujutracer.MATERIAL)
-        jujutracer.unread_token!(stream, token)
-        @test read_token(stream) == KeywordToken(SourceLocation("", 3, 1), jujutracer.MATERIAL)
-        token = read_token(stream)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == KeywordToken(SourceLocation("", 3, 1), jujutracer.MATERIAL)
+        token = jujutracer._read_token(stream)
         @test token == IdentifierToken(SourceLocation("", 3, 10), "sky_material")
-        jujutracer.unread_token!(stream, token)
-        @test read_token(stream) == IdentifierToken(SourceLocation("", 3, 10), "sky_material")
-        token = read_token(stream)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == IdentifierToken(SourceLocation("", 3, 10), "sky_material")
+        token = jujutracer._read_token(stream)
         @test token == SymbolToken(SourceLocation("", 3, 22), '(')
-        jujutracer.unread_token!(stream, token)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 3, 22), '(')
-        token = read_token(stream)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 3, 22), '(')
+        token = jujutracer._read_token(stream)
         @test token == KeywordToken(SourceLocation("", 4, 1), jujutracer.DIFFUSE)
-        jujutracer.unread_token!(stream, token)
-        @test read_token(stream) == KeywordToken(SourceLocation("", 4, 1), jujutracer.DIFFUSE)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 8), '(')
-        token = read_token(stream)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == KeywordToken(SourceLocation("", 4, 1), jujutracer.DIFFUSE)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 8), '(')
+        token = jujutracer._read_token(stream)
         @test token == KeywordToken(SourceLocation("", 4, 9), jujutracer.IMAGE)
-        jujutracer.unread_token!(stream, token)
-        @test read_token(stream) == KeywordToken(SourceLocation("", 4, 9), jujutracer.IMAGE)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 14), '(')
-        token = read_token(stream)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == KeywordToken(SourceLocation("", 4, 9), jujutracer.IMAGE)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 14), '(')
+        token = jujutracer._read_token(stream)
         @test token == StringToken(SourceLocation("", 4, 15), "my file.pfm")
-        jujutracer.unread_token!(stream, token)
-        @test read_token(stream) == StringToken(SourceLocation("", 4, 15), "my file.pfm")
-        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 28), ')')
-        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 29), ')')
-        @test read_token(stream) == SymbolToken(SourceLocation("", 4, 30), ',')
-        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 1), '<')
-        token = read_token(stream)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == StringToken(SourceLocation("", 4, 15), "my file.pfm")
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 28), ')')
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 29), ')')
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 30), ',')
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 5, 1), '<')
+        token = jujutracer._read_token(stream)
         @test token == NumberToken(SourceLocation("", 5, 2), 5.0)
-        jujutracer.unread_token!(stream, token)
-        @test read_token(stream) == NumberToken(SourceLocation("", 5, 2), 5.0)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 3), ',')
-        @test read_token(stream) == NumberToken(SourceLocation("", 5, 5), 500.0)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 10), ',')
-        @test read_token(stream) == NumberToken(SourceLocation("", 5, 12), 300.0)
-        @test read_token(stream) == SymbolToken(SourceLocation("", 5, 17), '>')
-        @test read_token(stream) == SymbolToken(SourceLocation("", 6, 1), ')')
-        @test read_token(stream) == StopToken(SourceLocation("", 7, 1))
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == NumberToken(SourceLocation("", 5, 2), 5.0)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 5, 3), ',')
+        @test jujutracer._read_token(stream) == NumberToken(SourceLocation("", 5, 5), 500.0)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 5, 10), ',')
+        @test jujutracer._read_token(stream) == NumberToken(SourceLocation("", 5, 12), 300.0)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 5, 17), '>')
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 6, 1), ')')
+        @test jujutracer._read_token(stream) == StopToken(SourceLocation("", 7, 1))
     end
 
-    @testset "expected_*" begin
+    @testset "_expect_*" begin
         input = IOBuffer("""
         material sky_material(
         diffuse(image("my file.pfm")),
@@ -1103,25 +1103,25 @@ end
         allowed_keywords = [jujutracer.SPHERE, jujutracer.MATERIAL, jujutracer.DIFFUSE]
 
 
-        @test jujutracer.expected_keywords(stream, allowed_keywords) == jujutracer.MATERIAL
-        @test jujutracer.expected_identifier(stream) == "sky_material"
-        @test jujutracer.expected_symbol(stream, '(') == '('
-        @test_throws jujutracer.GrammarError jujutracer.expected_number(stream, dictionary) # diffuse
-        @test_throws jujutracer.GrammarError jujutracer.expected_identifier(stream) #(
-        @test_throws jujutracer.GrammarError jujutracer.expected_symbol(stream, '(') # image
-        @test jujutracer.expected_symbol(stream, '(') == '('
-        @test jujutracer.expected_string(stream) == "my file.pfm"
-        @test_throws jujutracer.GrammarError jujutracer.expected_keywords(stream, allowed_keywords) # )
-        @test_throws jujutracer.GrammarError jujutracer.expected_string(stream) # )
-        @test jujutracer.expected_symbol(stream, ',') == ','
-        @test jujutracer.expected_symbol(stream, '<') == '<'
-        @test jujutracer.expected_number(stream, dictionary) == 5.0
-        @test_throws jujutracer.GrammarError jujutracer.expected_identifier(stream) # ,
-        @test jujutracer.expected_number(stream, dictionary) == 500.0
-        @test_throws jujutracer.GrammarError jujutracer.expected_number(stream, dictionary) #,
-        @test jujutracer.expected_number(stream, dictionary) == 300.0
-        @test jujutracer.expected_symbol(stream, '>') == '>'
-        @test jujutracer.expected_symbol(stream, ')') == ')'
+        @test jujutracer._expect_keywords(stream, allowed_keywords) == jujutracer.MATERIAL
+        @test jujutracer._expect_identifier(stream) == "sky_material"
+        @test jujutracer._expect_symbol(stream, '(') == '('
+        @test_throws jujutracer.GrammarError jujutracer._expect_number(stream, dictionary) # diffuse
+        @test_throws jujutracer.GrammarError jujutracer._expect_identifier(stream) #(
+        @test_throws jujutracer.GrammarError jujutracer._expect_symbol(stream, '(') # image
+        @test jujutracer._expect_symbol(stream, '(') == '('
+        @test jujutracer._expect_string(stream) == "my file.pfm"
+        @test_throws jujutracer.GrammarError jujutracer._expect_keywords(stream, allowed_keywords) # )
+        @test_throws jujutracer.GrammarError jujutracer._expect_string(stream) # )
+        @test jujutracer._expect_symbol(stream, ',') == ','
+        @test jujutracer._expect_symbol(stream, '<') == '<'
+        @test jujutracer._expect_number(stream, dictionary) == 5.0
+        @test_throws jujutracer.GrammarError jujutracer._expect_identifier(stream) # ,
+        @test jujutracer._expect_number(stream, dictionary) == 500.0
+        @test_throws jujutracer.GrammarError jujutracer._expect_number(stream, dictionary) #,
+        @test jujutracer._expect_number(stream, dictionary) == 300.0
+        @test jujutracer._expect_symbol(stream, '>') == '>'
+        @test jujutracer._expect_symbol(stream, ')') == ')'
 
     end
 
@@ -1135,7 +1135,7 @@ end
         [5.0, 500.0, 300.0]
         """)
         stream = InputStream(input)
-        vec = jujutracer.parse_vector(stream, dict)
+        vec = jujutracer._parse_vector(stream, dict)
         @test vec == Vec(5.0, 500.0, 300.0)
 
         # parse_color
@@ -1143,7 +1143,7 @@ end
         <5.0, 500.0, 300.0>
         """)
         stream = InputStream(input)
-        color = jujutracer.parse_color(stream, dict)
+        color = jujutracer._parse_color(stream, dict)
         @test color == RGB(5.0, 500.0, 300.0)
 
         # parse_pigment
@@ -1153,11 +1153,11 @@ end
         image("my file.pfm")
         """)
         stream = InputStream(input)
-        pigment1 = jujutracer.parse_pigment(stream, dict)
+        pigment1 = jujutracer._parse_pigment(stream, dict)
         @test pigment1 == UniformPigment(RGB(5.0, 500.0, 300.0))
-        pigment2 = jujutracer.parse_pigment(stream, dict)
+        pigment2 = jujutracer._parse_pigment(stream, dict)
         @test pigment2 == CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))
-        #pigment3 = jujutracer.parse_pigment(stream, dict)
+        #pigment3 = jujutracer._parse_pigment(stream, dict)
         #@test pigment3 == ImagePigment("my file.pfm")
 
         # parse_brdf
@@ -1166,9 +1166,9 @@ end
         specular(checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4))
         """)
         stream = InputStream(input)
-        brdf1 = jujutracer.parse_brdf(stream, dict)
+        brdf1 = jujutracer._parse_brdf(stream, dict)
         @test brdf1 == DiffusiveBRDF(UniformPigment(RGB(5.0, 500.0, 300.0)))
-        brdf2 = jujutracer.parse_brdf(stream, dict)
+        brdf2 = jujutracer._parse_brdf(stream, dict)
         @test brdf2 == SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))
 
         # parse_material
@@ -1180,13 +1180,13 @@ end
             )
         """)
         stream = InputStream(input)
-        name, material = jujutracer.parse_material(stream, dict)
+        name, material = jujutracer._parse_material(stream, dict)
         @test name == "sky_material"
         @test material == Material(
             UniformPigment(RGB(5.0, 500.0, 300.0)),
             SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))
         )
-        dict_mat = Dict{String, Material}("sky_material" => material)
+        dict_mat = Dict{String,Material}("sky_material" => material)
         # parse_transformation
         input = IOBuffer("""
         identity
@@ -1198,13 +1198,13 @@ end
         identity * translation([1.0, pluto, 3.0]) * scaling([2.0, 3.0, 4.0]) * rotation_x(0.5) * rotation_y(1.0) * rotation_z(1.5)
         """)
         stream = InputStream(input)
-        @test jujutracer.parse_transformation(stream, dict) ≈ Transformation()
-        @test jujutracer.parse_transformation(stream, dict) ≈ Translation(1.0, 2.0, 500.0)
-        @test jujutracer.parse_transformation(stream, dict) ≈ Scaling(2.0, 3.0, 4.0)
-        @test jujutracer.parse_transformation(stream, dict) ≈ Rx(0.5)
-        @test jujutracer.parse_transformation(stream, dict) ≈ Ry(1.0)
-        @test jujutracer.parse_transformation(stream, dict) ≈ Rz(1.5)
-        @test jujutracer.parse_transformation(stream, dict) ≈ Transformation() ⊙ Translation(1.0, 300.0, 3.0) ⊙ Scaling(2.0, 3.0, 4.0) ⊙ Rx(0.5) ⊙ Ry(1.0) ⊙ Rz(1.5)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Transformation()
+        @test jujutracer._parse_transformation(stream, dict) ≈ Translation(1.0, 2.0, 500.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Scaling(2.0, 3.0, 4.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Rx(0.5)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Ry(1.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Rz(1.5)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Transformation() ⊙ Translation(1.0, 300.0, 3.0) ⊙ Scaling(2.0, 3.0, 4.0) ⊙ Rx(0.5) ⊙ Ry(1.0) ⊙ Rz(1.5)
 
         # parse_sphere
         input = IOBuffer("""
@@ -1213,16 +1213,16 @@ end
         (sky_material, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]))
         """)
         stream = InputStream(input)
-        sphere1 = jujutracer.parse_sphere(stream, dict, dict_mat)
+        sphere1 = jujutracer._parse_sphere(stream, dict, dict_mat)
         @test sphere1.Tr ≈ Transformation()
-        @test sphere1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))) 
-        sphere2 = jujutracer.parse_sphere(stream, dict, dict_mat)
+        @test sphere1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+        sphere2 = jujutracer._parse_sphere(stream, dict, dict_mat)
         @test sphere2.Tr ≈ Translation(1.0, 2.0, 500.0)
         @test sphere2.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-        sphere3 = jujutracer.parse_sphere(stream, dict, dict_mat)
+        sphere3 = jujutracer._parse_sphere(stream, dict, dict_mat)
         @test sphere3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
         @test sphere3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-        
+
         # parse_plane
         input = IOBuffer("""
         (sky_material, identity)
@@ -1230,16 +1230,16 @@ end
         (sky_material, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]))
         """)
         stream = InputStream(input)
-        plane1 = jujutracer.parse_plane(stream, dict, dict_mat)
+        plane1 = jujutracer._parse_plane(stream, dict, dict_mat)
         @test plane1.Tr ≈ Transformation()
         @test plane1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-        plane2 = jujutracer.parse_plane(stream, dict, dict_mat)
+        plane2 = jujutracer._parse_plane(stream, dict, dict_mat)
         @test plane2.Tr ≈ Translation(1.0, 2.0, 500.0)
         @test plane2.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-        plane3 = jujutracer.parse_plane(stream, dict, dict_mat)
+        plane3 = jujutracer._parse_plane(stream, dict, dict_mat)
         @test plane3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
         @test plane3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-    
+
         # parse_camera
         input = IOBuffer("""
         (perspective, identity, 1.0, 2.0)
@@ -1250,28 +1250,28 @@ end
         (orthogonal, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]), 1.0)
         """)
         stream = InputStream(input)
-        camera1 = jujutracer.parse_camera(stream, dict)
+        camera1 = jujutracer._parse_camera(stream, dict)
         @test camera1.t ≈ Transformation()
         @test camera1.a_ratio == 1.0
         @test camera1.d == 2.0
-        camera2 = jujutracer.parse_camera(stream, dict)
+        camera2 = jujutracer._parse_camera(stream, dict)
         @test camera2.t ≈ Translation(1.0, 2.0, 500.0)
         @test camera2.a_ratio == 1.0
         @test camera2.d == 2.0
-        camera3 = jujutracer.parse_camera(stream, dict)
+        camera3 = jujutracer._parse_camera(stream, dict)
         @test camera3.t ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
         @test camera3.a_ratio == 1.0
         @test camera3.d == 2.0
-        camera4 = jujutracer.parse_camera(stream, dict)
+        camera4 = jujutracer._parse_camera(stream, dict)
         @test camera4.t ≈ Transformation()
         @test camera4.a_ratio == 1.0
-        camera5 = jujutracer.parse_camera(stream, dict)
+        camera5 = jujutracer._parse_camera(stream, dict)
         @test camera5.t ≈ Translation(1.0, 2.0, 500.0)
         @test camera5.a_ratio == 1.0
-        camera6 = jujutracer.parse_camera(stream, dict)
+        camera6 = jujutracer._parse_camera(stream, dict)
         @test camera6.t ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
         @test camera6.a_ratio == 1.0
-        
+
     end
     @testset "parse_world" begin
         input = IOBuffer("""
