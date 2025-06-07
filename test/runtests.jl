@@ -1196,3 +1196,448 @@ end
         @test color_blocked.r >= 0.05 && color_blocked.g >= 0.05 && color_blocked.b >= 0.05
     end
 end
+
+
+@testset "Scene interpreter" begin
+    @testset "InputStream" begin
+        stream = InputStream(IOBuffer("abc   \nd\nef"))
+
+        @test stream.location.line == 1
+        @test stream.location.col == 1
+
+        @test jujutracer._read_char(stream) == 'a'
+        @test stream.location.line == 1
+        @test stream.location.col == 2
+
+        jujutracer._unread_char!(stream, 'A')
+        @test stream.location.line == 1
+        @test stream.location.col == 1
+
+        @test jujutracer._read_char(stream) == 'A'
+        @test stream.location.line == 1
+        @test stream.location.col == 2
+
+        @test jujutracer._read_char(stream) == 'b'
+        @test stream.location.line == 1
+        @test stream.location.col == 3
+
+        @test jujutracer._read_char(stream) == 'c'
+        @test stream.location.line == 1
+        @test stream.location.col == 4
+
+        jujutracer._skip_whitespaces_and_comments!(stream)
+
+        @test jujutracer._read_char(stream) == 'd'
+        @test stream.location.line == 2
+        @test stream.location.col == 2
+
+        @test jujutracer._read_char(stream) == '\n'
+        @test stream.location.line == 3
+        @test stream.location.col == 1
+
+        @test jujutracer._read_char(stream) == 'e'
+        @test stream.location.line == 3
+        @test stream.location.col == 2
+
+        @test jujutracer._read_char(stream) == 'f'
+        @test stream.location.line == 3
+        @test stream.location.col == 3
+
+        @test jujutracer._read_char(stream) == '\0'  # End of file in Julia
+    end
+
+    @testset "Token" begin
+        input = IOBuffer("""
+        # This is a comment
+        # This is another comment 
+        material sky_material(
+        diffuse(image("my file.pfm")),
+        <5, 500.0, 300.0>
+        ) # Comment at the end of the line
+        """)
+
+        stream = InputStream(input)
+        token = jujutracer._read_token(stream)
+        @test token == KeywordToken(SourceLocation("", 3, 1), jujutracer.MATERIAL)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == KeywordToken(SourceLocation("", 3, 1), jujutracer.MATERIAL)
+        token = jujutracer._read_token(stream)
+        @test token == IdentifierToken(SourceLocation("", 3, 10), "sky_material")
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == IdentifierToken(SourceLocation("", 3, 10), "sky_material")
+        token = jujutracer._read_token(stream)
+        @test token == SymbolToken(SourceLocation("", 3, 22), '(')
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 3, 22), '(')
+        token = jujutracer._read_token(stream)
+        @test token == KeywordToken(SourceLocation("", 4, 1), jujutracer.DIFFUSE)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == KeywordToken(SourceLocation("", 4, 1), jujutracer.DIFFUSE)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 8), '(')
+        token = jujutracer._read_token(stream)
+        @test token == KeywordToken(SourceLocation("", 4, 9), jujutracer.IMAGE)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == KeywordToken(SourceLocation("", 4, 9), jujutracer.IMAGE)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 14), '(')
+        token = jujutracer._read_token(stream)
+        @test token == StringToken(SourceLocation("", 4, 15), "my file.pfm")
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == StringToken(SourceLocation("", 4, 15), "my file.pfm")
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 28), ')')
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 29), ')')
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 4, 30), ',')
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 5, 1), '<')
+        token = jujutracer._read_token(stream)
+        @test token == NumberToken(SourceLocation("", 5, 2), 5.0)
+        jujutracer._unread_token!(stream, token)
+        @test jujutracer._read_token(stream) == NumberToken(SourceLocation("", 5, 2), 5.0)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 5, 3), ',')
+        @test jujutracer._read_token(stream) == NumberToken(SourceLocation("", 5, 5), 500.0)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 5, 10), ',')
+        @test jujutracer._read_token(stream) == NumberToken(SourceLocation("", 5, 12), 300.0)
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 5, 17), '>')
+        @test jujutracer._read_token(stream) == SymbolToken(SourceLocation("", 6, 1), ')')
+        @test jujutracer._read_token(stream) == StopToken(SourceLocation("", 7, 1))
+    end
+
+    @testset "_expect_*" begin
+        input = IOBuffer("""
+        material sky_material(
+        diffuse(image("my file.pfm")),
+        <5, pippo, pluto>
+        )
+        """)
+        stream = InputStream(input)
+
+        dictionary = Dict{String,Float64}(
+            "pippo" => 500.0,
+            "pluto" => 300.0
+        )
+
+        allowed_keywords = [jujutracer.SPHERE, jujutracer.MATERIAL, jujutracer.DIFFUSE]
+
+
+        @test jujutracer._expect_keywords(stream, allowed_keywords) == jujutracer.MATERIAL
+        @test jujutracer._expect_identifier(stream) == "sky_material"
+        @test jujutracer._expect_symbol(stream, '(') == '('
+        @test_throws jujutracer.GrammarError jujutracer._expect_number(stream, dictionary) # diffuse
+        @test_throws jujutracer.GrammarError jujutracer._expect_identifier(stream) #(
+        @test_throws jujutracer.GrammarError jujutracer._expect_symbol(stream, '(') # image
+        @test jujutracer._expect_symbol(stream, '(') == '('
+        @test jujutracer._expect_string(stream) == "my file.pfm"
+        @test_throws jujutracer.GrammarError jujutracer._expect_keywords(stream, allowed_keywords) # )
+        @test_throws jujutracer.GrammarError jujutracer._expect_string(stream) # )
+        @test jujutracer._expect_symbol(stream, ',') == ','
+        @test jujutracer._expect_symbol(stream, '<') == '<'
+        @test jujutracer._expect_number(stream, dictionary) == 5.0
+        @test_throws jujutracer.GrammarError jujutracer._expect_identifier(stream) # ,
+        @test jujutracer._expect_number(stream, dictionary) == 500.0
+        @test_throws jujutracer.GrammarError jujutracer._expect_number(stream, dictionary) #,
+        @test jujutracer._expect_number(stream, dictionary) == 300.0
+        @test jujutracer._expect_symbol(stream, '>') == '>'
+        @test jujutracer._expect_symbol(stream, ')') == ')'
+
+    end
+
+    @testset "parse_*" begin
+        dict = Dict{String,Float64}(
+            "pippo" => 500.0,
+            "pluto" => 300.0
+        )
+        # parse_vector
+        input = IOBuffer("""
+        [5.0, 500.0, 300.0]
+        """)
+        stream = InputStream(input)
+        vec = jujutracer._parse_vector(stream, dict)
+        @test vec == Vec(5.0, 500.0, 300.0)
+
+        # parse_color
+        input = IOBuffer("""
+        <5.0, 500.0, 300.0>
+        """)
+        stream = InputStream(input)
+        color = jujutracer._parse_color(stream, dict)
+        @test color == RGB(5.0, 500.0, 300.0)
+
+        # parse_pigment
+        input = IOBuffer("""
+        uniform(<5.0, pippo, pluto>)
+        checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4)
+        image("my file.pfm")
+        """)
+        stream = InputStream(input)
+        pigment1 = jujutracer._parse_pigment(stream, dict)
+        @test pigment1 == UniformPigment(RGB(5.0, 500.0, 300.0))
+        pigment2 = jujutracer._parse_pigment(stream, dict)
+        @test pigment2 == CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))
+        #pigment3 = jujutracer._parse_pigment(stream, dict)
+        #@test pigment3 == ImagePigment("my file.pfm")
+
+        # parse_brdf
+        input = IOBuffer("""
+        diffuse(uniform(<5.0, pippo, pluto>))
+        specular(checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4))
+        """)
+        stream = InputStream(input)
+        brdf1 = jujutracer._parse_brdf(stream, dict)
+        @test brdf1 == DiffusiveBRDF(UniformPigment(RGB(5.0, 500.0, 300.0)))
+        brdf2 = jujutracer._parse_brdf(stream, dict)
+        @test brdf2 == SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))
+
+        # parse_material
+        #input = IOBuffer("""sky_material(specular(checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4)),uniform(<5.0, pippo, pluto>))""")
+        input = IOBuffer("""
+        sky_material(
+            specular(checkered(<5.0, 500.0, 300.0>, <pippo, pluto, 5.0>, 4)),
+            uniform(<5.0, pippo, pluto>)
+            )
+        """)
+        stream = InputStream(input)
+        name, material = jujutracer._parse_material(stream, dict)
+        @test name == "sky_material"
+        @test material == Material(
+            UniformPigment(RGB(5.0, 500.0, 300.0)),
+            SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0)))
+        )
+        dict_mat = Dict{String,Material}("sky_material" => material)
+        # parse_transformation
+        input = IOBuffer("""
+        identity
+        translation([1.0, 2.0, pippo])
+        scaling([2.0, 3.0, 4.0])
+        rotation_x(0.5)
+        rotation_y(1.0)
+        rotation_z(1.5)
+        identity * translation([1.0, pluto, 3.0]) * scaling([2.0, 3.0, 4.0]) * rotation_x(0.5) * rotation_y(1.0) * rotation_z(1.5)
+        """)
+        stream = InputStream(input)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Transformation()
+        @test jujutracer._parse_transformation(stream, dict) ≈ Translation(1.0, 2.0, 500.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Scaling(2.0, 3.0, 4.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Rx(0.5)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Ry(1.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Rz(1.5)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Transformation() ⊙ Translation(1.0, 300.0, 3.0) ⊙ Scaling(2.0, 3.0, 4.0) ⊙ Rx(0.5) ⊙ Ry(1.0) ⊙ Rz(1.5)
+
+        # parse_shapes
+
+        for SHAPE in jujutracer.SHAPES
+            shape_constructor = jujutracer.shapes_constructors[SHAPE]
+            input = IOBuffer("""
+            (sky_material, identity)
+            (sky_material, translation([1.0, 2.0, pippo]))
+            (sky_material, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]))
+            """)
+            stream = InputStream(input)
+            shape1 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test shape1.Tr ≈ Transformation()
+            @test shape1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+            shape2 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test shape2.Tr ≈ Translation(1.0, 2.0, 500.0)
+            @test shape2.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+            shape3 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test shape3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
+            @test shape3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+        end
+
+        #parse_triangle
+        input = IOBuffer("""
+        (sky_material, [0.0, 0.0, 0.0], [1.0, pippo, 0.0], [0.0, 1.0, pluto])
+        """)
+        stream = InputStream(input)
+        triangle1 = jujutracer._parse_triangle(stream, dict, dict_mat)
+        @test triangle1.A ≈ Point(0.0, 0.0, 0.0)
+        @test triangle1.B ≈ Point(1.0, 500.0, 0.0)
+        @test triangle1.C ≈ Point(0.0, 1.0, 300.0)
+        @test triangle1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+    
+        #parse_parallelogram
+        input = IOBuffer("""
+        (sky_material, [0.0, 0.0, 0.0], [1.0, pippo, 0.0], [0.0, 1.0, pluto])
+        """)
+        stream = InputStream(input)
+        parallelogram1 = jujutracer._parse_parallelogram(stream, dict, dict_mat)
+        @test parallelogram1.A ≈ Point(0.0, 0.0, 0.0)
+        @test parallelogram1.B ≈ Point(1.0, 500.0, 0.0)
+        @test parallelogram1.C ≈ Point(0.0, 1.0, 300.0)
+        @test parallelogram1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
+        
+        # parse_camera
+        input = IOBuffer("""
+        (perspective, identity, 1.0, 2.0)
+        (perspective, translation([1.0, 2.0, pippo]), 1.0, 2.0)
+        (perspective, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]), 1.0, 2.0)
+        (orthogonal, identity, 1.0)
+        (orthogonal, translation([1.0, 2.0, pippo]), 1.0)
+        (orthogonal, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]), 1.0)
+        """)
+        stream = InputStream(input)
+        camera1 = jujutracer._parse_camera(stream, dict)
+        @test camera1.t ≈ Transformation()
+        @test camera1.a_ratio == 1.0
+        @test camera1.d == 2.0
+        camera2 = jujutracer._parse_camera(stream, dict)
+        @test camera2.t ≈ Translation(1.0, 2.0, 500.0)
+        @test camera2.a_ratio == 1.0
+        @test camera2.d == 2.0
+        camera3 = jujutracer._parse_camera(stream, dict)
+        @test camera3.t ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
+        @test camera3.a_ratio == 1.0
+        @test camera3.d == 2.0
+        camera4 = jujutracer._parse_camera(stream, dict)
+        @test camera4.t ≈ Transformation()
+        @test camera4.a_ratio == 1.0
+        camera5 = jujutracer._parse_camera(stream, dict)
+        @test camera5.t ≈ Translation(1.0, 2.0, 500.0)
+        @test camera5.a_ratio == 1.0
+        camera6 = jujutracer._parse_camera(stream, dict)
+        @test camera6.t ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
+        @test camera6.a_ratio == 1.0
+
+        # parse_lightsource
+        input = IOBuffer("""
+        ([1.0, 2.0, pippo], <5.0, 500.0, 300.0>, 100.0)
+        """)
+        stream = InputStream(input)
+        light1 = jujutracer._parse_lightsource(stream, dict)
+        @test light1.position ≈ Point(1.0, 2.0, 500.0)
+        @test light1.emission == RGB(5.0, 500.0, 300.0)
+        @test light1.scale == 100.0
+
+        # parse_spotlight
+        input = IOBuffer("""
+        ([1.0, 2.0, pippo], [1.0, 0.0, pluto], <5.0, 500.0, 300.0>, 100.0, 0.8, 0.85, 0.9)
+        """)
+        stream = InputStream(input)
+        spot1 = jujutracer._parse_spotlight(stream, dict)
+        @test spot1.position ≈ Point(1.0, 2.0, 500.0)
+        @test spot1.direction ≈ Vec(1.0, 0.0, 300.0)
+        @test spot1.emission == RGB(5.0, 500.0, 300.0)
+        @test spot1.scale == 100.0
+        @test spot1.cos_total == 0.8
+        @test spot1.cos_falloff == 0.85
+        @test spot1.cos_start == 0.9
+
+
+    end
+    @testset "parse_world" begin
+        input = IOBuffer("""
+        float clock(150)
+        
+        material sky_material(
+            diffuse(uniform(<0, 0, 0>)),
+            uniform(<0.7, 0.5, 1>)
+        )
+
+        # Here is a comment
+
+        material ground_material(
+            diffuse(checkered(<0.3, 0.5, 0.1>,
+                              <0.1, 0.2, 0.5>, 4)),
+            uniform(<0, 0, 0>)
+        )
+
+        material sphere_material(
+            specular(uniform(<0.5, 0.5, 0.5>)),
+            uniform(<0, 0, 0>)
+        )
+
+        plane (sky_material, translation([0, 0, 100]) * rotation_y(clock))
+        plane (ground_material, identity)
+
+        sphere(sphere_material, translation([0, 0, 1]))
+
+        box(sphere_material, translation([-1, -1, 0]) * scaling([2, 2, 2]))
+
+        cone(sphere_material, translation([-2, -2, 0]) * scaling([1, 1, 1]))
+
+        cylinder(sphere_material, translation([-3, -3, 0]) * scaling([1, 1, 1]))
+
+        triangle(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
+
+        parallelogram(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
+
+        spotlight([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 0.8, 0.85, 0.9)
+
+        pointlight([2, 2, 2], <1, 1, 1>, 100)
+
+        camera(perspective, rotation_z(30) * translation([-4, 0, 1]), 1.0, 2.0)
+        """)
+        stream = InputStream(input)
+
+        scene = parse_scene(stream)
+
+        @test length(scene.float_variables) == 1
+        @test haskey(scene.float_variables, "clock")
+        @test scene.float_variables["clock"] == 150.0
+
+        @test length(scene.materials) == 3
+        @test "sphere_material" in keys(scene.materials)
+        @test "sky_material" in keys(scene.materials)
+        @test "ground_material" in keys(scene.materials)
+
+        sphere_material = scene.materials["sphere_material"]
+        sky_material = scene.materials["sky_material"]
+        ground_material = scene.materials["ground_material"]
+
+        @test sphere_material == Material(
+            UniformPigment(RGB(0.0, 0.0, 0.0)),
+            SpecularBRDF(UniformPigment(RGB(0.5, 0.5, 0.5)))
+        )
+        @test sky_material == Material(
+            UniformPigment(RGB(0.7, 0.5, 1.0)),
+            DiffusiveBRDF(UniformPigment(RGB(0.0, 0.0, 0.0)))
+        )
+        @test ground_material == Material(
+            UniformPigment(RGB(0.0, 0.0, 0.0)),
+            DiffusiveBRDF(CheckeredPigment(4, 4, RGB(0.3, 0.5, 0.1), RGB(0.1, 0.2, 0.5)))
+        )
+        @test length(scene.world.shapes) == 8
+        @test scene.world.shapes[1] isa Plane
+        @test scene.world.shapes[1].Mat == sky_material
+        @test scene.world.shapes[1].Tr ≈ Translation(0.0, 0.0, 100.0) ⊙ Ry(150.0)
+        @test scene.world.shapes[2] isa Plane
+        @test scene.world.shapes[2].Mat == ground_material
+        @test scene.world.shapes[2].Tr ≈ Transformation()
+        @test scene.world.shapes[3] isa Sphere
+        @test scene.world.shapes[3].Mat == sphere_material
+        @test scene.world.shapes[3].Tr ≈ Translation(0.0, 0.0, 1.0)
+        @test scene.world.shapes[4] isa Box
+        @test scene.world.shapes[4].Mat == sphere_material
+        @test scene.world.shapes[4].Tr ≈ Translation(-1.0, -1.0, 0.0) ⊙ Scaling(2.0, 2.0, 2.0)
+        @test scene.world.shapes[5] isa Cone
+        @test scene.world.shapes[5].Mat == sphere_material
+        @test scene.world.shapes[5].Tr ≈ Translation(-2.0, -2.0, 0.0) ⊙ Scaling(1.0, 1.0, 1.0)
+        @test scene.world.shapes[6] isa Cylinder
+        @test scene.world.shapes[6].Mat == sphere_material
+        @test scene.world.shapes[6].Tr ≈ Translation(-3.0, -3.0, 0.0) ⊙ Scaling(1.0, 1.0, 1.0)
+        @test scene.world.shapes[7] isa Triangle
+        @test scene.world.shapes[7].Mat == sphere_material
+        @test scene.world.shapes[7].A ≈ Point(0.0, 0.0, 0.0)
+        @test scene.world.shapes[7].B ≈ Point(1.0, 0.0, 0.0)
+        @test scene.world.shapes[7].C ≈ Point(0.0, 1.0, 0.0)
+        @test scene.world.shapes[8] isa Parallelogram
+        @test scene.world.shapes[8].Mat == sphere_material
+        @test scene.world.shapes[8].A ≈ Point(0.0, 0.0, 0.0)
+        @test scene.world.shapes[8].B ≈ Point(1.0, 0.0, 0.0)
+        @test scene.world.shapes[8].C ≈ Point(0.0, 1.0, 0.0)
+        @test length(scene.world.lights) == 2
+        @test scene.world.lights[1] isa SpotLight
+        @test scene.world.lights[1].position ≈ Point(0.0, 0.0, 0.0)
+        @test scene.world.lights[1].direction ≈ Vec(1.0, 0.0, 0.0)
+        @test scene.world.lights[1].emission == RGB(1.0, 1.0, 1.0)
+        @test scene.world.lights[1].scale == 100.0
+        @test scene.world.lights[1].cos_total == 0.8
+        @test scene.world.lights[1].cos_falloff == 0.85
+        @test scene.world.lights[1].cos_start == 0.9
+        @test scene.world.lights[2] isa LightSource
+        @test scene.world.lights[2].position ≈ Point(2.0, 2.0, 2.0)
+        @test scene.world.lights[2].emission == RGB(1.0, 1.0, 1.0)
+        @test scene.world.lights[2].scale == 100.0
+        @test scene.camera isa Perspective
+        @test scene.camera.t ≈ Rz(30.0) ⊙ Translation(-4.0, 0.0, 1.0)
+        @test scene.camera.a_ratio == 1.0
+        @test scene.camera.d == 2.0
+    end
+end
