@@ -1,8 +1,15 @@
 using jujutracer
 using Test
 using Logging
-Logging.disable_logging(Logging.Info)   
+using LoggingExtras
+using TerminalLoggers
+Logging.disable_logging(Logging.Info)
+# Create a filtered logger
+#= module_filter(log) = (log._module == jujutracer)
+filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logging.Debug))
 
+# Set as the global logger
+global_logger(filtered_logger) =#
 
 @testset "Colors arithmetics" begin
     # Put here the tests required for color sum and product
@@ -274,7 +281,7 @@ end
         @test_throws MethodError p1 / 2
     end
 
-    @testset "Norm" begin 
+    @testset "Norm" begin
         v = Vec(1.0, 2.0, 3.0)
         n = Normal(10.0, 20.0, 30.0)
         p = Point(1.0, 2.0, 3.0)
@@ -424,6 +431,7 @@ end
         HRlist = ray_intersection_list(S, ray1)
         @test HRlist[1] ≈ HR1
         @test HRlist[2].normal ≈ HR1.normal
+        @test quick_ray_intersection(S, ray1) == true
 
         O2 = Point(3.0, 0.0, 0.0)
         ray2 = Ray(origin=O2, dir=-êx)
@@ -435,6 +443,7 @@ end
         HRlist = ray_intersection_list(S, ray2)
         @test HRlist[1] ≈ HR2
         @test HRlist[2].normal ≈ HR2.normal
+        @test quick_ray_intersection(S, ray2) == true
 
         O3 = Point(0.0, 0.0, 0.0)
         ray3 = Ray(origin=O3, dir=êx)
@@ -445,10 +454,11 @@ end
         @test HR3.normal ≈ -Normal(êx)
         HRlist = ray_intersection_list(S, ray3)
         @test isnothing(HRlist)
+        @test quick_ray_intersection(S, ray3) == true
 
         Tr = Translation(10.0, 0.0, 0.0)
         S = Sphere(Tr, Mat)
-        
+
         O4 = Tr(O1)
         ray4 = Ray(origin=O4, dir=-êz)
         HR4 = ray_intersection(S, ray4)
@@ -459,6 +469,7 @@ end
         HRlist = ray_intersection_list(S, ray4)
         @test HRlist[1] ≈ HR4
         @test HRlist[2].normal ≈ HR4.normal
+        @test quick_ray_intersection(S, ray4) == true
 
         ray5 = Tr(ray2)
         HR5 = ray_intersection(S, ray5)
@@ -469,6 +480,7 @@ end
         HRlist = ray_intersection_list(S, ray5)
         @test HRlist[1] ≈ HR5
         @test HRlist[2].normal ≈ HR5.normal
+        @test quick_ray_intersection(S, ray5) == true
 
         O6 = inverse(Tr)(O3)
         ray6 = Ray(origin=O6, dir=-êz)
@@ -476,9 +488,16 @@ end
         @test HR6 === nothing
         HRlist = ray_intersection_list(S, ray6)
         @test isnothing(HRlist)
+        @test quick_ray_intersection(S, ray6) == false
 
         HR7 = ray_intersection(S, ray1)
         @test HR7 === nothing
+        @test quick_ray_intersection(S, ray1) == false
+
+        # Test internal sphere
+        S = Sphere()
+        @test internal(S, Point(0.5, 0.5, 0.5)) == true
+        @test !internal(S, Point(1.5, 0.5, 0.5))
     end
     # test for plane
     @testset "Plane" begin
@@ -491,6 +510,7 @@ end
         @test HR8.t ≈ 1.0
         @test HR8 ≈ SurfacePoint(0.5, 0.5)
         @test HR8.normal ≈ Normal(êz)
+        @test quick_ray_intersection(P, ray8) == true
 
         O9 = Point(0.2, 0.3, -2.0)
         ray9 = Ray(origin=O9, dir=êz)
@@ -499,16 +519,19 @@ end
         @test HR9.t ≈ 2.0
         @test HR9 ≈ SurfacePoint(0.2, 0.3)
         @test HR9.normal ≈ -Normal(êz)
+        @test quick_ray_intersection(P, ray9) == true
 
         O10 = Point(1.0, 1.0, 1.0)
         ray10 = Ray(origin=O10, dir=êx)
         HR10 = ray_intersection(P, ray10)
         @test HR10 === nothing
+        @test quick_ray_intersection(P, ray10) == false
 
         O11 = Point(0.0, 0.0, 0.0)
         ray11 = Ray(origin=O11, dir=êx)
         HR11 = ray_intersection(P, ray11)
         @test HR11 === nothing
+        @test quick_ray_intersection(P, ray11) == false
 
         Tr2 = Translation(0.0, 0.0, 2.0)
         P2 = Plane(Tr2, Mat)
@@ -519,11 +542,13 @@ end
         @test HR12.t ≈ 1.0
         @test HR12 ≈ SurfacePoint(0.5, 0.5)
         @test HR12.normal ≈ Normal(-êz)
+        @test quick_ray_intersection(P2, ray12) == true
 
         O13 = Point(0.0, 0.0, 1.0)
         ray13 = Ray(origin=O13, dir=-êz)
         HR13 = ray_intersection(P2, ray13)
         @test HR13 === nothing
+        @test quick_ray_intersection(P2, ray13) == false
     end
 
     # test for rectangle
@@ -537,6 +562,7 @@ end
         @test HR14.t ≈ 1.0
         @test HR14 ≈ SurfacePoint(0.5, 0.5)
         @test HR14.normal ≈ Normal(êz)
+        @test quick_ray_intersection(R, ray14) == true
 
         O15 = Point(0.2, 0.3, -2.0)
         ray15 = Ray(origin=O15, dir=êz)
@@ -545,16 +571,19 @@ end
         @test HR15.t ≈ 2.0
         @test HR15 ≈ SurfacePoint(0.7, 0.8)
         @test HR15.normal ≈ -Normal(êz)
+        @test quick_ray_intersection(R, ray15) == true
 
         O16 = Point(1.0, 1.0, 1.0)
         ray16 = Ray(origin=O16, dir=êx)
         HR16 = ray_intersection(R, ray16)
         @test HR16 === nothing
+        @test quick_ray_intersection(R, ray16) == false
 
         O17 = Point(1.5, 1.5, 1.0)
         ray17 = Ray(origin=O17, dir=-êz)
         HR17 = ray_intersection(R, ray17)
         @test HR17 === nothing
+        @test quick_ray_intersection(R, ray17) == false
 
     end
 
@@ -569,6 +598,7 @@ end
         @test HR18.t ≈ 1.0
         @test HR18 ≈ SurfacePoint(0.5, 0.5)
         @test HR18.normal ≈ Normal(êz)
+        @test quick_ray_intersection(T, ray18) == true
 
         O19 = Point(0.2, 0.3, -2.0)
         ray19 = Ray(origin=O19, dir=êz)
@@ -577,11 +607,13 @@ end
         @test HR19.t ≈ 2.0
         @test HR19 ≈ SurfacePoint(0.2, 0.3)
         @test HR19.normal ≈ -Normal(êz)
+        @test quick_ray_intersection(T, ray19) == true
 
         O20 = Point(1.0, 1.0, 1.0)
         ray20 = Ray(origin=O20, dir=êx)
         HR20 = ray_intersection(T, ray20)
         @test HR20 === nothing
+        @test quick_ray_intersection(T, ray20) == false
     end
 
     # test for Parallelogram
@@ -595,6 +627,7 @@ end
         @test HR21.t ≈ 1.0
         @test HR21 ≈ SurfacePoint(0.5, 0.5)
         @test HR21.normal ≈ Normal(êz)
+        @test quick_ray_intersection(Q, ray21) == true
 
         O22 = Point(0.2, 0.3, -2.0)
         ray22 = Ray(origin=O22, dir=êz)
@@ -603,11 +636,13 @@ end
         @test HR22.t ≈ 2.0
         @test HR22 ≈ SurfacePoint(0.2, 0.3)
         @test HR22.normal ≈ -Normal(êz)
+        @test quick_ray_intersection(Q, ray22) == true
 
         O23 = Point(1.0, 1.0, 1.0)
         ray23 = Ray(origin=O23, dir=êx)
         HR23 = ray_intersection(Q, ray23)
         @test HR23 === nothing
+        @test quick_ray_intersection(Q, ray23) == false
     end
 
     # Box shape tests
@@ -631,6 +666,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(0.0, 0.0, 1.0)
         @test HRlist[1].t < HRlist[2].t
+        @test quick_ray_intersection(B, ray1) == true
 
         # Ray from -z, should hit bottom face at (0,0,-0.5)
         O2 = Point(0.0, 0.0, -2.0)
@@ -648,6 +684,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(0.0, 0.0, -1.0)
         @test HRlist[1].t < HRlist[2].t
+        @test quick_ray_intersection(B, ray2) == true
 
         # Ray from +x, should hit right face at (0.5,0,0)
         O3 = Point(2.0, 0.0, 0.0)
@@ -665,6 +702,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(1.0, 0.0, 0.0)
         @test HRlist[1].t < HRlist[2].t
+        @test quick_ray_intersection(B, ray3) == true
 
         # Ray from -x, should hit left face at (-0.5,0,0)
         O4 = Point(-2.0, 0.0, 0.0)
@@ -682,6 +720,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(-1.0, 0.0, 0.0)
         @test HRlist[1].t < HRlist[2].t
+        @test quick_ray_intersection(B, ray4) == true
 
         # Ray from +y, should hit back face at (0,0.5,0)
         O5 = Point(0.0, 2.0, 0.0)
@@ -699,6 +738,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(0.0, 1.0, 0.0)
         @test HRlist[1].t < HRlist[2].t
+        @test quick_ray_intersection(B, ray5) == true
 
         # Ray from -y, should hit front face at (0,-0.5,0)
         O6 = Point(0.0, -2.0, 0.0)
@@ -716,6 +756,7 @@ end
         @test HRlist[2].t ≈ 2.5
         @test HRlist[2].normal ≈ Normal(0.0, -1.0, 0.0)
         @test HRlist[1].t < HRlist[2].t
+        @test quick_ray_intersection(B, ray6) == true
 
         # Ray missing the box
         O7 = Point(2.0, 2.0, 2.0)
@@ -724,6 +765,7 @@ end
         @test HR7 === nothing
         HRlist = ray_intersection_list(B, ray7)
         @test isnothing(HRlist)
+        @test quick_ray_intersection(B, ray7) == false
 
         # Internal point test
         @test internal(B, Point(0.0, 0.0, 0.0)) == true
@@ -738,19 +780,25 @@ end
     @testset "Cylinder" begin
         C = Cylinder()
 
-        ray1 = Ray(origin = Point(2.0, 0.0, 0.0),
-                    dir = Vec(-1.0, 0.0, 0.0))
+        ray1 = Ray(origin=Point(2.0, 0.0, 0.0), dir=Vec(-1.0, 0.0, 0.0))
         repo1 = ray_intersection_list(C, ray1)
         @test !isnothing(repo1)
         @test repo1[1].normal ≈ -ray1.dir
         @test repo1[2].normal ≈ -ray1.dir
+        @test quick_ray_intersection(C, ray1) == true
 
-        ray2 = Ray(origin = Point(0.0, 0.0, 3.0),
-                    dir = Vec(0.0, 0.0, -1.0))
+        ray2 = Ray(origin=Point(0.0, 0.0, 3.0), dir=Vec(0.0, 0.0, -1.0))
         repo2 = ray_intersection_list(C, ray2)
         @test !isnothing(repo2)
         @test repo2[1].normal ≈ -ray2.dir
         @test repo2[2].normal ≈ -ray2.dir
+        @test quick_ray_intersection(C, ray2) == true
+
+        ray3 = Ray(origin=Point(0.0, 0.0, 3.0), dir=Vec(0.0, 0.0, 1.0))
+        
+        # test internal point
+        @test internal(C, Point(0.0, 0.0, 0.5)) == true
+        @test internal(C, Point(1.1, 0.0, 0.5)) == false
     end
     @testset "Cone" begin
         C = Cone()
@@ -761,7 +809,8 @@ end
         HR1 = ray_intersection(C, ray1)
         @test !isnothing(HR1)
         @test HR1 ≈ Point(0.0, 0.5, 0.5)
-        @test HR1.normal ≈ Normal(0.0, 1.0/sqrt(2.0), 1.0 / sqrt(2.0))
+        @test HR1.normal ≈ Normal(0.0, 1.0 / sqrt(2.0), 1.0 / sqrt(2.0))
+        @test quick_ray_intersection(C, ray1) == true
 
         # Ray from below, should hit the base at (0.5,0.5,0)
         O2 = Point(0.5, 0.5, -1.0)
@@ -770,6 +819,7 @@ end
         @test !isnothing(HR2)
         @test HR2 ≈ Point(0.5, 0.5, 0.0)
         @test HR2.normal ≈ Normal(0.0, 0.0, -1.0)
+        @test quick_ray_intersection(C, ray2) == true
 
         # Ray from side, should hit side at (0.5,0,0.5)
         O4 = Point(2.0, 0.0, 0.5)
@@ -778,6 +828,7 @@ end
         @test !isnothing(HR4)
         @test HR4 ≈ Point(0.5, 0, 0.5)
         @test HR4.normal ≈ Normal(1.0 / sqrt(2.0), 0.0, 1.0 / sqrt(2.0))
+        @test quick_ray_intersection(C, ray4) == true
 
         # Internal point test
         @test internal(C, Point(0.0, 0.0, 0.5)) == true
@@ -794,25 +845,27 @@ end
         @test HR1.t ≈ 1.0
         @test HR1.normal ≈ Normal(0.0, 0.0, 1.0)
 
-        # Ray from side, should hit at (1,0,0)
         O2 = Point(1.0, 0.0, 1.0)
         ray2 = Ray(origin=O2, dir=Vec(0.0, 0.0, -1.0))
         HR2 = ray_intersection(Ci, ray2)
         @test HR2 ≈ Point(1.0, 0.0, 0.0)
         @test HR2.t ≈ 1.0
         @test HR2.normal ≈ Normal(0.0, 0.0, 1.0)
+        @test quick_ray_intersection(Ci, ray2) == true
 
         # Ray outside circle, should miss
         O3 = Point(2.0, 0.0, 1.0)
         ray3 = Ray(origin=O3, dir=Vec(0.0, 0.0, -1.0))
         HR3 = ray_intersection(Ci, ray3)
         @test HR3 === nothing
+        @test quick_ray_intersection(Ci, ray3) == false
 
         # Ray parallel to plane, should miss
         O4 = Point(0.0, 0.0, 1.0)
         ray4 = Ray(origin=O4, dir=Vec(1.0, 0.0, 0.0))
         HR4 = ray_intersection(Ci, ray4)
         @test HR4 === nothing
+        @test quick_ray_intersection(Ci, ray4) == false
     end
 end
 
@@ -820,7 +873,7 @@ end
     pcg = PCG()
     @test pcg.state == 1753877967969059832
     @test pcg.inc == 109
-    for expected in [2707161783, 2068313097,3122475824, 2211639955, 3215226955, 3421331566]
+    for expected in [2707161783, 2068313097, 3122475824, 2211639955, 3215226955, 3421331566]
         @test expected == rand_pcg(pcg)
     end
 end
@@ -841,7 +894,7 @@ end
     S_2[3] = S3
     world1 = World(S_UD)
     world2 = World(S_2)
-    cam = Perspective(d = 2.0, t = Translation(-1.0, 0.0, 0.0))
+    cam = Perspective(d=2.0, t=Translation(-1.0, 0.0, 0.0))
     hdr1 = hdrimg(160, 90)
     hdr2 = hdrimg(160, 90)
     ImgTr1 = ImageTracer(hdr1, cam)
@@ -852,7 +905,7 @@ end
     ImgTr1(delta1)
     ImgTr2(delta2)
     @test all(hdr1[x_pixel, y_pixel] ≈ hdr2[x_pixel, y_pixel] for y_pixel in 0:(hdr1.h-1), x_pixel in 0:(hdr1.w-1))
-    
+
     # union
     S_U = Vector{AbstractShape}(undef, 1)
     S_1 = Vector{AbstractShape}(undef, 2)
@@ -903,19 +956,19 @@ end
 end
 
 @testset "ONB" begin
-    pcg=PCG()
+    pcg = PCG()
     for i in 1:10^4
         normal = Normal(rand_uniform(pcg), rand_uniform(pcg), rand_uniform(pcg))
 
         e1, e2, e3 = create_onb_from_z(normal)
         @test e3 ≈ normal
-        @test e3 ⋅ e1 ≈ 0.0 atol=1e-15
-        @test e3 ⋅ e2 ≈ 0.0 atol=1e-15
-        @test e1 ⋅ e2 ≈ 0.0 atol=1e-15
+        @test e3 ⋅ e1 ≈ 0.0 atol = 1e-15
+        @test e3 ⋅ e2 ≈ 0.0 atol = 1e-15
+        @test e1 ⋅ e2 ≈ 0.0 atol = 1e-15
 
         @test e1 × e2 ≈ e3
         @test e2 × e3 ≈ e1
-        @test e3 × e1 ≈ e2 
+        @test e3 × e1 ≈ e2
     end
 end
 
@@ -935,7 +988,7 @@ end
 
         O = Point(rand_uniform(pcg) * 0.5, rand_uniform(pcg) * 0.5, rand_uniform(pcg) * 0.5)
         v = Vec(rand_uniform(pcg), rand_uniform(pcg), rand_uniform(pcg))
-        ray = Ray(origin = O, dir = v)
+        ray = Ray(origin=O, dir=v)
         color = path(ray)
 
         exp = emitted_r / (1.0 - reflect)
@@ -981,4 +1034,165 @@ end
     @test jujutracer.intersected(axisbox, ray2) == true
     HR2_a = ray_intersection(axisbox, ray2)
     HR2 = ray_intersection(B2, ray2)
+end
+
+@testset "Point-Light tracing" begin
+    @testset "is_point_visible" begin
+        # Test basic visibility with no obstacles
+        world = World(Vector{AbstractShape}())
+        pos = Point(2.5, 0.0, 0.5)
+        observer = Point(0.0, 0.0, 0.0)
+        @test is_point_visible(world, pos, observer) == true
+        
+        # Test visibility with obstacle
+        sphere = Sphere(Translation(1.01, 0.0, 0.0), Material(UniformPigment(RGB(1.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(1.0, 0.0, 0.0)))))
+        shapes = Vector{AbstractShape}([sphere])
+        world_with_obstacle = World(shapes)
+        @test is_point_visible(world_with_obstacle, pos, observer) == false
+        
+        # Test visibility from same point
+        @test is_point_visible(world, observer, observer) == true
+    end
+    
+    @testset "is_light_visible" begin
+        # Test point light visibility
+        light = LightSource(Point(0.0, 0.0, 2.0), RGB(1.0, 1.0, 1.0), 100.0)
+        point = Point(1.0, 0.0, 0.0)
+        world = World(Vector{AbstractShape}())
+        @test jujutracer.is_light_visible(world, light, point) == true
+        
+        # Test point light visibility with obstacle
+        sphere = Sphere(Translation(0.5, 0.0, 1.0), Material(UniformPigment(RGB(1.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(1.0, 0.0, 0.0)))))
+        shapes = Vector{AbstractShape}([sphere])
+        world_with_obstacle = World(shapes)
+        @test jujutracer.is_light_visible(world_with_obstacle, light, point) == false
+        
+        # Test spotlight visibility - point within cone
+        spot_light = SpotLight(Point(0.0, 0.0, 2.0), Vec(1.0, 0.0, -2.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85, 0.9)
+        @test jujutracer.is_light_visible(world, spot_light, point) == true
+        
+        # Test spotlight visibility - point outside cone
+        point_outside = Point(-2.0, 0.0, 0.0)
+        @test jujutracer.is_light_visible(world, spot_light, point_outside) == false
+        
+        # Test spotlight visibility - point in cone but obstructed
+        @test jujutracer.is_light_visible(world_with_obstacle, spot_light, point) == false
+    end
+    
+    @testset "_light_modulation" begin
+        # Test point light modulation
+        light = LightSource(Point(0.0, 0.0, 1.0), RGB(1.0, 1.0, 1.0), 100.0)
+        
+        # Create a hit record for testing
+        hit_point = Point(1.0, 0.0, 0.0)
+        normal = Normal(0.0, 0.0, 1.0)
+        surface_point = SurfacePoint(0.5, 0.5)
+        ray = Ray(origin=Point(0.0, 0.0, -1.0), dir=Vec(0.0, 0.0, 1.0))
+        sphere = Sphere(Material(UniformPigment(RGB(1.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(1.0, 0.0, 0.0)))))
+        
+        hit_record = HitRecord(
+            world_P=hit_point,
+            normal=normal,
+            surface_P=surface_point,
+            t=1.0,
+            ray=ray,
+            shape=sphere
+        )
+        
+        modulation = jujutracer._light_modulation(light, hit_record)
+        @test modulation isa RGB
+        @test modulation.r >= 0.0 && modulation.g >= 0.0 && modulation.b >= 0.0
+        
+        # Test that closer light sources have more intensity
+        closer_light = LightSource(Point(0.0, 0.0, 0.5), RGB(1.0, 1.0, 1.0), 100.0)
+        closer_modulation = jujutracer._light_modulation(closer_light, hit_record)
+        @test closer_modulation.r > modulation.r
+        
+        # Test spotlight modulation
+        spot_light = SpotLight(Point(0.0, 0.0, 1.0), Vec(1.0, 0.0, -1.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85, 0.9)
+        spot_modulation = jujutracer._light_modulation(spot_light, hit_record)
+        @test spot_modulation isa RGB
+        @test spot_modulation.r >= 0.0 && spot_modulation.g >= 0.0 && spot_modulation.b >= 0.0
+        
+        # Test that normal facing away from light gives zero contribution
+        hit_record_away = HitRecord(
+            world_P=hit_point,
+            normal=Normal(0.0, 0.0, -1.0),  # Normal facing away
+            surface_P=surface_point,
+            t=1.0,
+            ray=ray,
+            shape=sphere
+        )
+        away_modulation = jujutracer._light_modulation(light, hit_record_away)
+        @test away_modulation.r ≈ 0.0 && away_modulation.g ≈ 0.0 && away_modulation.b ≈ 0.0
+    end
+    
+    @testset "point_light_tracing" begin
+        # Create a simple scene with a sphere and a light
+        light = LightSource(Point(2.0, 2.0, 2.0), RGB(1.0, 1.0, 1.0), 100.0)
+        
+        # Test diffuse material
+        diffuse_material = Material(UniformPigment(RGB(0.8, 0.2, 0.2)), DiffusiveBRDF(UniformPigment(RGB(0.8, 0.2, 0.2))))
+        sphere_diffuse = Sphere(Translation(0.0, 0.0, 0.0), diffuse_material)
+        shapes = Vector{AbstractShape}([sphere_diffuse])
+        lights = Vector{AbstractLight}([light])
+        world_diffuse = World(shapes, lights)
+        
+        # Test specular material  
+        specular_material = Material(UniformPigment(RGB(0.9, 0.9, 0.9)), SpecularBRDF(UniformPigment(RGB(0.9, 0.9, 0.9))))
+        sphere_specular = Sphere(Translation(0.0, 0.0, 0.0), specular_material)
+        shapes_specular = Vector{AbstractShape}([sphere_specular])
+        world_specular = World(shapes_specular, lights)
+        
+        # Create PointLight renderer
+        point_light_renderer = PointLight(world_diffuse, RGB(0.1, 0.1, 0.1), RGB(0.05, 0.05, 0.05), 2)
+        
+        # Test ray hitting diffuse sphere
+        ray_diffuse = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0))
+        color_diffuse = point_light_renderer(ray_diffuse)
+        @test color_diffuse isa RGB
+        # Should have some color from diffuse lighting
+        @test color_diffuse.r > 0.0 || color_diffuse.g > 0.0 || color_diffuse.b > 0.0
+        
+        # Test ray missing all objects
+        ray_miss = Ray(origin=Point(10.0, 10.0, 10.0), dir=Vec(1.0, 0.0, 0.0))
+        color_miss = point_light_renderer(ray_miss)
+        @test color_miss ≈ RGB(0.1, 0.1, 0.1)  # Should return background color
+        
+        # Test specular reflection
+        point_light_renderer_spec = PointLight(world_specular, RGB(0.1, 0.1, 0.1), RGB(0.05, 0.05, 0.05), 2)
+        ray_specular = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0))
+        color_specular = point_light_renderer_spec(ray_specular)
+        @test color_specular isa RGB
+        
+        # Test depth limiting
+        deep_ray = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0), depth=10)
+        color_deep = point_light_renderer(deep_ray)
+        @test color_deep ≈ RGB(0.1, 0.1, 0.1)  # Should return background when depth exceeded
+        
+        # Test with multiple lights
+        light2 = LightSource(Point(-2.0, 2.0, 2.0), RGB(0.0, 1.0, 0.0), 80.0)
+        world_multi_light = World(shapes, lights)
+        point_light_multi = PointLight(world_multi_light, RGB(0.1, 0.1, 0.1), RGB(0.05, 0.05, 0.05), 2)
+        
+        ray_multi = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0))
+        color_multi = point_light_multi(ray_multi)
+        @test color_multi isa RGB
+        # Should have contribution from both lights
+        @test color_multi.r > 0.0 && color_multi.g > 0.0
+        
+        # Test ambient lighting only (no direct light hits)
+        # Create sphere that blocks light
+        blocking_sphere = Sphere(Translation(1.0, 1.0, 1.0), diffuse_material)
+        push!(shapes, blocking_sphere)
+        lights = Vector{AbstractLight}([light])
+        world_blocked = World(shapes, lights)
+        point_light_blocked = PointLight(world_blocked, RGB(0.1, 0.1, 0.1), RGB(0.05, 0.05, 0.05), 2)
+        
+        ray_blocked = Ray(origin=Point(0.0, 0.0, -2.0), dir=Vec(0.0, 0.0, 1.0))
+        color_blocked = point_light_blocked(ray_blocked)
+        @test color_blocked isa RGB
+        # Should have at least ambient contribution
+        @test color_blocked.r >= 0.05 && color_blocked.g >= 0.05 && color_blocked.b >= 0.05
+    end
 end

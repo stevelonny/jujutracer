@@ -10,18 +10,18 @@ function (BRDF::DiffusiveBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, 
     sin_θ = sqrt(1.0 - sq)
     ϕ = 2.0 * π * rand_uniform(pcg)
 
-    return Ray(origin = p,
-                dir = e1 * cos(ϕ) * cos_θ + e2 * sin(ϕ) * cos_θ + e3 * sin_θ,
-                tmin = 10e-3,
-                depth = depth)
+    return Ray(origin=p,
+        dir=e1 * cos(ϕ) * cos_θ + e2 * sin(ϕ) * cos_θ + e3 * sin_θ,
+        tmin=10e-3,
+        depth=depth)
+end
+
+function (BRDF::SpecularBRDF)(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+    return _reflect_ray(in_dir, p, normal, depth)
 end
 
 function (BRDF::SpecularBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)
-    ray_dir = Vec(Normal(in_dir))
-    return Ray(origin = p,
-                dir = ray_dir - 2 * normal * (normal ⋅ ray_dir),
-                tmin = 10e-3,
-                depth = depth)
+    return _reflect_ray(in_dir, p, normal, depth)
 end
 
 function (U::UniformPigment)(p::SurfacePoint)
@@ -48,6 +48,15 @@ function (I::ImagePigment)(p::SurfacePoint)
     return I.img[x, y]
 end
 
+"""
+    _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+"""
+function _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+    incoming_dir = Vec(Normal(in_dir))
+    reflected_dir = incoming_dir - 2 * normal * (normal ⋅ incoming_dir)
+    return Ray(origin=p, dir=reflected_dir, tmin=1e-5, depth=depth)
+end
+
 #---------------------------------------------------------
 # OnOff
 #---------------------------------------------------------
@@ -57,16 +66,23 @@ end
 OnOff renderer of the scene. Returns white if the ray hits something, balck otherwise
 # Fields
 - `world::World` the world containing the scene
+- `background_color::RGB` the color of the background when the ray doesn't hit anything
+- `foreground_color::RGB` the color of the foreground when the ray hits something
 # Functional Usage
 `OnOff(ray::Ray)` functional renderer on a ray
 """
 struct OnOff <: Function
     world::World
+    background_color::RGB
+    foreground_color::RGB
+    function OnOff(world::World, background_color::RGB=RGB(0.0, 0.0, 0.0), foreground_color::RGB=RGB(1.0, 1.0, 1.0))
+        new(world, background_color, foreground_color)
+    end
 end
 
 function (OF::OnOff)(ray::Ray)
     repo = ray_intersection(OF.world, ray)
-    return (isnothing(repo)) ? RGB(0.0, 0.0, 0.0) : RGB(1.0, 1.0, 1.0)
+    return (isnothing(repo)) ? OF.background_color : OF.foreground_color
 end
 
 #---------------------------------------------------------
@@ -83,11 +99,15 @@ Flat renderer of the scene. Returns the Emition pigment of the hitten shapes
 """
 struct Flat <: Function
     world::World
+    background_color::RGB
+    function Flat(world::World, background_color::RGB=RGB(0.0, 0.0, 0.0))
+        new(world, background_color)
+    end
 end
 
 function (F::Flat)(ray::Ray)
     repo = ray_intersection(F.world, ray)
-    return (isnothing(repo)) ? RGB(0.0, 0.0, 0.0) : repo.shape.Mat.Emition(repo.surface_P) + repo.shape.Mat.BRDF.Pigment(repo.surface_P)
+    return (isnothing(repo)) ? F.background_color : repo.shape.Mat.Emition(repo.surface_P) + repo.shape.Mat.BRDF.Pigment(repo.surface_P)
 end
 
 #---------------------------------------------------------
@@ -109,7 +129,7 @@ Path Tracer renderer of the scene.
 """
 struct PathTracer <: Function
     world::World
-    backg::RGB
+    background_color::RGB
     rnd::PCG
     n_rays::Int64
     depth::Int64
@@ -123,10 +143,10 @@ function (P::PathTracer)(ray::Ray)
 
     repo = ray_intersection(P.world, ray)
 
-    if isnothing(repo) 
-        return P.backg
+    if isnothing(repo)
+        return P.background_color
     end
-    
+
     hit_material = repo.shape.Mat
     hit_color = hit_material.BRDF.Pigment(repo.surface_P)
     emitted_r = hit_material.Emition(repo.surface_P)
@@ -152,4 +172,72 @@ function (P::PathTracer)(ray::Ray)
     end
 
     return emitted_r + cum * (1.0 / P.n_rays)
+end
+
+#---------------------------------------------------------
+# Point-light tracing
+#---------------------------------------------------------
+"""
+    PointLight(world::World, background::RGB, ambient::RGB, max_depth::Int64)
+PointLight renderer of the scene. Backtraces the light from the point light sources.
+# Fields
+- `world::World`: the world containing the scene. Must contain at least one light source
+- `background_color::RGB`: the color of the background when the ray doesn't hit anything
+- `ambient_color::RGB`: the ambient color of the scene
+- `max_depth::Int64`: the maximum depth of the ray tracing
+# Functional Usage
+`PointLight(ray::Ray)` functional renderer on a ray
+"""
+struct PointLight <: Function
+    world::World
+    background_color::RGB
+    ambient_color::RGB
+    max_depth::Int64
+
+    function PointLight(world::World, background::RGB=RGB(0.0, 0.0, 0.0), ambient=RGB(0.2, 0.2, 0.2), max_depth::Int64=0)
+        if isempty(world.lights)
+            throw(ArgumentError("World must contain at least one light source for PointLight renderer."))
+        end
+        new(world, background, ambient, max_depth)
+    end
+end
+
+function (PL::PointLight)(ray::Ray)
+    repo = ray_intersection(PL.world, ray)
+    if isnothing(repo)
+        return PL.background_color
+    end
+    if ray.depth > PL.max_depth
+        return PL.background_color
+    end
+
+    hit_material = repo.shape.Mat
+    emitted_color = hit_material.Emition(repo.surface_P)
+    result_color = RGB(0.0, 0.0, 0.0)
+
+    if ray.depth == 0
+        result_color += emitted_color + PL.ambient_color
+    end
+
+    if hit_material.BRDF isa DiffusiveBRDF
+        for cur_light in PL.world.lights
+            if is_light_visible(PL.world, cur_light, repo.world_P)
+                light_effect = _light_modulation(cur_light, repo)
+                # lambertian reflectance
+                brdf_color = hit_material.BRDF.Pigment(repo.surface_P) * (1.0 / π)
+
+                result_color += brdf_color * light_effect
+            end
+        end
+    end
+
+    if hit_material.BRDF isa SpecularBRDF
+        reflected_ray = hit_material.BRDF(ray.dir, repo.world_P, repo.normal, ray.depth + 1)
+        reflected_color = PL(reflected_ray)
+        # should it be multiplied by the specular color? where is / π?
+        brdf_color = hit_material.BRDF.Pigment(repo.surface_P)
+        result_color += reflected_color * brdf_color
+    end
+
+    return result_color
 end

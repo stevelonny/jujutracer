@@ -6,6 +6,7 @@
     struct Sphere <: AbstractSolid
 
 A sphere.
+Unit radius sphere centered at the origin.
 This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `t::Transformation`: the transformation applied to the sphere.
@@ -84,7 +85,9 @@ function ray_intersection(S::Sphere, ray::Ray)
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
 
-    Δrid <= 0.0 && return nothing
+    if Δrid <= 0.0
+        return nothing
+    end
 
     sqrot = sqrt(Δrid)
     t1 = (-O_dot_d - sqrot) / d_squared
@@ -135,7 +138,9 @@ function ray_intersection_list(S::Sphere, ray::Ray)
 
     Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
 
-    Δrid <= 0.0 && return nothing
+    if Δrid <= 0.0
+        return nothing
+    end
 
     sqrot = sqrt(Δrid)
     t1 = (-O_dot_d - sqrot) / d_squared
@@ -212,4 +217,38 @@ function boxed(S::Sphere)::Tuple{Point,Point}
     Pmin = Point(minimum(xs), minimum(ys), minimum(zs))
     Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
     return (Pmin, Pmax)
+end
+
+"""
+    quick_ray_intersection(S::Sphere, ray::Ray)::Bool
+Checks if a ray intersects with the sphere without calculating the exact intersection point.
+# Arguments
+- `S::Sphere`: The circle to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the circle.
+# Returns
+- `Bool`: `true` if the ray intersects with the circle, `false` otherwise.
+"""
+function quick_ray_intersection(S::Sphere, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    O = Vec(inv_ray.origin)
+    d = inv_ray.dir
+    # precompute common values, probably not needed as the compiler is already smart enough
+    O_dot_d = O ⋅ d # its sign tells wheter the ray is moving towards or away from ray's origin
+    d_squared = squared_norm(d)
+    O_squared = squared_norm(O) # position of the ray's origin
+
+    if O_squared > 1.0 && O_dot_d > 0.0
+        return false
+    end
+    
+    Δrid = O_dot_d * O_dot_d - d_squared * (O_squared - 1.0)
+
+    if Δrid <= 0.0
+        return false
+    end
+
+    sqrot = sqrt(Δrid)
+    t1 = (-O_dot_d - sqrot) / d_squared
+    t2 = (-O_dot_d + sqrot) / d_squared
+    return (t1 > inv_ray.tmin && t1 < inv_ray.tmax) || (t2 > inv_ray.tmin && t2 < inv_ray.tmax)
 end
