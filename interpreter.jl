@@ -31,6 +31,7 @@ function parse_cli()
         default = "path_tracer"
         help = "Renderer to use (path_tracer, flat, on_off or point)"
         "--antialiasing", "-a"
+        arg_type = Int
         default = 2
         help = "Antialiasing level (default: 2)"
         "scene_file"
@@ -99,7 +100,7 @@ function main()
     camera = scene.camera
 
     gray = RGB(0.2, 0.2, 0.2)
-    ambient = RGB(0.1, 0.1, 0.1)
+    ambient = RGB(0.01, 0.01, 0.01)
     render = nothing
     pcg = PCG()
 
