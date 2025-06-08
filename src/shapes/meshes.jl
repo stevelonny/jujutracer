@@ -89,7 +89,7 @@ end
 function read_obj_file(filename::String; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     # Check if the file extension is valid
     if !(endswith(filename, ".obj"))
-        throw(InvalidPfmFileFormat("Invalid file extension. Only .obj is supported."))
+        throw(InvalidFileFormat("Invalid file extension. Only .obj is supported."))
     end
     io = IOBuffer()
     @info("Reading OBJ file from file: $(abspath(filename))")

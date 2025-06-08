@@ -62,14 +62,14 @@ end
 
 # Exception for invalid PFM file format
 """
-    InvalidPfmFileFormat <: Exception
+    InvalidFileFormat <: Exception
 
 Exception raised when the PFM file format is invalid or cannot be read.
 
 # Fields
 - `error_message::String`: The error message describing the issue.
 """
-struct InvalidPfmFileFormat <: Exception
+struct InvalidFileFormat <: Exception
     error_message::String
 end
 
@@ -84,14 +84,14 @@ Read a Float32 value by interpreting 4 bytes with the correct endianness from a 
 # Returns
 - `Float32`: The read float value.
 # Raises
-- `InvalidPfmFileFormat`: If there is an error reading the bytes from the file.
+- `InvalidFileFormat`: If there is an error reading the bytes from the file.
 """
 function _read_float(io::IO, is_little_endian)
 
     bytes = try
         read(io, UInt32)
     catch e
-        throw(InvalidPfmFileFormat("Impossible to read bytes from the file"))
+        throw(InvalidFileFormat("Impossible to read bytes from the file"))
     end
 
     if !is_little_endian
@@ -126,13 +126,13 @@ Parse endianness of the PFM file from a string.
 # Returns
 - `Bool`: Returns true if the endianness is little-endian, false if big-endian.
 # Raises
-- `InvalidPfmFileFormat`: If the endianness value is invalid or missing.
+- `InvalidFileFormat`: If the endianness value is invalid or missing.
 """
 function _parse_endianness(endian::String)
     value = try
         Int(parse(Float64, endian))
     catch e
-        throw(InvalidPfmFileFormat("Invalid or missing endianness specification"))
+        throw(InvalidFileFormat("Invalid or missing endianness specification"))
     end
 
     # return true if Little-endian, false if Big-endian
@@ -141,7 +141,7 @@ function _parse_endianness(endian::String)
     elseif value < 0
         return true   # Little-endian
     else
-        throw(InvalidPfmFileFormat("Endianness value cannot be 0. Expected a positive or negative value."))
+        throw(InvalidFileFormat("Endianness value cannot be 0. Expected a positive or negative value."))
     end
 end
 
@@ -155,18 +155,18 @@ Read image size from a string.
 # Returns
 - `Tuple{Int, Int}`: A tuple containing the width and height of the image.
 # Raises
-- `InvalidPfmFileFormat`: If the image size specification is invalid or if the width/height values are not integers.
+- `InvalidFileFormat`: If the image size specification is invalid or if the width/height values are not integers.
 """
 function _parse_image_size(line::String)
     dims = split(line)
     if length(dims) != 2
-        throw(InvalidPfmFileFormat("Invalid image size specification"))
+        throw(InvalidFileFormat("Invalid image size specification"))
     end
 
     w, h = try
         parse(Int, dims[1]), parse(Int, dims[2])
     catch e
-        throw(InvalidPfmFileFormat("Invalid weight/hight"))
+        throw(InvalidFileFormat("Invalid weight/hight"))
     end
     return w, h
 end
@@ -180,13 +180,13 @@ Read a PFM image from an input stream.
 # Returns
 - `hdrimg`: The HDR image read from the PFM file.
 # Raises
-- `InvalidPfmFileFormat`: If the PFM file format is invalid or if there are issues reading the file.
+- `InvalidFileFormat`: If the PFM file format is invalid or if there are issues reading the file.
 """
 function read_pfm_image(io)
     # Read the first line, should be "PF"
     line = _read_line(io)
     if line != "PF"
-        throw(InvalidPfmFileFormat("Non-specified PF type"))
+        throw(InvalidFileFormat("Non-specified PF type"))
     end
 
     # Read the second line, should be "width height"
@@ -220,12 +220,12 @@ Read a PFM image from an input stream.
 # Returns
 - `hdrimg`: The HDR image read from the PFM file.
 # Raises
-- `InvalidPfmFileFormat`: If the PFM file format is invalid or if there are issues reading the file.
+- `InvalidFileFormat`: If the PFM file format is invalid or if there are issues reading the file.
 """
 function read_pfm_image(filename::String)
     # Check if the file extension is valid
     if !(endswith(filename, ".pfm"))
-        throw(InvalidPfmFileFormat("Invalid file extension. Only .pfm is supported."))
+        throw(InvalidFileFormat("Invalid file extension. Only .pfm is supported."))
     end
     io = IOBuffer()
     @info("Reading PFM image from file: $(abspath(filename))")
@@ -255,7 +255,7 @@ function write_pfm_image(img::hdrimg, io::IOBuffer, endianness::Bool=true)
     try
         write(io, header)
     catch e
-        throw(InvalidPfmFileFormat("Invalid output file"))
+        throw(InvalidFileFormat("Invalid output file"))
     end
 
     for row_pixel in (img.h-1):-1:0
@@ -279,12 +279,12 @@ Write a PFM file encoding the content of an `hdrimg`.
 - `filename::String`: The file path where the PFM image will be saved, including the ".pfm" extension.
 - `endianness::Bool`: A boolean indicating whether to write the float values in little-endian format (default is true).
 # Raises
-- `InvalidPfmFileFormat`: If the file extension is not ".pfm".
+- `InvalidFileFormat`: If the file extension is not ".pfm".
 """
 function write_pfm_image(img::hdrimg, filename::String, endianness::Bool=true)
     # Check if the file extension is valid
     if !(endswith(filename, ".pfm"))
-        throw(InvalidPfmFileFormat("Invalid file extension. Only .pfm is supported."))
+        throw(InvalidFileFormat("Invalid file extension. Only .pfm is supported."))
     end
 
     # Open a temporary IOBuffer to write the PFM image
