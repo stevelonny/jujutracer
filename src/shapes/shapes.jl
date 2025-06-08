@@ -37,6 +37,9 @@ export AABB, intersected
 include("meshes.jl")
 export mesh
 
+include("bvh.jl")
+export BVHNode, BuildBVH, ray_intersection_bvh, ray_intersection_aabb
+
 include("world.jl")
 export World
 

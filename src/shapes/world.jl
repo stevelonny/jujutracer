@@ -20,13 +20,21 @@ A struct representing a collection of shapes (and lights) in a 3D world.
 struct World
     shapes::Vector{AbstractShape}
     lights::Vector{AbstractLight}
+    bvh::Union{BVHNode, Nothing}
 
     function World(shapes::Vector{AbstractShape})
-        World(shapes, Vector{AbstractLight}())
+        World(shapes, Vector{AbstractLight}(), nothing)
     end
-    function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight})
+    function World(shapes::Vector{AbstractShape}, bvh::Union{BVHNode, Nothing})
+        World(shapes, Vector{AbstractLight}(), bvh)
+    end
+    function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight}, nothing)
         @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))" shapes=shapes lights=lights
         new(shapes, lights)
+    end
+    function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight}, bvh::Union{BVHNode, Nothing})
+        @debug "Creating World with shapes: $(length(shapes)), lights: $(length(lights)), and BVH: $(bvh !== nothing)" shapes=shapes lights=lights bvh=bvh
+        new(shapes, lights, bvh)
     end
 end
 
@@ -43,6 +51,10 @@ If there is an intersection, returns a `HitRecord` containing the hit informatio
 function ray_intersection(W::World, ray::Ray)
     dim = length(W.shapes)
     closest = nothing
+
+    if !isnothing(W.bvh)
+        return ray_intersection_bvh(W.bvh, W.shapes, ray)            
+    end
 
     for i in 1:dim
         inter = ray_intersection(W.shapes[i], ray)
@@ -80,3 +92,4 @@ function is_point_visible(W::World, pos::Point, observer::Point)
     end
     return true
 end
+

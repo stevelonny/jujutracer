@@ -9,11 +9,11 @@ using TerminalLoggers
 using LoggingExtras
 
 filename = "output"
-renderertype = "flat" # "path" or "flat"
-width = 800
-height = 450
-n_rays = 3
-depth = 3
+renderertype = "path" # "path" or "flat"
+width = 1600
+height = 900
+n_rays = 4
+depth = 5
 russian = 3
 point_depth = 5
 aa = 2
@@ -76,12 +76,15 @@ function random_color(pcg::PCG)
     return RGB(rand_uniform(pcg, 0.0, 1.0), rand_uniform(pcg, 0.0, 1.0), rand_uniform(pcg, 0.0, 1.0))
 end
 
-function generate_triangle(pcg::PCG)
+function generate_triangle(pcg::PCG, diffuse::Bool)
     p1 = generate_point(pcg)
     p2 = Point(p1.x + rand_uniform(pcg, -0.5, 0.5), p1.y + rand_uniform(pcg, -0.5, 0.5), p1.z + rand_uniform(pcg, -0.5, 0.5))
     p3 = Point(p1.x + rand_uniform(pcg, -0.5, 0.5), p1.y + rand_uniform(pcg, -0.5, 0.5), p1.z + rand_uniform(pcg, -0.5, 0.5))
     color = color_from_centroid(centroid(p1, p2, p3))
-    return Triangle(p1, p2, p3, Material(UniformPigment(RGB(0.1, 0.1, 0.1)), DiffusiveBRDF(UniformPigment(color))))
+    random_emissive = rand_uniform(pcg, 0.0, 1.0)
+    emissive_color = RGB(random_emissive, random_emissive, random_emissive)
+    brdf = diffuse ? DiffusiveBRDF(UniformPigment(color)) : SpecularBRDF(UniformPigment(color))
+    return Triangle(p1, p2, p3, Material(UniformPigment(emissive_color), brdf))
 end
 # Create a filtered logger
 module_filter(log) = (log._module == jujutracer)
@@ -93,14 +96,19 @@ global_logger(filtered_logger)
 pcg = PCG()
 
 # generate random triangles
-number_of_triangles = 128
+number_of_triangles = 1024
 rand_triangles = Vector{AbstractShape}(undef, number_of_triangles)
 for i in 1:length(rand_triangles)
-    rand_triangles[i] = generate_triangle(pcg)
+    rand_triangles[i] = generate_triangle(pcg, isodd(i))
 end
 
+centroids = [centroid(t) for t in rand_triangles]
+
+# build the bvh tree
+bvh = BuildBVH(rand_triangles, centroids)
+world = World(rand_triangles, bvh)
+
 # rendering 
-world = World(rand_triangles)
 #cam = Orthogonal(t = R_cam ⊙ Translation(-1.0, 0.0, 0.0), a_ratio = convert(Float64, 16 // 9))
 cam = Perspective(d=2.0, t=Translation(-4.00, 0.0, 0.0))
 hdr = hdrimg(width, height)
@@ -121,6 +129,7 @@ if aa != 0
 else
     ImgTr(renderer)
 end
+
 toned_img = tone_mapping(hdr)
 # Save the LDR image
 save_ldrimage(get_matrix(toned_img), png_output)
