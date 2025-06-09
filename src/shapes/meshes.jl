@@ -50,39 +50,43 @@ end
 function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     shapes = Vector{Triangle}()
     points = Vector{Point}()
-    
-    while !eof(io)
-        line = split(readline(io), ' ')
-        dim = length(line)
-        
-        if line[1] == "v"
-            # add a point
-            p = Point(parse(Float64, line[2]),
-                        parse(Float64, line[3]),
-                        parse(Float64, line[4]))
-            push!(points, p)
-        elseif line[1] == "f"
-            # add a shape
-            if dim == 4
-                tr = Triangle(Tr,
-                              points[parse(Int, line[2])],
-                              points[parse(Int, line[3])],
-                              points[parse(Int, line[4])],
-                              Mat)
-                push!(shapes, tr)
-            elseif dim > 4
-                P = Vector{Point}()
-                for i in 2:dim
-                    push!(P, points[parse(Int, line[i])])
+    total = io.size
+    @debug "Reading OBJ file from IOBuffer with size: $(total) bytes" total=total
+    @withprogress name = "Reading OBJ file" begin
+        while !eof(io)
+            line = split(readline(io), ' ')
+            dim = length(line)
+            
+            if line[1] == "v"
+                # add a point
+                p = Point(parse(Float64, line[2]),
+                            parse(Float64, line[3]),
+                            parse(Float64, line[4]))
+                push!(points, p)
+            elseif line[1] == "f"
+                # add a shape
+                if dim == 4
+                    tr = Triangle(Tr,
+                                points[parse(Int, line[2])],
+                                points[parse(Int, line[3])],
+                                points[parse(Int, line[4])],
+                                Mat)
+                    push!(shapes, tr)
+                elseif dim > 4
+                    P = Vector{Point}()
+                    for i in 2:dim
+                        push!(P, points[parse(Int, line[i])])
+                    end
+                    tr = trianglize(P, Tr, Mat)
+                    shapes = vcat(shapes, tr)
+                else
+                    throw(ArgumentError("Invalid polygon declaration"))
                 end
-                tr = trianglize(P, Tr, Mat)
-                shapes = vcat(shapes, tr)
-            else
-                throw(ArgumentError("Invalid polygon declaration"))
-            end
-        end
-    end
-
+            end #if/else
+            @logprogress progress = position(io) / total
+        end #while
+    end #withprogress
+    @info "Read OBJ file: $(length(shapes)) shapes and $(length(points)) points."
     return shapes, points
 end
 
