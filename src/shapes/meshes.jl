@@ -39,9 +39,9 @@ Works only convex poygons
 function trianglize(P::Vector{Point}, Tr::AbstractTransformation, Mat::Material)
     tr = Vector{Triangle}()
     p = P[1]
-    sort!(P, by=x -> norm(x - p))
-    for i in 1:(length(P) - 2)
-        add = Triangle(Tr, p, P[i+1], P[i+2], Mat)
+    #sort!(P, by=x -> norm(x - p))
+    for i in 2:(length(P) - 1)
+        add = Triangle(Tr, p, P[i], P[i+1], Mat)
         push!(tr, add)
     end
     return tr
@@ -50,46 +50,50 @@ end
 function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     shapes = Vector{Triangle}()
     points = Vector{Point}()
-    
-    while !eof(io)
-        line = split(readline(io), ' ')
-        dim = length(line)
-        
-        if line[1] == "v"
-            # add a point
-            p = Point(parse(Float64, line[2]),
-                        parse(Float64, line[3]),
-                        parse(Float64, line[4]))
-            push!(points, p)
-        elseif line[1] == "f"
-            # add a shape
-            if dim == 4
-                tr = Triangle(Tr,
-                              points[parse(Int, line[2])],
-                              points[parse(Int, line[3])],
-                              points[parse(Int, line[4])],
-                              Mat)
-                push!(shapes, tr)
-            elseif dim > 4
-                P = Vector{Point}()
-                for i in 2:dim
-                    push!(P, points[parse(Int, line[i])])
+    total = io.size
+    @debug "Reading OBJ file from IOBuffer with size: $(total) bytes" total=total
+    @withprogress name = "Reading OBJ file" begin
+        while !eof(io)
+            line = split(readline(io), ' ')
+            dim = length(line)
+            
+            if line[1] == "v"
+                # add a point
+                p = Point(parse(Float64, line[2]),
+                            parse(Float64, line[3]),
+                            parse(Float64, line[4]))
+                push!(points, p)
+            elseif line[1] == "f"
+                # add a shape
+                if dim == 4
+                    tr = Triangle(Tr,
+                                points[parse(Int, line[2])],
+                                points[parse(Int, line[3])],
+                                points[parse(Int, line[4])],
+                                Mat)
+                    push!(shapes, tr)
+                elseif dim > 4
+                    P = Vector{Point}()
+                    for i in 2:dim
+                        push!(P, points[parse(Int, line[i])])
+                    end
+                    tr = trianglize(P, Tr, Mat)
+                    shapes = vcat(shapes, tr)
+                else
+                    throw(ArgumentError("Invalid polygon declaration"))
                 end
-                tr = trianglize(P, Tr, Mat)
-                shapes = vcat(shapes, tr)
-            else
-                throw(ArgumentError("Invalid polygon declaration"))
-            end
-        end
-    end
-
+            end #if/else
+            @logprogress progress = position(io) / total
+        end #while
+    end #withprogress
+    @info "Read OBJ file: $(length(shapes)) shapes and $(length(points)) points."
     return shapes, points
 end
 
 function read_obj_file(filename::String; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     # Check if the file extension is valid
     if !(endswith(filename, ".obj"))
-        throw(InvalidPfmFileFormat("Invalid file extension. Only .obj is supported."))
+        throw(InvalidFileFormat("Invalid file extension. Only .obj is supported."))
     end
     io = IOBuffer()
     @info("Reading OBJ file from file: $(abspath(filename))")
