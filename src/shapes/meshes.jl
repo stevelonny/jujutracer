@@ -39,9 +39,9 @@ Works only convex poygons
 function trianglize(P::Vector{Point}, Tr::AbstractTransformation, Mat::Material)
     tr = Vector{Triangle}()
     p = P[1]
-    sort!(P, by=x -> norm(x - p))
-    for i in 1:(length(P) - 2)
-        add = Triangle(Tr, p, P[i+1], P[i+2], Mat)
+    #sort!(P, by=x -> norm(x - p))
+    for i in 2:(length(P) - 1)
+        add = Triangle(Tr, p, P[i], P[i+1], Mat)
         push!(tr, add)
     end
     return tr
