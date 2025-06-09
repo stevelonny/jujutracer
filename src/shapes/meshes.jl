@@ -59,9 +59,9 @@ function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation
             
             if line[1] == "v"
                 # add a point
-                p = Point(parse(Float64, line[2]),
-                            parse(Float64, line[3]),
-                            parse(Float64, line[4]))
+                p = Point(parse(Float64, line[4]),
+                            parse(Float64, line[2]),
+                            parse(Float64, line[3]))
                 push!(points, p)
             elseif line[1] == "f"
                 # add a shape

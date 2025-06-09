@@ -29,11 +29,11 @@ struct World
         World(shapes, Vector{AbstractLight}(), bvh)
     end
     function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight}, nothing)
-        @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))" shapes=shapes lights=lights
+        @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))"
         new(shapes, lights)
     end
     function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight}, bvh::Union{BVHNode, Nothing})
-        @debug "Creating World with shapes: $(length(shapes)), lights: $(length(lights)), and BVH: $(bvh !== nothing)" shapes=shapes lights=lights bvh=bvh
+        @debug "Creating World with shapes: $(length(shapes)), lights: $(length(lights)), and BVH: $(bvh !== nothing)"
         new(shapes, lights, bvh)
     end
 end

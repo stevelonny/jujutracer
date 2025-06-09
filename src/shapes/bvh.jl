@@ -26,7 +26,7 @@ function Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vec
     if node.last_index - node.first_index + 1 <= 1
         return
     end
-    extent = node.p_max - node.p_min
+
     extent = node.p_max - node.p_min
     axis = 1 # x-axis
     if extent.y > extent.x
@@ -50,9 +50,11 @@ function Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vec
             right_index -= 1
         end
     end
+
     if left_index - node.first_index <= 0 || node.last_index - right_index <= 0
         return
     end
+
     node.left = BVHNode(node.first_index, left_index - 1)
     node.right = BVHNode(left_index, node.last_index)
     UpdateBoundaries!(node.left, shapes)
@@ -64,9 +66,11 @@ end
 
 function BuildBVH(shapes::Vector{AbstractShape}, centroids::Vector{Point})
     root = BVHNode(1, length(shapes))
-    @debug "Created root node" root=root
+    @debug "Created root node" root = root
+
     UpdateBoundaries!(root, shapes)
     Subdivide!(root, shapes, centroids)
+
     return root
 end
 
@@ -85,37 +89,44 @@ function ray_intersection_aabb(pmin::Point, pmax::Point, ray::Ray)
 
     tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
     tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+
     if tmax < max(ray.tmin, tmin)
         return false
     end
+
     first_hit = tmin > ray.tmin ? tmin : tmax
-    first_hit > ray.tmax && return false
-    return true
+    return first_hit <= ray.tmax
 end
 
 function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray)
     if !ray_intersection_aabb(bvh.p_min, bvh.p_max, ray)
         return nothing
     end
-    closest = nothing
-    if isnothing(bvh.left) && isnothing(bvh.right)
-        closest = ray_intersection(shapes[bvh.first_index], ray)
-    else
-        left_hit = !isnothing(bvh.left) ? ray_intersection_bvh(bvh.left, shapes, ray) : nothing
-        right_hit = !isnothing(bvh.right) ? ray_intersection_bvh(bvh.right, shapes, ray) : nothing
 
-        if isnothing(left_hit) && isnothing(right_hit)
-            return nothing
-        elseif isnothing(left_hit)
-            return right_hit
-        elseif isnothing(right_hit)
-            return left_hit
-        else
-            return left_hit.t < right_hit.t ? left_hit : right_hit
+    if isnothing(bvh.left) && isnothing(bvh.right)
+        closest = nothing
+        for i in bvh.first_index:bvh.last_index
+            hit = ray_intersection(shapes[i], ray)
+            if !isnothing(hit) && (isnothing(closest) || hit.t < closest.t)
+                closest = hit
+            end
         end
+        return closest
+    end
+
+    left_hit = !isnothing(bvh.left) ? ray_intersection_bvh(bvh.left, shapes, ray) : nothing
+    right_hit = !isnothing(bvh.right) ? ray_intersection_bvh(bvh.right, shapes, ray) : nothing
+
+    if isnothing(left_hit) && isnothing(right_hit)
+        return nothing
+    elseif isnothing(left_hit)
+        return right_hit
+    elseif isnothing(right_hit)
+        return left_hit
+    else
+        return left_hit.t < right_hit.t ? left_hit : right_hit
     end
 end
-
 
 struct BVHShape <: AbstractShape
     bvhroot::BVHNode

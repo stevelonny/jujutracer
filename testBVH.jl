@@ -8,7 +8,7 @@ using Logging
 using TerminalLoggers
 using LoggingExtras
 
-filename = "output"
+filename = "output_rand"
 renderertype = "path" # "path" or "flat"
 width = 1600
 height = 900
@@ -17,6 +17,7 @@ depth = 5
 russian = 3
 point_depth = 5
 aa = 2
+aatype = ""
 if aa != 0
     aatype = "_" * string(aa) * "aa"
 end
@@ -50,7 +51,7 @@ function rand_uniform(pcg::PCG, min::Number, max::Number)::Float64
 end
 
 function generate_point(pcg::PCG)
-    return Point(rand_uniform(pcg, -2.0, 2.0), rand_uniform(pcg, -4.0, 4.0), rand_uniform(pcg, -2.0, 2.0))
+    return Point(rand_uniform(pcg, -2.0, 2.0), rand_uniform(pcg, -4.0, 4.0), rand_uniform(pcg, -3.0, 3.0))
 end
 
 function centroid(t::Triangle)
@@ -64,7 +65,7 @@ function color_from_centroid(c::Point)
     # Normalize the centroid coordinates to the range [0, 1]
     r = (c.x + 2.0) / 4.0
     g = (c.y + 4.0) / 8.0
-    b = (c.z + 2.0) / 4.0
+    b = (c.z + 3.0) / 6.0
     # Clamp values to ensure they are within [0, 1]
     r = clamp(r, 0.0, 1.0)
     g = clamp(g, 0.0, 1.0)
@@ -96,7 +97,7 @@ global_logger(filtered_logger)
 pcg = PCG()
 
 # generate random triangles
-number_of_triangles = 1024
+number_of_triangles = 512
 rand_triangles = Vector{AbstractShape}(undef, number_of_triangles)
 for i in 1:length(rand_triangles)
     rand_triangles[i] = generate_triangle(pcg, isodd(i))
@@ -104,13 +105,21 @@ end
 
 centroids = [centroid(t) for t in rand_triangles]
 
+
 # build the bvh tree
 bvh = BuildBVH(rand_triangles, centroids)
-world = World(rand_triangles, bvh)
+bvhshape = BVHShape(bvh, rand_triangles)
+
+sky = Sphere(Scaling(10.0, 10.0, 10.0), Material(UniformPigment(RGB(0.5, 0.7, 1.0)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.7, 1.0)))))
+
+shapes = Vector{AbstractShape}()
+push!(shapes, bvhshape)
+#push!(shapes, sky)
+
+world = World(shapes)
 
 # rendering 
-#cam = Orthogonal(t = R_cam ⊙ Translation(-1.0, 0.0, 0.0), a_ratio = convert(Float64, 16 // 9))
-cam = Perspective(d=2.0, t=Translation(-4.00, 0.0, 0.0))
+cam = Perspective(d=2.0, t=Translation(-5.00, 0.0, 0.0))
 hdr = hdrimg(width, height)
 ImgTr = ImageTracer(hdr, cam)
 pcg = PCG()
