@@ -64,6 +64,7 @@ end
 
 function BuildBVH(shapes::Vector{AbstractShape}, centroids::Vector{Point})
     root = BVHNode(1, length(shapes))
+    @debug "Created root node" root=root
     UpdateBoundaries!(root, shapes)
     Subdivide!(root, shapes, centroids)
     return root
@@ -113,4 +114,14 @@ function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::
             return left_hit.t < right_hit.t ? left_hit : right_hit
         end
     end
+end
+
+
+struct BVHShape <: AbstractShape
+    bvhroot::BVHNode
+    shapes::Vector{AbstractShape}
+end
+
+function ray_intersection(bvhshape::BVHShape, ray::Ray)
+    return ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray)
 end
