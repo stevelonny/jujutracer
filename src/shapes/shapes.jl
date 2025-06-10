@@ -38,7 +38,7 @@ include("meshes.jl")
 export mesh
 
 include("bvh.jl")
-export BVHNode, BuildBVH, ray_intersection_bvh, ray_intersection_aabb, BVHShape, ray_intersection
+export BVHNode, BuildBVH, ray_intersection_bvh, ray_intersection_aabb, BVHShape, ray_intersection, centroid
 
 include("world.jl")
 export World

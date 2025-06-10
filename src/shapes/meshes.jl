@@ -50,9 +50,9 @@ end
 function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     shapes = Vector{Triangle}()
     points = Vector{Point}()
+    faces = Vector{Vector{Int}}()
     total = io.size
     @debug "Reading OBJ file from IOBuffer with size: $(total) bytes" total=total
-    @withprogress name = "Reading OBJ file" begin
         while !eof(io)
             line = split(readline(io), ' ')
             dim = length(line)
@@ -64,28 +64,33 @@ function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation
                             parse(Float64, line[3]))
                 push!(points, p)
             elseif line[1] == "f"
-                # add a shape
-                if dim == 4
-                    tr = Triangle(Tr,
-                                points[parse(Int, line[2])],
-                                points[parse(Int, line[3])],
-                                points[parse(Int, line[4])],
-                                Mat)
-                    push!(shapes, tr)
-                elseif dim > 4
-                    P = Vector{Point}()
-                    for i in 2:dim
-                        push!(P, points[parse(Int, line[i])])
-                    end
-                    tr = trianglize(P, Tr, Mat)
-                    shapes = vcat(shapes, tr)
-                else
-                    throw(ArgumentError("Invalid polygon declaration"))
+                face = Vector{Int}()
+                for i in 2:dim
+                    push!(face, parse.(Int, line[i]))
                 end
+                push!(faces, face)
             end #if/else
-            @logprogress progress = position(io) / total
         end #while
-    end #withprogress
+    # Convert faces to triangles
+    for face in faces
+        if length(face) == 3
+            tr = Triangle(Tr,
+                          points[face[1]],
+                          points[face[2]],
+                          points[face[3]],
+                          Mat)
+            push!(shapes, tr)
+        elseif length(face) > 3
+            P = Vector{Point}()
+            for i in eachindex(face)
+                push!(P, points[face[i]])
+            end
+            tr = jujutracer.trianglize(P, Tr, Mat)
+            append!(shapes, tr)
+        else
+            throw(ArgumentError("Invalid polygon declaration"))
+        end
+    end
     @info "Read OBJ file: $(length(shapes)) shapes and $(length(points)) points."
     return shapes, points
 end

@@ -23,8 +23,8 @@ filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logg
 global_logger(filtered_logger)
 
 filename = "output"
-width = 360
-height = 640
+width = 900
+height = 1600
 n_rays = 4
 depth = 5
 russian = 3
@@ -33,32 +33,47 @@ aa = 2
 png_output = filename * ".png"
 pfm_output = filename * ".pfm"
 
-m_tree = mesh("tree.obj", Material(UniformPigment(RGB(0.5, 0.3, 0.1)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.3, 0.1)))))
+m_tree = mesh("tree.obj", Material(UniformPigment(RGB(0.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.3, 0.1)))))
 
 tree_shapes = Vector{AbstractShape}()
-centroids = [centroid(t) for t in m_tree.shapes]
 for t in m_tree.shapes
     push!(tree_shapes, t)
 end
 
 tree_shapes = deepcopy(tree_shapes)
 
-bvh = BuildBVH(tree_shapes, centroids)
-bvhshape = BVHShape(bvh, tree_shapes)
+bvh, primitves = BuildBVH(tree_shapes; use_sah=false)
+bvhshape = BVHShape(bvh, tree_shapes, primitves)
 box = Box(bvhshape.bvhroot.p_min, bvhshape.bvhroot.p_max, Material(UniformPigment(RGB(0.5, 0.3, 0.1)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.3, 0.1)))))
 
+sun_material = Material(UniformPigment(RGB(1.0, 1.0, 0.8)), DiffusiveBRDF(UniformPigment(RGB(1.0, 1.0, 0.8))))
 
-shapes = Vector{AbstractShape}(undef, 1)
-shapes[1] = box
+sun = Sphere(Translation(10.0, 4.5, 16.0), sun_material)
+spot = SpotLight(Point(10.0, 4.5, 16.0), Vec(-10.0, -4.5, -16.0), RGB(1.0, 1.0, 0.8), 100.0)
+A, B = box.P2, box.P1
+spot = SpotLight(A, (B-A), RGB(1.0, 1.0, 0.8), 100.0)
+light = LightSource(A, RGB(0.2, 0.2, 0.12), 100.0)
 
-world = World(shapes)
+
+shapes = Vector{AbstractShape}()
+push!(shapes, Plane(Material(UniformPigment(RGB(0.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(0.1, 0.2, 0.1))))))
+push!(shapes, sun) # remove it if using point light
+# push!(shapes, box)
+push!(shapes, bvhshape)
+lights = Vector{AbstractLight}()
+push!(lights, spot)
+push!(lights, light)
+
+world = World(shapes, lights, nothing)
 
 cam = Perspective(d=1.0, t=Translation(-3.0, 0.0, 7.5), a_ratio=9/16)
 hdr = hdrimg(width, height)
 ImgTr = ImageTracer(hdr, cam)
 pcg = PCG()
 renderer = Flat(world, RGB(0.1, 0.1, 0.1))
-ImgTr(renderer, aa, pcg)
+#renderer = PathTracer(world, RGB(0.1, 0.1, 0.1), pcg, n_rays, depth, russian)
+#renderer = PointLight(world, RGB(0.1, 0.1, 0.15), RGB(0.1, 0.1, 0.1), 0)
+ImgTr(renderer)
 
 toned_img = tone_mapping(hdr)
 save_ldrimage(get_matrix(toned_img), png_output)

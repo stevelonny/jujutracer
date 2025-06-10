@@ -10,6 +10,16 @@ mutable struct BVHNode
     end
 end
 
+function centroid(t::AbstractShape)
+    p1, p2 = boxed(t)
+    return Point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0, (p1.z + p2.z) / 2.0)
+end
+
+function surface_area(p1::Point, p2::Point)
+    diagonal = p2 - p1
+    return 2 * (diagonal.x * diagonal.y + diagonal.x * diagonal.z + diagonal.y * diagonal.z)
+end
+
 function UpdateBoundaries!(node::BVHNode, shapes::Vector{AbstractShape})
     pmin = Point(Inf, Inf, Inf)
     pmax = Point(-Inf, -Inf, -Inf)
@@ -22,8 +32,11 @@ function UpdateBoundaries!(node::BVHNode, shapes::Vector{AbstractShape})
     node.p_max = pmax
 end
 
-function Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point})
-    if node.last_index - node.first_index + 1 <= 1
+function Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point}; max_shapes_per_leaf::Int64=2)
+    if node.last_index - node.first_index + 1 <= max_shapes_per_leaf
+        # create a leaf node
+        node.left = nothing
+        node.right = nothing
         return
     end
 
@@ -37,6 +50,7 @@ function Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vec
     end
     split_pos = getfield(node.p_min, axis) + getfield(extent, axis) * 0.5
 
+    # equivalet to std::partition!
     left_index = node.first_index
     right_index = node.last_index
     while left_index <= right_index
@@ -60,16 +74,171 @@ function Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vec
     UpdateBoundaries!(node.left, shapes)
     UpdateBoundaries!(node.right, shapes)
 
-    Subdivide!(node.left, shapes, centroids)
-    Subdivide!(node.right, shapes, centroids)
+    Subdivide!(node.left, shapes, centroids; max_shapes_per_leaf=max_shapes_per_leaf)
+    Subdivide!(node.right, shapes, centroids; max_shapes_per_leaf=max_shapes_per_leaf)
 end
 
-function BuildBVH(shapes::Vector{AbstractShape}, centroids::Vector{Point})
+function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point}; max_shapes_per_leaf::Int64=2)
+    # stop if there are too few shapes
+    if node.last_index - node.first_index + 1 <= max_shapes_per_leaf
+        return
+    end
+
+    # chose split axis
+    extent = node.p_max - node.p_min
+    axis = 1 # x-axis
+    if extent.y > extent.x
+        axis = 2  # y-axis
+    end
+    if extent.z > getfield(extent, axis)
+        axis = 3  # z-axis
+    end
+
+    num_shapes = node.last_index - node.first_index + 1
+    if num_shapes <= 2
+        # split in half if there are 2 or fewer shapes
+        split_pos = getfield(node.p_min, axis) + getfield(extent, axis) * 0.5
+        if num_shapes == 2
+            # swap shapes if they are not in the correct order
+            if getfield(centroids[node.first_index], axis) > split_pos
+                centroids[node.first_index], centroids[node.last_index] = centroids[node.last_index], centroids[node.first_index]
+                shapes[node.first_index], shapes[node.last_index] = shapes[node.last_index], shapes[node.first_index]
+            end
+            node.left = BVHNode(node.first_index, node.first_index)
+            node.right = BVHNode(node.first_index + 1, node.last_index)
+            UpdateBoundaries!(node.left, shapes)
+            UpdateBoundaries!(node.right, shapes)
+            return
+        else # num_shapes == 1
+            node.left = BVHNode(node.first_index, node.first_index)
+            node.right = nothing
+            UpdateBoundaries!(node.left, shapes)
+            return
+        end
+    else
+        # initialize buckets for SAH
+        p_a_min = getfield(node.p_min, axis)
+        p_a_max = getfield(node.p_max, axis)
+        extent_axis = p_a_max - p_a_min
+        n_buckets = 12
+        bucket_count = Vector{Int64}(undef, n_buckets)
+        bucket_bounds = Vector{Tuple{Point,Point}}(undef, n_buckets)
+        for i in 1:n_buckets
+            bucket_count[i] = 0
+        end
+        for i in node.first_index:node.last_index
+            centroid_a = getfield(centroids[i], axis)
+            b = floor(Int, (centroid_a - p_a_min) / extent_axis * n_buckets) + 1
+            if b < 1
+                b = 1
+            elseif b > n_buckets
+                b = n_buckets
+            end
+            if bucket_count[b] == 0
+                # initialize bucket bounds
+                P1, P2 = boxed(shapes[i])
+                bucket_bounds[b] = (P1, P2)
+            end
+            bucket_count[b] += 1
+            P1, P2 = boxed(shapes[i])
+            bucket_bounds[b] = (
+                Point(min(bucket_bounds[b][1].x, P1.x), min(bucket_bounds[b][1].y, P1.y), min(bucket_bounds[b][1].z, P1.z)),
+                Point(max(bucket_bounds[b][2].x, P2.x), max(bucket_bounds[b][2].y, P2.y), max(bucket_bounds[b][2].z, P2.z))
+            )
+        end
+
+        # forward scan to assing costs (first part of the cost equation)
+        n_splits = n_buckets - 1
+        costs = Vector{Float64}(undef, n_splits)
+        count_below = 0
+        bound_below = (Point(Inf, Inf, Inf), Point(-Inf, -Inf, -Inf))
+        for i in 1:n_splits
+            bound_below = (
+                Point(min(bound_below[1].x, bucket_bounds[i][1].x), min(bound_below[1].y, bucket_bounds[i][1].y), min(bound_below[1].z, bucket_bounds[i][1].z)),
+                Point(max(bound_below[2].x, bucket_bounds[i][2].x), max(bound_below[2].y, bucket_bounds[i][2].y), max(bound_below[2].z, bucket_bounds[i][2].z))
+            )
+            count_below += bucket_count[i]
+            costs[i] = count_below * surface_area(bound_below[1], bound_below[2])
+        end
+        # backward scan to assign costs (second part of the cost equation)
+        count_above = 0
+        bound_above = (Point(Inf, Inf, Inf), Point(-Inf, -Inf, -Inf))
+        for i in n_splits:-1:1
+            bound_above = (
+                Point(min(bound_above[1].x, bucket_bounds[i+1][1].x), min(bound_above[1].y, bucket_bounds[i+1][1].y), min(bound_above[1].z, bucket_bounds[i+1][1].z)),
+                Point(max(bound_above[2].x, bucket_bounds[i+1][2].x), max(bound_above[2].y, bucket_bounds[i+1][2].y), max(bound_above[2].z, bucket_bounds[i+1][2].z))
+            )
+            count_above += bucket_count[i+1]
+            costs[i] += count_above * surface_area(bound_above[1], bound_above[2])
+        end
+
+        # find the best split
+        best_bucket = 0 #-1
+        best_cost = Inf
+        for i in 1:n_splits
+            if costs[i] < best_cost
+                best_cost = costs[i]
+                best_bucket = i
+            end
+        end
+
+        leaf_cost = num_shapes
+        # 0.5 = traversal cost (arbitrarianly set)
+        best_cost = 0.5 + best_cost / surface_area(node.p_min, node.p_max)
+        # either:
+        # - split if:
+        #   - the cost is lower than the leaf cost
+        #   - or the number of shapes is greater than max_shapes_per_leaf
+        # - or create a leaf node
+        if (best_cost < leaf_cost || num_shapes > max_shapes_per_leaf)
+            # reorder shapes and centroids
+            left_index = node.first_index
+            right_index = node.last_index
+            while left_index <= right_index
+                if getfield(centroids[left_index], axis) < p_a_min + extent_axis * best_bucket / n_buckets
+                    left_index += 1
+                else
+                    if left_index < right_index
+                        centroids[left_index], centroids[right_index] = centroids[right_index], centroids[left_index]
+                        shapes[left_index], shapes[right_index] = shapes[right_index], shapes[left_index]
+                    end
+                    right_index -= 1
+                end
+            end #while
+            if left_index - node.first_index <= 0 || node.last_index - right_index <= 0
+                return
+            end
+
+            node.left = BVHNode(node.first_index, left_index - 1)
+            node.right = BVHNode(left_index, node.last_index)
+
+            UpdateBoundaries!(node.left, shapes)
+            UpdateBoundaries!(node.right, shapes)
+
+            SubdivideSAH!(node.left, shapes, centroids; max_shapes_per_leaf=max_shapes_per_leaf)
+            SubdivideSAH!(node.right, shapes, centroids; max_shapes_per_leaf=max_shapes_per_leaf)
+        else # create a leaf node
+            node.left = nothing
+            node.right = nothing
+            return
+        end
+    end
+end
+
+function BuildBVH(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes_per_leaf::Int64=2)
     root = BVHNode(1, length(shapes))
-    @debug "Created root node" root = root
+    @debug "Building BVH tree" shapes = length(shapes) max_shapes_per_leaf = max_shapes_per_leaf use_sah = use_sah
+
+    centroids = [centroid(s) for s in shapes]
 
     UpdateBoundaries!(root, shapes)
-    Subdivide!(root, shapes, centroids)
+    if use_sah
+        @debug "Subdividing BVH using SAH"
+        SubdivideSAH!(root, shapes, centroids; max_shapes_per_leaf=max_shapes_per_leaf)
+    else
+        @debug "Subdividing BVH using simple method"
+        Subdivide!(root, shapes, centroids)
+    end
 
     return root
 end
@@ -128,6 +297,7 @@ function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::
     end
 end
 
+
 struct BVHShape <: AbstractShape
     bvhroot::BVHNode
     shapes::Vector{AbstractShape}
@@ -136,3 +306,89 @@ end
 function ray_intersection(bvhshape::BVHShape, ray::Ray)
     return ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray)
 end
+
+function quick_ray_intersection(bvhshape::BVHShape, ray::Ray)
+    return !isnothing(ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray))
+end
+
+# stack traversal + early exits
+function ray_intersection_bvh_optimized(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray)
+    # prepare a stack for traversal
+    nodesToVisit = Vector{BVHNode}()
+    sizehint!(nodesToVisit, 64) # preallocate stack size (prob useless as i cant allocate on the stack)
+    push!(nodesToVisit, bvh) # add the root node
+
+    closest = nothing
+    closest_t = ray.tmax # this will be used as tMax // early exits
+
+    current_ray = Ray(
+        origin=ray.origin,
+        dir=ray.dir,
+        tmin=ray.tmin,
+        tmax=ray.tmax,
+        depth=ray.depth
+    )
+
+    while !isempty(nodesToVisit)
+        current_node = pop!(nodesToVisit)
+
+        if !ray_intersection_aabb(current_node.p_min, current_node.p_max, current_ray)
+            continue
+        end
+
+        # leaf: intersect shapes directly
+        if isnothing(current_node.left) && isnothing(current_node.right)
+            for i in current_node.first_index:current_node.last_index
+                hit = ray_intersection(shapes[i], current_ray)
+                if !isnothing(hit) && hit.t < closest_t
+                    closest = hit
+                    closest_t = hit.t
+
+                    # update current ray with current permissible tMax:
+                    # this should allow for early exits in the ray_intersection's
+                    current_ray = Ray(
+                        origin=ray.origin,
+                        dir=ray.dir,
+                        tmin=ray.tmin,
+                        tmax=hit.t,
+                        depth=ray.depth
+                    )
+                end
+            end
+        else
+            # we cannot leverage ray direction vs split direction as we do not save the latter
+            # project child centers onto the ray to determine which one to visit first
+            left_child = current_node.left
+            right_child = current_node.right
+
+            if !isnothing(left_child) && !isnothing(right_child)
+                # calculate approx children distance
+                left_center = (left_child.p_min + left_child.p_max) * 0.5
+                right_center = (right_child.p_min + right_child.p_max) * 0.5
+                left_distance = (left_center - ray.origin) ⋅ ray.dir
+                right_distance = (right_center - ray.origin) ⋅ ray.dir
+
+                # remember: first in last out. so as we advance in th while loop:
+                # first add farther node (it will be skipped as the current iteration will end)
+                # then add closer node (it will be processed first in the next iteration)
+                if left_distance < right_distance
+                    push!(nodesToVisit, right_child)
+                    push!(nodesToVisit, left_child)
+                else
+                    push!(nodesToVisit, left_child)
+                    push!(nodesToVisit, right_child)
+                end
+            else
+                if !isnothing(right_child)
+                    push!(nodesToVisit, right_child)
+                end
+                if !isnothing(left_child)
+                    push!(nodesToVisit, left_child)
+                end
+            end
+        end
+    end
+
+    return closest
+end
+

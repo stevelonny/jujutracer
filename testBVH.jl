@@ -9,14 +9,14 @@ using TerminalLoggers
 using LoggingExtras
 
 filename = "output_rand"
-renderertype = "path" # "path" or "flat"
-width = 1600
-height = 900
+renderertype = "flat" # "path" or "flat"
+width = 3840
+height = 2160
 n_rays = 4
 depth = 5
 russian = 3
 point_depth = 5
-aa = 2
+aa = 0
 aatype = ""
 if aa != 0
     aatype = "_" * string(aa) * "aa"
@@ -97,17 +97,14 @@ global_logger(filtered_logger)
 pcg = PCG()
 
 # generate random triangles
-number_of_triangles = 512
+number_of_triangles = 2048
 rand_triangles = Vector{AbstractShape}(undef, number_of_triangles)
 for i in 1:length(rand_triangles)
     rand_triangles[i] = generate_triangle(pcg, isodd(i))
 end
 
-centroids = [centroid(t) for t in rand_triangles]
-
-
 # build the bvh tree
-bvh = BuildBVH(rand_triangles, centroids)
+bvh = BuildBVH(rand_triangles; use_sah=false)
 bvhshape = BVHShape(bvh, rand_triangles)
 
 sky = Sphere(Scaling(10.0, 10.0, 10.0), Material(UniformPigment(RGB(0.5, 0.7, 1.0)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.7, 1.0)))))
