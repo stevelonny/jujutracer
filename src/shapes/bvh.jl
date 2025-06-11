@@ -285,7 +285,7 @@ function BuildBVH(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes
         depth = Subdivide!(root, shapes, centroids, depth)
     end
     @debug "BVH tree built" depth = depth
-    return root
+    return root, depth
 end
 
 function ray_intersection_aabb(pmin::Point, pmax::Point, ray::Ray)
@@ -312,7 +312,8 @@ function ray_intersection_aabb(pmin::Point, pmax::Point, ray::Ray)
     return first_hit <= ray.tmax
 end
 
-function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray)
+function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray, bvh_depth::Int64)
+    bvh_depth += 1
     if !ray_intersection_aabb(bvh.p_min, bvh.p_max, ray)
         return nothing
     end
@@ -325,19 +326,64 @@ function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::
                 closest = hit
             end
         end
-        return closest
+        hit = !isnothing(closest) ? HitRecord(
+            world_P=closest.world_P,
+            normal=closest.normal,
+            surface_P=closest.surface_P,
+            t=closest.t,
+            ray=closest.ray,
+            shape=closest.shape,
+            bvh_depth=bvh_depth
+        ) : nothing
+        return hit
     end
 
-    left_hit = !isnothing(bvh.left) ? ray_intersection_bvh(bvh.left, shapes, ray) : nothing
-    right_hit = !isnothing(bvh.right) ? ray_intersection_bvh(bvh.right, shapes, ray) : nothing
+    left_hit = !isnothing(bvh.left) ? ray_intersection_bvh(bvh.left, shapes, ray, bvh_depth) : nothing
+    right_hit = !isnothing(bvh.right) ? ray_intersection_bvh(bvh.right, shapes, ray, bvh_depth) : nothing
 
     if isnothing(left_hit) && isnothing(right_hit)
         return nothing
     elseif isnothing(left_hit)
+        hit = HitRecord(
+            world_P=right_hit.world_P,
+            normal=right_hit.normal,
+            surface_P=right_hit.surface_P,
+            t=right_hit.t,
+            ray=right_hit.ray,
+            shape=right_hit.shape,
+            bvh_depth=bvh_depth
+        )
         return right_hit
     elseif isnothing(right_hit)
+        hit = HitRecord(
+            world_P=left_hit.world_P,
+            normal=left_hit.normal,
+            surface_P=left_hit.surface_P,
+            t=left_hit.t,
+            ray=left_hit.ray,
+            shape=left_hit.shape,
+            bvh_depth=bvh_depth
+        )
         return left_hit
     else
+        left_hit = HitRecord(
+            world_P=left_hit.world_P,
+            normal=left_hit.normal,
+            surface_P=left_hit.surface_P,
+            t=left_hit.t,
+            ray=left_hit.ray,
+            shape=left_hit.shape,
+            bvh_depth=bvh_depth
+        )
+        right_hit = HitRecord(
+            world_P=right_hit.world_P,
+            normal=right_hit.normal,
+            surface_P=right_hit.surface_P,
+            t=right_hit.t,
+            ray=right_hit.ray,
+            shape=right_hit.shape,
+            bvh_depth=bvh_depth
+        )
         return left_hit.t < right_hit.t ? left_hit : right_hit
     end
 end
@@ -349,11 +395,11 @@ struct BVHShape <: AbstractShape
 end
 
 function ray_intersection(bvhshape::BVHShape, ray::Ray)
-    return ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray)
+    return ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray, 0)
 end
 
 function quick_ray_intersection(bvhshape::BVHShape, ray::Ray)
-    return !isnothing(ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray))
+    return !isnothing(ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray, 0))
 end
 
 # stack traversal + early exits

@@ -31,9 +31,10 @@ struct HitRecord
     t::Float64
     ray::Ray
     shape::AbstractShape
+    bvh_depth::Union{Int64, Nothing}
 
-    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray, shape::AbstractShape)
-        new(world_P, normal, surface_P, t, ray, shape)
+    function HitRecord(; world_P::Point, normal::Normal, surface_P::SurfacePoint, t::Float64, ray::Ray, shape::AbstractShape, bvh_depth::Union{Int64, Nothing}=nothing)
+        new(world_P, normal, surface_P, t, ray, shape, bvh_depth)
     end
 
 end

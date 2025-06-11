@@ -241,3 +241,32 @@ function (PL::PointLight)(ray::Ray)
 
     return result_color
 end
+
+struct DepthBVHRender <: Function
+    world::World
+    background_color::RGB
+    non_bvh_color::RGB
+    bvh_color_low::RGB
+    bvh_color_high::RGB
+    bvh_max_depth::Int64
+
+    function DepthBVHRender(world::World; background_color::RGB=RGB(0.1, 0.1, 0.1), non_bvh_color::RGB=RGB(1.0, 0.0, 0.0), 
+                            bvh_color_low::RGB=RGB(0.0, 0.0, 1.0), bvh_color_high::RGB=RGB(0.0, 1.0, 0.0), bvh_max_depth::Int64)
+        new(world, background_color, non_bvh_color, bvh_color_low, bvh_color_high, bvh_max_depth)
+    end
+
+end
+
+function (DBR::DepthBVHRender)(ray::Ray)
+    repo = ray_intersection(DBR.world, ray)
+    if isnothing(repo)
+        return DBR.background_color
+    end
+    if isnothing(repo.bvh_depth)
+        return DBR.non_bvh_color
+    end
+    v_color = clamp(repo.bvh_depth / DBR.bvh_max_depth, 0.0, 1.0)
+    result_color = DBR.bvh_color_low * (1.0 - v_color) + DBR.bvh_color_high * v_color
+    return result_color
+end
+
