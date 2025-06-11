@@ -277,7 +277,7 @@ end
         p1 = Point(1.0, 2.0, 3.0)
         p2 = Point(1.0, 2.0, 3.0)
         @test p1 ≈ p2
-        @test_throws MethodError p1 * 2
+        @test p1 * 2 ≈ Point(2.0, 4.0, 6.0)
         @test_throws MethodError p1 / 2
     end
 

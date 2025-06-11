@@ -28,9 +28,9 @@ struct World
     function World(shapes::Vector{AbstractShape}, bvh::Union{BVHNode, Nothing})
         World(shapes, Vector{AbstractLight}(), bvh)
     end
-    function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight}, nothing)
+    function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight})
         @debug "Creating World with shapes: $(length(shapes)) and lights: $(length(lights))"
-        new(shapes, lights)
+        new(shapes, lights, nothing)
     end
     function World(shapes::Vector{AbstractShape}, lights::Vector{AbstractLight}, bvh::Union{BVHNode, Nothing})
         @debug "Creating World with shapes: $(length(shapes)), lights: $(length(lights)), and BVH: $(bvh !== nothing)"

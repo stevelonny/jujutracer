@@ -128,3 +128,30 @@ function boxed(S::Parallelogram)::Tuple{Point,Point}
     P2 = Point(max(A.x, B.x, C.x, D.x), max(A.y, B.y, C.y, D.y), max(A.z, B.z, C.z, D.z))
     return (P1, P2)
 end
+
+"""
+    quick_ray_intersection(S::Parallelogram, ray::Ray)::Bool
+Checks if a ray intersects with the parallelogram without calculating the exact intersection point.
+# Arguments
+- `S::Parallelogram`: The parallelogram to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the parallelogram.
+# Returns
+- `Bool`: `true` if the ray intersects with the parallelogram, `false` otherwise.
+"""
+function quick_ray_intersection(S::Parallelogram, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    O = inv_ray.origin - S.A
+    d = inv_ray.dir
+
+    detM = _sarrus(S.B - S.A, S.C - S.A, -d)
+
+    if detM != 0.0
+        β = _sarrus(O, S.C - S.A, -d) / detM
+        γ = _sarrus(S.B - S.A, O, -d) / detM
+        t = _sarrus(S.B - S.A, S.C - S.A, O) / detM
+
+        return (t > inv_ray.tmin && t < inv_ray.tmax && β >= 0.0 && γ >= 0.0)
+    else
+        return false
+    end
+end
