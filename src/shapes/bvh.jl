@@ -222,7 +222,7 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
         #   - or the number of shapes is greater than max_shapes_per_leaf
         # - or create a leaf node
         #@debug "Processing node with:" n_buckets=n_buckets p_max = node.p_max p_min = node.p_min axis = axis best_bucket = best_bucket best_cost = best_cost leaf_cost = leaf_cost left= node.first_index right = node.last_index
-        if best_cost < leaf_cost
+        if (best_cost < leaf_cost || num_shapes > max_shapes_per_leaf)
             # reorder shapes and centroids
             left_index = node.first_index
             right_index = node.last_index
