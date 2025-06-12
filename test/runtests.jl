@@ -1425,28 +1425,32 @@ end
         for SHAPE in jujutracer.SHAPES
             shape_constructor = jujutracer.shapes_constructors[SHAPE]
             input = IOBuffer("""
-            (sky_material, identity)
-            (sky_material, translation([1.0, 2.0, pippo]))
-            (sky_material, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]))
+            sh1(sky_material, identity)
+            sh2(sky_material, translation([1.0, 2.0, pippo]))
+            sh3(sky_material, translation([1.0, 2.0, pluto]) * scaling([2.0, 3.0, 4.0]))
             """)
             stream = InputStream(input)
-            shape1 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            name1, shape1 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test name1 == "sh1"
             @test shape1.Tr ≈ Transformation()
             @test shape1.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-            shape2 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            name2, shape2 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test name2 == "sh2"
             @test shape2.Tr ≈ Translation(1.0, 2.0, 500.0)
             @test shape2.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
-            shape3 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            name3, shape3 = jujutracer._parse_shape(shape_constructor, stream, dict, dict_mat)
+            @test name3 == "sh3"
             @test shape3.Tr ≈ Translation(1.0, 2.0, 300.0) ⊙ Scaling(2.0, 3.0, 4.0)
             @test shape3.Mat == Material(UniformPigment(RGB(5.0, 500.0, 300.0)), SpecularBRDF(CheckeredPigment(4, 4, RGB(5.0, 500.0, 300.0), RGB(500.0, 300.0, 5.0))))
         end
 
         #parse_triangle
         input = IOBuffer("""
-        (sky_material, [0.0, 0.0, 0.0], [1.0, pippo, 0.0], [0.0, 1.0, pluto])
+        tr(sky_material, [0.0, 0.0, 0.0], [1.0, pippo, 0.0], [0.0, 1.0, pluto])
         """)
         stream = InputStream(input)
-        triangle1 = jujutracer._parse_triangle(stream, dict, dict_mat)
+        name, triangle1 = jujutracer._parse_triangle(stream, dict, dict_mat)
+        @test name == "tr"
         @test triangle1.A ≈ Point(0.0, 0.0, 0.0)
         @test triangle1.B ≈ Point(1.0, 500.0, 0.0)
         @test triangle1.C ≈ Point(0.0, 1.0, 300.0)
@@ -1454,10 +1458,11 @@ end
     
         #parse_parallelogram
         input = IOBuffer("""
-        (sky_material, [0.0, 0.0, 0.0], [1.0, pippo, 0.0], [0.0, 1.0, pluto])
+        parall(sky_material, [0.0, 0.0, 0.0], [1.0, pippo, 0.0], [0.0, 1.0, pluto])
         """)
         stream = InputStream(input)
-        parallelogram1 = jujutracer._parse_parallelogram(stream, dict, dict_mat)
+        name, parallelogram1 = jujutracer._parse_parallelogram(stream, dict, dict_mat)
+        @test name == "parall"
         @test parallelogram1.A ≈ Point(0.0, 0.0, 0.0)
         @test parallelogram1.B ≈ Point(1.0, 500.0, 0.0)
         @test parallelogram1.C ≈ Point(0.0, 1.0, 300.0)
@@ -1543,20 +1548,20 @@ end
             uniform(<0, 0, 0>)
         )
 
-        plane (sky_material, translation([0, 0, 100]) * rotation_y(clock))
-        plane (ground_material, identity)
+        plane pl1(sky_material, translation([0, 0, 100]) * rotation_y(clock))
+        plane pl2(ground_material, identity)
 
-        sphere(sphere_material, translation([0, 0, 1]))
+        sphere sp1(sphere_material, translation([0, 0, 1]))
 
-        box(sphere_material, translation([-1, -1, 0]) * scaling([2, 2, 2]))
+        box bx1(sphere_material, translation([-1, -1, 0]) * scaling([2, 2, 2]))
 
-        cone(sphere_material, translation([-2, -2, 0]) * scaling([1, 1, 1]))
+        cone cn1(sphere_material, translation([-2, -2, 0]) * scaling([1, 1, 1]))
 
-        cylinder(sphere_material, translation([-3, -3, 0]) * scaling([1, 1, 1]))
+        cylinder cy1(sphere_material, translation([-3, -3, 0]) * scaling([1, 1, 1]))
 
-        triangle(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
+        triangle tr(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
 
-        parallelogram(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
+        parallelogram par(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
 
         spotlight([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 0.8, 0.85, 0.9)
 

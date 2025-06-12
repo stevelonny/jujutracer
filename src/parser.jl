@@ -109,15 +109,17 @@ mutable struct Scene
     camera::Union{AbstractCamera,Nothing}
     float_variables::Dict{String,Float64}
     overridden_variables::Set{String}
+    all_shapes::Dict{String, AbstractShape}
 
     function Scene(;
         materials=Dict{String,Material}(),
         world=nothing,
         camera=nothing,
         float_variables=Dict{String,Float64}(),
-        overridden_variables=Set{String}()
+        overridden_variables=Set{String}(),
+        all_shapes=Dict{String, AbstractShape}()
     )
-        new(materials, world, camera, float_variables, overridden_variables)
+        new(materials, world, camera, float_variables, overridden_variables, all_shapes)
     end
 end
 
@@ -462,6 +464,7 @@ Parses a shape from the input stream. The expected format is:
 - `GrammarError`: If the input does not match the expected format or if a material is not defined.
 """
 function _parse_shape(shape::T, s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material}) where {T<:typeshapes}
+    shape_name = _expect_identifier(s)
     _expect_symbol(s, '(')
 
     material_name = _expect_identifier(s)
@@ -472,7 +475,7 @@ function _parse_shape(shape::T, s::InputStream, dict_float::Dict{String,Float64}
     _expect_symbol(s, ',')
     transformation = _parse_transformation(s, dict_float)
     _expect_symbol(s, ')')
-    return T(transformation, dict_material[material_name])
+    return shape_name, T(transformation, dict_material[material_name])
 end
 
 """
@@ -483,6 +486,7 @@ Parses a triangle from the input stream. The expected format is:
 - `s::InputStream`: The input stream to read from.
 """
 function _parse_triangle(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    name = _expect_identifier(s)
     _expect_symbol(s, '(')
 
     material_name = _expect_identifier(s)
@@ -498,7 +502,7 @@ function _parse_triangle(s::InputStream, dict_float::Dict{String,Float64}, dict_
     v3 = _parse_vector(s, dict_float)
     _expect_symbol(s, ')')
 
-    return Triangle(Point(v1), Point(v2), Point(v3), dict_material[material_name])
+    return name , Triangle(Point(v1), Point(v2), Point(v3), dict_material[material_name])
 end
 
 """
@@ -515,6 +519,7 @@ Parses a parallelogram from the input stream. The expected format is:
 - `GrammarError`: If the input does not match the expected format or if a material is not defined.
 """
 function _parse_parallelogram(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    name = _expect_identifier(s)
     _expect_symbol(s, '(')
 
     material_name = _expect_identifier(s)
@@ -530,7 +535,7 @@ function _parse_parallelogram(s::InputStream, dict_float::Dict{String,Float64}, 
     v3 = _parse_vector(s, dict_float)
     _expect_symbol(s, ')')
 
-    return Parallelogram(Point(v1), Point(v2), Point(v3), dict_material[material_name])
+    return name, Parallelogram(Point(v1), Point(v2), Point(v3), dict_material[material_name])
 end
 
 
@@ -668,13 +673,14 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
             scene.materials[material_name] = material
         elseif haskey(shapes_constructors, token.keyword)
             shape_constructor = shapes_constructors[token.keyword]
-            shape = _parse_shape(shape_constructor, s, scene.float_variables, scene.materials)
+            shape_name, shape = _parse_shape(shape_constructor, s, scene.float_variables, scene.materials)
+            scene.all_shapes[shape_name] = shape
             push!(shapes, shape)
         elseif token.keyword == TRIANGLE
-            triangle = _parse_triangle(s, scene.float_variables, scene.materials)
+            name, triangle = _parse_triangle(s, scene.float_variables, scene.materials)
             push!(shapes, triangle)
         elseif token.keyword == PARALLELOGRAM
-            parallelogram = _parse_parallelogram(s, scene.float_variables, scene.materials)
+            name , parallelogram = _parse_parallelogram(s, scene.float_variables, scene.materials)
             push!(shapes, parallelogram)
         elseif token.keyword == POINTLIGHT
             light_source = _parse_lightsource(s, scene.float_variables)
