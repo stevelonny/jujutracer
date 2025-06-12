@@ -1502,20 +1502,22 @@ end
 
         # parse_lightsource
         input = IOBuffer("""
-        ([1.0, 2.0, pippo], <5.0, 500.0, 300.0>, 100.0)
+        light_source([1.0, 2.0, pippo], <5.0, 500.0, 300.0>, 100.0)
         """)
         stream = InputStream(input)
-        light1 = jujutracer._parse_lightsource(stream, dict)
+        name, light1 = jujutracer._parse_lightsource(stream, dict)
+        @test name == "light_source"
         @test light1.position ≈ Point(1.0, 2.0, 500.0)
         @test light1.emission == RGB(5.0, 500.0, 300.0)
         @test light1.scale == 100.0
 
         # parse_spotlight
         input = IOBuffer("""
-        ([1.0, 2.0, pippo], [1.0, 0.0, pluto], <5.0, 500.0, 300.0>, 100.0, 0.8, 0.85, 0.9)
+        light_source([1.0, 2.0, pippo], [1.0, 0.0, pluto], <5.0, 500.0, 300.0>, 100.0, 0.8, 0.85, 0.9)
         """)
         stream = InputStream(input)
-        spot1 = jujutracer._parse_spotlight(stream, dict)
+        name, spot1 = jujutracer._parse_spotlight(stream, dict)
+        @test name == "light_source"
         @test spot1.position ≈ Point(1.0, 2.0, 500.0)
         @test spot1.direction ≈ Vec(1.0, 0.0, 300.0)
         @test spot1.emission == RGB(5.0, 500.0, 300.0)
@@ -1563,11 +1565,22 @@ end
 
         parallelogram par(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
 
-        spotlight([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 0.8, 0.85, 0.9)
+        spotlight spli([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 0.8, 0.85, 0.9)
 
-        pointlight([2, 2, 2], <1, 1, 1>, 100)
+        pointlight poli([2, 2, 2], <1, 1, 1>, 100)
 
         camera(perspective, rotation_z(30) * translation([-4, 0, 1]), 1.0, 2.0)
+
+        add pl1
+        add pl2
+        add sp1
+        add bx1
+        add cn1
+        add cy1
+        add tr
+        add par
+        add spli
+        add poli
         """)
         stream = InputStream(input)
 

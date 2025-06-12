@@ -110,6 +110,7 @@ mutable struct Scene
     float_variables::Dict{String,Float64}
     overridden_variables::Set{String}
     all_shapes::Dict{String, AbstractShape}
+    all_lights::Dict{String, AbstractLight}
 
     function Scene(;
         materials=Dict{String,Material}(),
@@ -117,9 +118,10 @@ mutable struct Scene
         camera=nothing,
         float_variables=Dict{String,Float64}(),
         overridden_variables=Set{String}(),
-        all_shapes=Dict{String, AbstractShape}()
+        all_shapes=Dict{String, AbstractShape}(),
+        all_lights=Dict{String, AbstractLight}()
     )
-        new(materials, world, camera, float_variables, overridden_variables, all_shapes)
+        new(materials, world, camera, float_variables, overridden_variables, all_shapes, all_lights)
     end
 end
 
@@ -459,6 +461,7 @@ Parses a shape from the input stream. The expected format is:
 - `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
 - `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
 # Returns
+- `shape_name::String`: The name of the shape as defined in the input.
 - `T`: An instance of the specified shape type with the parsed transformation and material.
 # Throws
 - `GrammarError`: If the input does not match the expected format or if a material is not defined.
@@ -514,6 +517,7 @@ Parses a parallelogram from the input stream. The expected format is:
 - `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
 - `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
 # Returns
+- `name::String`: The name of the parallelogram as defined in the input.
 - `Parallelogram`: A parallelogram object with the parsed vertices and material.
 # Throws
 - `GrammarError`: If the input does not match the expected format or if a material is not defined.
@@ -584,6 +588,7 @@ Parses a point light source from the input stream. The expected format is:
 - `LightSource`: A point light source object with the parsed position, color, and scale.
 """
 function _parse_lightsource(s::InputStream, dict_float::Dict{String,Float64})
+    name = _expect_identifier(s)
     _expect_symbol(s, '(')
 
     position = _parse_vector(s, dict_float)
@@ -593,7 +598,7 @@ function _parse_lightsource(s::InputStream, dict_float::Dict{String,Float64})
     scale = _expect_number(s, dict_float)
     _expect_symbol(s, ')')
 
-    return LightSource(Point(position), color, scale)
+    return name, LightSource(Point(position), color, scale)
 end
 
 """
@@ -607,6 +612,7 @@ Parses a spotlight source from the input stream. The expected format is:
 - `SpotLight`: A spotlight object with the parsed position, direction, color, scale, and cosine values.
 """
 function _parse_spotlight(s::InputStream, dict_float::Dict{String,Float64})
+    name = _expect_identifier(s)
     _expect_symbol(s, '(')
 
     position = _parse_vector(s, dict_float)
@@ -624,7 +630,7 @@ function _parse_spotlight(s::InputStream, dict_float::Dict{String,Float64})
     cos_start = _expect_number(s, dict_float)
     _expect_symbol(s, ')')
 
-    return SpotLight(Point(position), direction, color, scale, cos_total, cos_falloff, cos_start)
+    return name, SpotLight(Point(position), direction, color, scale, cos_total, cos_falloff, cos_start)
 end
 
 """
@@ -675,28 +681,43 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
             shape_constructor = shapes_constructors[token.keyword]
             shape_name, shape = _parse_shape(shape_constructor, s, scene.float_variables, scene.materials)
             scene.all_shapes[shape_name] = shape
-            push!(shapes, shape)
+            #push!(shapes, shape)
         elseif token.keyword == TRIANGLE
             name, triangle = _parse_triangle(s, scene.float_variables, scene.materials)
-            push!(shapes, triangle)
+            scene.all_shapes[name] = triangle
+            #push!(shapes, triangle)
         elseif token.keyword == PARALLELOGRAM
             name , parallelogram = _parse_parallelogram(s, scene.float_variables, scene.materials)
-            push!(shapes, parallelogram)
+            scene.all_shapes[name] = parallelogram
+            #push!(shapes, parallelogram)
         elseif token.keyword == POINTLIGHT
-            light_source = _parse_lightsource(s, scene.float_variables)
-            push!(lights, light_source)
+            name, light_source = _parse_lightsource(s, scene.float_variables)
+            scene.all_lights[name] = light_source
+            #push!(lights, light_source)
         elseif token.keyword == SPOTLIGHT
-            spot_light = _parse_spotlight(s, scene.float_variables)
-            push!(lights, spot_light)
+            name, spot_light = _parse_spotlight(s, scene.float_variables)
+            scene.all_lights[name] = spot_light
+            #push!(lights, spot_light)
         elseif token.keyword == CAMERA
             if !isnothing(scene.camera)
                 throw(GrammarError(token.location, "camera already defined"))
             end
             scene.camera = _parse_camera(s, scene.float_variables)
+        elseif token.keyword == ADD
+            name = _expect_identifier(s)
+            if haskey(scene.all_shapes, name)
+                push!(shapes, scene.all_shapes[name])
+            elseif haskey(scene.all_lights, name)
+                push!(lights, scene.all_lights[name])
+            else
+                throw(GrammarError(token.location, "no shape or light with name '$name' defined"))
+            end
         else
             throw(GrammarError(token.location, "unexpected keyword $token.keyword"))
         end
     end
+
+    #shapes = collect(values(scene.all_shapes))
 
     if isnothing(scene.camera)
         throw(GrammarError(s.location, "camera not defined"))

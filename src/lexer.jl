@@ -76,6 +76,8 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missi
     RECTANGLE
     TRIANGLE
     PARALLELOGRAM
+
+    ADD #to add shapes and lights to the world
 end
 
 const KEYWORDS = Dict(
@@ -107,6 +109,7 @@ const KEYWORDS = Dict(
     "rectangle" => RECTANGLE,
     "triangle" => TRIANGLE,
     "parallelogram" => PARALLELOGRAM,
+    "add" => ADD
 )
 
 #---------------------------------------------------------
