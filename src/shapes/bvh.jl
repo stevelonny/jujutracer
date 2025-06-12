@@ -277,14 +277,14 @@ function BuildBVH(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes
     centroids = [centroid(s) for s in shapes]
 
     depth = 0
-
+    starting_time = time_ns()
     UpdateBoundaries!(root, shapes)
     if use_sah
         depth = SubdivideSAH!(root, shapes, centroids, depth; max_shapes_per_leaf=max_shapes_per_leaf, n_buckets=n_buckets)
     else
         depth = Subdivide!(root, shapes, centroids, depth)
     end
-    @debug "BVH tree built" depth = depth
+    @debug "BVH tree built" depth = depth time = (time_ns() - starting_time) / 1e9
     return root, depth
 end
 
