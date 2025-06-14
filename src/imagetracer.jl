@@ -57,7 +57,7 @@ function (it::ImageTracer)(fun::Function)
     progress = Threads.Atomic{Int}(0)
     update_interval = max(1, div(total, 500)) # update progress every 0.2% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
-    @info "Starting image tracing with $(Threads.nthreads()) threads.\nStarting rendering with $(renderer_type) renderer\nImage size: $(it.img.w) x $(it.img.h)\nNo antialising applied."
+    @info "Starting image tracing." threads=(Threads.nthreads()) render=(renderer_type) w=(it.img.w) h=(it.img.h) aa=0
     if fun isa OnOff
         @debug "OnOff renderer parameters" bg_color = fun.background_color fg_color = fun.foreground_color
     elseif fun isa Flat
@@ -102,7 +102,7 @@ function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
     progress = Threads.Atomic{Int}(0)
     update_interval = max(1, div(total, 500)) # update progress every 0.2% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
-    @info "Starting image tracing with $(Threads.nthreads()) threads.\nStarting rendering with $(renderer_type) renderer\nImage size: $(it.img.w) x $(it.img.h)\nAnti-Aliasing factor: $(AA)"
+    @info "Starting image tracing."  threads=(Threads.nthreads()) render=(renderer_type) w=(it.img.w) h=(it.img.h) aa=(AA)
     if fun isa OnOff
         @debug "OnOff renderer parameters" bg_color = fun.background_color fg_color = fun.foreground_color
     elseif fun isa Flat

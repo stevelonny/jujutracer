@@ -9,11 +9,17 @@ import Base: *, +, -
 Struct representing a point in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
+# Constructors
+- `Point(x::Float64, y::Float64, z::Float64)`: Create a Point from x, y, z coordinates.
+- `Point(p::Vec)`: Create a Point from a Vec.
 """
 struct Point
     x::Float64
     y::Float64
     z::Float64
+    function Point(x, y, z)
+        new(x, y, z)
+    end
 end
 
 #--------------------------------------------------------------------------
@@ -25,7 +31,8 @@ end
 A struct representing a vector in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
-# Methods
+# Constructors
+- `Vec(x::Float64, y::Float64, z::Float64)`: Create a Vec from x, y, z coordinates.
 - `Vec(n::Normal)`: Create a Vec from a Normal.
 - `Vec(p::Point)`: Create a Vec from a Point.
 """
@@ -50,7 +57,7 @@ end
 Struct representing a unit vector (normal) in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
-# Methods
+# Constructors
 - `Normal(v::Vec)`: Create a Normal from a Vec.
 - `Normal(x::Float64, y::Float64, z::Float64)`: Create a Normal from x, y, z coordinates.
 # Throws
@@ -79,6 +86,10 @@ end
 # Outside constructors
 function Vec(n::Normal)
     return Vec(n.x, n.y, n.z)
+end
+
+function Point(p::Vec)
+    return Point(p.x, p.y, p.z)
 end
 
 #--------------------------------------------------------------------------
