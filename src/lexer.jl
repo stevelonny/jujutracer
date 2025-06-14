@@ -78,6 +78,10 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missi
     PARALLELOGRAM
 
     ADD #to add shapes and lights to the world
+    #CSG
+    UNION
+    INTERSECTION
+    DIFFERENCE
 end
 
 const KEYWORDS = Dict(
@@ -109,7 +113,12 @@ const KEYWORDS = Dict(
     "rectangle" => RECTANGLE,
     "triangle" => TRIANGLE,
     "parallelogram" => PARALLELOGRAM,
-    "add" => ADD
+
+    "add" => ADD,
+    #CSG
+    "union" => UNION,
+    "intersection" => INTERSECTION,
+    "difference" => DIFFERENCE
 )
 
 #---------------------------------------------------------

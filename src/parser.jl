@@ -87,6 +87,31 @@ Used for type annotations and dispatch to ensure proper shape handling.
 """
 const typeshapes = Union{Sphere,Box,Cylinder,Cone,Plane,Circle,Rectangle}
 
+"""
+    CSG_operations
+A vector of all supported Constructive Solid Geometry (CSG) operations in the scene description language.
+Used for validating CSG operation keywords in the parser.
+"""
+const CSG = [
+    UNION,
+    DIFFERENCE,
+    INTERSECTION
+]
+
+"""
+    csg_constructors
+A dictionary mapping CSG operation keywords to their respective constructor types.
+Used to instantiate the appropriate CSG operation object when parsing a scene description.
+"""
+const csg_constructors = Dict(
+    UNION => CSGUnion,
+    DIFFERENCE => CSGDifference,
+    INTERSECTION => CSGIntersection
+)
+
+const typeCSG = Union{CSGUnion, CSGDifference, CSGIntersection}
+
+
 #-----------------------------------------------------------------------
 # Scene
 #------------------------------------------------------------------------
@@ -140,9 +165,9 @@ Checks if the next token in the input stream matches the expected symbol.
 # Throws
 - `GrammarError`: If the next token is not a symbol or if it doesn't match the expected symbol.
 """
-function _expect_symbol(s::InputStream, symbol::Char)
+function _expect_symbol(s::InputStream, symbol::Vararg{Char})
     token = _read_token(s)
-    if !(token isa SymbolToken) || token.symbol != symbol
+    if !(token isa SymbolToken) || !(token.symbol in symbol)
         throw(GrammarError(token.location, "got $token instead of $symbol"))
     end
 
@@ -634,6 +659,54 @@ function _parse_spotlight(s::InputStream, dict_float::Dict{String,Float64})
 end
 
 """
+    _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractShape}, T::Type{<:typeCSG})
+
+Parses a Constructive Solid Geometry (CSG) operation from the input stream. The expected format is:
+- `union name(<shape1>, <shape2>, ...)`
+- `difference name(<shape1>, <shape2>, ...)`
+- `intersection name(<shape1>, <shape2>, ...)`
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `all_shapes::Dict{String, AbstractShape}`: A dictionary containing all defined shapes.
+- `T::Type{<:typeCSG}`: The type of CSG operation to parse, which must be one of the defined CSG types. See [`typeCSG`](@ref) and [`csg_constructors`](@ref).
+# Returns
+- `Tuple{String, T}`: A tuple containing the name of the CSG operation and the constructed CSG shape.
+"""
+function _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractShape}, T::Type{<:typeCSG})
+    csg_name = _expect_identifier(s)
+    _expect_symbol(s, '(')
+
+
+    shape1_name = _expect_identifier(s)
+    if !(haskey(all_shapes, shape1_name))
+        throw(GrammarError(s.location, "shape '$shape1_name' not defined"))
+    end
+    
+    _expect_symbol(s, ',')
+    shape2_name = _expect_identifier(s)
+    if !(haskey(all_shapes, shape2_name))
+        throw(GrammarError(s.location, "shape '$shape2_name' not defined"))
+    end
+
+    shape = T(Transformation(), all_shapes[shape1_name] , all_shapes[shape2_name])
+    while true
+        symbol= _expect_symbol(s, ',', ')')
+
+        if symbol == ')'
+            break
+        end
+
+        shape_name = _expect_identifier(s)
+        if !(haskey(all_shapes, shape_name))
+            throw(GrammarError(s.location, "shape '$shape_name' not defined"))
+        end
+
+        shape = T(Transformation(),shape , all_shapes[shape_name])
+    end
+    return csg_name , shape
+end
+
+"""
     parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String,Float64}())
 Parses a scene from the input stream.
 # Arguments
@@ -681,23 +754,18 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
             shape_constructor = shapes_constructors[token.keyword]
             shape_name, shape = _parse_shape(shape_constructor, s, scene.float_variables, scene.materials)
             scene.all_shapes[shape_name] = shape
-            #push!(shapes, shape)
         elseif token.keyword == TRIANGLE
             name, triangle = _parse_triangle(s, scene.float_variables, scene.materials)
             scene.all_shapes[name] = triangle
-            #push!(shapes, triangle)
         elseif token.keyword == PARALLELOGRAM
             name , parallelogram = _parse_parallelogram(s, scene.float_variables, scene.materials)
             scene.all_shapes[name] = parallelogram
-            #push!(shapes, parallelogram)
         elseif token.keyword == POINTLIGHT
             name, light_source = _parse_lightsource(s, scene.float_variables)
             scene.all_lights[name] = light_source
-            #push!(lights, light_source)
         elseif token.keyword == SPOTLIGHT
             name, spot_light = _parse_spotlight(s, scene.float_variables)
             scene.all_lights[name] = spot_light
-            #push!(lights, spot_light)
         elseif token.keyword == CAMERA
             if !isnothing(scene.camera)
                 throw(GrammarError(token.location, "camera already defined"))
@@ -712,6 +780,10 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
             else
                 throw(GrammarError(token.location, "no shape or light with name '$name' defined"))
             end
+        elseif haskey(csg_constructors, token.keyword)
+            csg_constructor = csg_constructors[token.keyword]
+            name, shape = _parse_CSG_operation(s, scene.all_shapes, csg_constructor)
+            scene.all_shapes[name] = shape
         else
             throw(GrammarError(token.location, "unexpected keyword $token.keyword"))
         end
@@ -728,6 +800,7 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
     if isempty(shapes)
         throw(GrammarError(s.location, "no shapes defined"))
     end
+
     scene.world = World(shapes, lights)
     return scene
 end

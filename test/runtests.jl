@@ -1526,8 +1526,24 @@ end
         @test spot1.cos_falloff == 0.85
         @test spot1.cos_start == 0.9
 
+        #_parse_CSG_operation
+        all_shapes = Dict{String, AbstractShape}(
+           "s1" => Sphere(),
+           "s2" => Sphere(),
+           "c1" => Box(),
+       )
+       for (sym, csg_type) in jujutracer.csg_constructors
+            input = IOBuffer("name(s1, s2, c1)")  # nome fittizio, ignorato nel test
+            stream = InputStream(input)
 
+            name, result = jujutracer._parse_CSG_operation(stream, all_shapes, csg_type)
+
+            @test name == "name"
+            @test result isa csg_type
+            @test result.Sh2 == all_shapes["c1"] 
+        end
     end
+
     @testset "parse_world" begin
         input = IOBuffer("""
         float clock(150)
@@ -1571,6 +1587,10 @@ end
 
         camera(perspective, rotation_z(30) * translation([-4, 0, 1]), 1.0, 2.0)
 
+        union un(bx1, cy1, cn1)
+        intersection in(sp1, cy1)
+        difference di(sp1, cn1, in)
+
         add pl1
         add pl2
         add sp1
@@ -1581,6 +1601,10 @@ end
         add par
         add spli
         add poli
+
+        add un
+        add in
+        add di
         """)
         stream = InputStream(input)
 
@@ -1611,7 +1635,7 @@ end
             UniformPigment(RGB(0.0, 0.0, 0.0)),
             DiffusiveBRDF(CheckeredPigment(4, 4, RGB(0.3, 0.5, 0.1), RGB(0.1, 0.2, 0.5)))
         )
-        @test length(scene.world.shapes) == 8
+        @test length(scene.world.shapes) == 11
         @test scene.world.shapes[1] isa Plane
         @test scene.world.shapes[1].Mat == sky_material
         @test scene.world.shapes[1].Tr ≈ Translation(0.0, 0.0, 100.0) ⊙ Ry(150.0)
@@ -1657,5 +1681,13 @@ end
         @test scene.camera.t ≈ Rz(30.0) ⊙ Translation(-4.0, 0.0, 1.0)
         @test scene.camera.a_ratio == 1.0
         @test scene.camera.d == 2.0
+
+        @test scene.world.shapes[9] isa CSGUnion
+        @test scene.world.shapes[9].Sh2 == scene.world.shapes[5]
+        @test scene.world.shapes[10] isa CSGIntersection
+        @test scene.world.shapes[10].Sh2 == scene.world.shapes[6]
+        @test scene.world.shapes[11] isa CSGDifference
+        @test scene.world.shapes[11].Sh2 == scene.world.shapes[10]
     end
+
 end
