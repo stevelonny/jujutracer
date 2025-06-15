@@ -1,3 +1,20 @@
+#--------------------------------------------------------------------
+# Boundary Volume Hierarchy
+#--------------------------------------------------------------------
+
+"""
+    mutable struct BVHNode
+A node in the Boundary Volume Hierarchy (BVH) tree.
+# Fields
+- `p_min::Point`: The minimum point of the bounding box.
+- `p_max::Point`: The maximum point of the bounding box.
+- `left::Union{BVHNode,Nothing}`: The left child node.
+- `right::Union{BVHNode,Nothing}`: The right child node.
+- `first_index::Int64`: The index of the first shape in this node.
+- `last_index::Int64`: The index of the last shape in this node.
+# Constructor
+- `BVHNode(first_index::Int64, last_index::Int64)`: Creates a new BVHNode with the specified indices and initializes the bounding box to infinity.
+"""
 mutable struct BVHNode
     p_min::Point
     p_max::Point
@@ -14,16 +31,49 @@ function Base.show(io::IO, node::BVHNode)
     print(io, "BVHNode(p_min=$(node.p_min), p_max=$(node.p_max), first_index=$(node.first_index), last_index=$(node.last_index))")
 end
 
+"""
+    centroid(t::AbstractShape)
+Calculate the centroid of a shape `t` using the [`boxed`](@ref) method.
+# Arguments
+- `t::AbstractShape`: The shape for which to calculate the centroid.
+# Returns
+- `Point`: The centroid of the shape.
+"""
 function centroid(t::AbstractShape)
     p1, p2 = boxed(t)
     return Point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0, (p1.z + p2.z) / 2.0)
 end
 
+"""
+    surface_area(p1::Point, p2::Point)
+Calculate the surface area of a bounding box defined by two points `p1` and `p2`.
+# Arguments
+- `p1::Point`: The first point defining the bounding box.
+- `p2::Point`: The second point defining the bounding box.
+# Returns
+- `Float64`: The surface area of the bounding box.
+"""
 function surface_area(p1::Point, p2::Point)
+    if p1.x == Inf || p2.x == -Inf
+        return 0.0
+    end
     diagonal = p2 - p1
+    if diagonal.x < 0 || diagonal.y < 0 || diagonal.z < 0
+        return 0.0
+    end
     return 2 * (diagonal.x * diagonal.y + diagonal.x * diagonal.z + diagonal.y * diagonal.z)
 end
 
+"""
+    offset(p::Point, pmin::Point, pmax::Point)
+Calculate the normalized offset of a point `p` within the bounding box defined by `pmin` and `pmax`.   
+# Arguments
+- `p::Point`: The point to offset.
+- `pmin::Point`: The minimum point of the bounding box.
+- `pmax::Point`: The maximum point of the bounding box.
+# Returns
+- `Point`: The offset point normalized within the bounding box.
+"""
 function offset(p::Point, pmin::Point, pmax::Point)
     o = p - pmin
     if pmax.x > pmin.x
@@ -38,6 +88,13 @@ function offset(p::Point, pmin::Point, pmax::Point)
     return o
 end
 
+"""
+    UpdateBoundaries!(node::BVHNode, shapes::Vector{AbstractShape})
+Update the bounding box of a BVH node `node` based on the shapes contained within it.
+# Arguments
+- `node::BVHNode`: The BVH node whose bounding box is to be updated.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+"""
 function UpdateBoundaries!(node::BVHNode, shapes::Vector{AbstractShape})
     pmin = Point(Inf, Inf, Inf)
     pmax = Point(-Inf, -Inf, -Inf)
@@ -50,6 +107,19 @@ function UpdateBoundaries!(node::BVHNode, shapes::Vector{AbstractShape})
     node.p_max = pmax
 end
 
+"""
+    Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point}, depth::Int64; max_shapes_per_leaf::Int64=2)
+Subdivide a BVH node into left and right child nodes based on the centroids of the shapes.
+# Arguments
+- `node::BVHNode`: The BVH node to subdivide.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+- `centroids::Vector{Point}`: The centroids of the shapes.
+- `depth::Int64`: The current depth of the BVH tree.
+# Keyword Arguments
+- `max_shapes_per_leaf::Int64=2`: The maximum number of shapes allowed in a leaf node.
+# Returns
+- `Int64`: The maximum depth of the BVH tree after subdivision.
+"""
 function Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point}, depth::Int64; max_shapes_per_leaf::Int64=2)
     depth += 1
     if node.last_index - node.first_index + 1 <= max_shapes_per_leaf
@@ -104,10 +174,25 @@ function Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vec
     end
 end
 
+"""
+    SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point}, depth::Int64; max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
+Subdivide a BVH node using the Surface Area Heuristic (SAH) method.
+# Arguments
+- `node::BVHNode`: The BVH node to subdivide.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+- `centroids::Vector{Point}`: The centroids of the shapes.
+- `depth::Int64`: The current depth of the BVH tree.
+# Keyword Arguments
+- `max_shapes_per_leaf::Int64=2`: The maximum number of shapes allowed in a leaf node.
+- `n_buckets::Int64=12`: The number of buckets to use for SAH.
+# Returns
+- `Int64`: The maximum depth of the BVH tree after subdivision.
+"""
 function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point}, depth::Int64; max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
     depth += 1
     # stop if there are too few shapes
-    if node.last_index - node.first_index + 1 <= max_shapes_per_leaf
+    num_shapes = node.last_index - node.first_index + 1
+    if num_shapes <= max_shapes_per_leaf
         return depth
     end
 
@@ -121,7 +206,6 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
         axis = 3  # z-axis
     end
 
-    num_shapes = node.last_index - node.first_index + 1
     if num_shapes <= 2
         # split in half if there are 2 or fewer shapes
         split_pos = getfield(node.p_min, axis) + getfield(extent, axis) * 0.5
@@ -151,27 +235,31 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
         bucket_bounds = Vector{Tuple{Point,Point}}(undef, n_buckets)
         for i in 1:n_buckets
             bucket_count[i] = 0
+            bucket_bounds[i] = (Point(Inf, Inf, Inf), Point(-Inf, -Inf, -Inf))
         end
         for i in node.first_index:node.last_index
-            centroid_a = getfield(centroids[i], axis)
-            b = floor(Int64, n_buckets * getfield(offset(centroids[i], node.p_min, node.p_max), axis)) + 1
-            if b < 1
-                b = 1
-            elseif b > n_buckets
+            centroid_offset = offset(centroids[i], node.p_min, node.p_max)
+            b = floor(Int64, 1 + n_buckets * getfield(centroid_offset, axis))
+            if b > n_buckets
                 b = n_buckets
-            end
-            if bucket_count[b] == 0
-                # initialize bucket bounds
-                P1, P2 = boxed(shapes[i])
-                bucket_bounds[b] = (P1, P2)
             end
             bucket_count[b] += 1
             P1, P2 = boxed(shapes[i])
-            bucket_bounds[b] = (
-                Point(min(bucket_bounds[b][1].x, P1.x), min(bucket_bounds[b][1].y, P1.y), min(bucket_bounds[b][1].z, P1.z)),
-                Point(max(bucket_bounds[b][2].x, P2.x), max(bucket_bounds[b][2].y, P2.y), max(bucket_bounds[b][2].z, P2.z))
-            )
+
+            if bucket_count[b] == 1
+                bucket_bounds[b] = (P1, P2)
+            else
+                bucket_bounds[b] = (
+                    Point(min(bucket_bounds[b][1].x, P1.x), min(bucket_bounds[b][1].y, P1.y), min(bucket_bounds[b][1].z, P1.z)),
+                    Point(max(bucket_bounds[b][2].x, P2.x), max(bucket_bounds[b][2].y, P2.y), max(bucket_bounds[b][2].z, P2.z))
+                )
+            end
         end
+        total_bucketed_shapes = 0
+        for i in 1:n_buckets
+            total_bucketed_shapes += bucket_count[i]
+        end
+        @debug "Total bucketed shapes: $(total_bucketed_shapes) out of $(num_shapes)"
         #@debug "Bucket counts and bounds: $(bucket_count) $(bucket_bounds)"
         for i in 1:n_buckets
             if bucket_count[i] == 0
@@ -204,12 +292,12 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
             costs[i] += count_above * surface_area(bound_above[1], bound_above[2])
         end
         # find the best split
-        best_bucket = 0 #-1
+        best_split = 0 #-1
         best_cost = Inf
         for i in 1:n_splits
             if costs[i] < best_cost
                 best_cost = costs[i]
-                best_bucket = i
+                best_split = i
             end
         end
 
@@ -221,19 +309,17 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
         #   - the cost is lower than the leaf cost
         #   - or the number of shapes is greater than max_shapes_per_leaf
         # - or create a leaf node
-        #@debug "Processing node with:" n_buckets=n_buckets p_max = node.p_max p_min = node.p_min axis = axis best_bucket = best_bucket best_cost = best_cost leaf_cost = leaf_cost left= node.first_index right = node.last_index
+        @debug "Processing node with:" n_buckets=n_buckets p_max = node.p_max p_min = node.p_min axis = axis best_split = best_split best_cost = best_cost leaf_cost = leaf_cost left= node.first_index right = node.last_index
         if (best_cost < leaf_cost || num_shapes > max_shapes_per_leaf)
             # reorder shapes and centroids
             left_index = node.first_index
             right_index = node.last_index
             while left_index <= right_index
-                b = floor(Int64, n_buckets * getfield(offset(centroids[left_index], node.p_min, node.p_max), axis)) + 1
-                if b < 1
-                    b = 1
-                elseif b > n_buckets
+                b = floor(Int64, 1 + n_buckets * getfield(offset(centroids[left_index], node.p_min, node.p_max), axis))
+                if b > n_buckets
                     b = n_buckets
                 end
-                if b <= best_bucket
+                if b <= best_split
                     left_index += 1
                 else
                     if left_index < right_index
@@ -244,7 +330,7 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
                 end
             end #while
             if left_index - node.first_index <= 0 || node.last_index - right_index <= 0
-                #@debug "No valid split found, creating leaf node"
+                @debug "No valid split found, creating leaf node"
                 return depth
             end
 
@@ -270,6 +356,18 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
     end
 end
 
+"""
+    BuildBVH(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
+Build a Boundary Volume Hierarchy (BVH) tree from a vector of shapes.
+# Arguments
+- `shapes::Vector{AbstractShape}`: The vector of shapes to build the BVH from.
+# Keyword Arguments
+- `use_sah::Bool=false`: Whether to use the Surface Area Heuristic (SAH) for subdivision.
+- `max_shapes_per_leaf::Int64=2`: The maximum number of shapes allowed in a leaf node.
+- `n_buckets::Int64=12`: The number of buckets to use for SAH.
+# Returns
+- `(BVHNode, Int64)`: A tuple containing the root node of the BVH tree and the maximum depth of the tree.
+"""
 function BuildBVH(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
     root = BVHNode(1, length(shapes))
     @debug "Building BVH tree" shapes = length(shapes) max_shapes_per_leaf = max_shapes_per_leaf use_sah = use_sah n_buckets = n_buckets
@@ -314,6 +412,7 @@ end
 
 function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray, bvh_depth::Int64)
     bvh_depth += 1
+    
     if !ray_intersection_aabb(bvh.p_min, bvh.p_max, ray)
         return nothing
     end
@@ -326,16 +425,19 @@ function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::
                 closest = hit
             end
         end
-        hit = !isnothing(closest) ? HitRecord(
-            world_P=closest.world_P,
-            normal=closest.normal,
-            surface_P=closest.surface_P,
-            t=closest.t,
-            ray=closest.ray,
-            shape=closest.shape,
-            bvh_depth=bvh_depth
-        ) : nothing
-        return hit
+        
+        if !isnothing(closest)
+            return HitRecord(
+                world_P=closest.world_P,
+                normal=closest.normal,
+                surface_P=closest.surface_P,
+                t=closest.t,
+                ray=closest.ray,
+                shape=closest.shape,
+                bvh_depth=bvh_depth
+            )
+        end
+        return nothing
     end
 
     left_hit = !isnothing(bvh.left) ? ray_intersection_bvh(bvh.left, shapes, ray, bvh_depth) : nothing
@@ -344,46 +446,10 @@ function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::
     if isnothing(left_hit) && isnothing(right_hit)
         return nothing
     elseif isnothing(left_hit)
-        hit = HitRecord(
-            world_P=right_hit.world_P,
-            normal=right_hit.normal,
-            surface_P=right_hit.surface_P,
-            t=right_hit.t,
-            ray=right_hit.ray,
-            shape=right_hit.shape,
-            bvh_depth=bvh_depth
-        )
         return right_hit
     elseif isnothing(right_hit)
-        hit = HitRecord(
-            world_P=left_hit.world_P,
-            normal=left_hit.normal,
-            surface_P=left_hit.surface_P,
-            t=left_hit.t,
-            ray=left_hit.ray,
-            shape=left_hit.shape,
-            bvh_depth=bvh_depth
-        )
         return left_hit
     else
-        left_hit = HitRecord(
-            world_P=left_hit.world_P,
-            normal=left_hit.normal,
-            surface_P=left_hit.surface_P,
-            t=left_hit.t,
-            ray=left_hit.ray,
-            shape=left_hit.shape,
-            bvh_depth=bvh_depth
-        )
-        right_hit = HitRecord(
-            world_P=right_hit.world_P,
-            normal=right_hit.normal,
-            surface_P=right_hit.surface_P,
-            t=right_hit.t,
-            ray=right_hit.ray,
-            shape=right_hit.shape,
-            bvh_depth=bvh_depth
-        )
         return left_hit.t < right_hit.t ? left_hit : right_hit
     end
 end
@@ -393,6 +459,7 @@ struct BVHShape <: AbstractShape
     bvhroot::BVHNode
     shapes::Vector{AbstractShape}
 end
+
 
 function ray_intersection(bvhshape::BVHShape, ray::Ray)
     return ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray, 0)
@@ -483,3 +550,73 @@ function ray_intersection_bvh_optimized(bvh::BVHNode, shapes::Vector{AbstractSha
     return closest
 end
 
+
+struct BVHShapeDebug <: AbstractShape
+    bvhroot::BVHNode
+    shapes::Vector{AbstractShape}
+end
+
+function ray_intersection(bvhshape::BVHShapeDebug, ray::Ray)
+    return ray_intersection_bvh_boxe(bvhshape.bvhroot, bvhshape.shapes, ray, 0)
+end
+
+function ray_intersection_aabb_withtime(pmin::Point, pmax::Point, ray::Ray)
+    p1 = pmin
+    p2 = pmax
+    O = ray.origin
+    d = ray.dir
+
+    t1x = (p1.x - O.x) / d.x
+    t2x = (p2.x - O.x) / d.x
+    t1y = (p1.y - O.y) / d.y
+    t2y = (p2.y - O.y) / d.y
+    t1z = (p1.z - O.z) / d.z
+    t2z = (p2.z - O.z) / d.z
+
+    tmin = max(min(t1x, t2x), min(t1y, t2y), min(t1z, t2z))
+    tmax = min(max(t1x, t2x), max(t1y, t2y), max(t1z, t2z))
+
+    if tmax < max(ray.tmin, tmin)
+        return false, Inf
+    end
+
+    first_hit = tmin > ray.tmin ? tmin : tmax
+    hit = first_hit <= ray.tmax
+    return (convert(Bool, hit), convert(Float64, first_hit))
+end
+
+function ray_intersection_bvh_boxe(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray, bvh_depth::Int64)
+    bvh_depth += 1
+    
+    hit, first_hit = ray_intersection_aabb_withtime(bvh.p_min, bvh.p_max, ray)
+    #@debug "ray_intersection_bvh_boxe" hit=hit first_hit=first_hit
+    if isnothing(bvh.left) && isnothing(bvh.right) && hit
+        return HitRecord(
+            world_P = ray.origin + ray.dir * first_hit,
+            normal = Normal(1.0, 0.0, 0.0), # placeholder normal
+            surface_P = SurfacePoint(0.0, 0.0), # placeholder surface point
+            ray = ray,
+            shape = shapes[bvh.first_index], # placeholder shape
+            t = first_hit,
+            bvh_depth=bvh_depth,
+        )
+    end
+
+    if !hit
+        return nothing
+    end
+
+    left_hit = !isnothing(bvh.left) ? ray_intersection_bvh_boxe(bvh.left, shapes, ray, bvh_depth) : nothing
+    right_hit = !isnothing(bvh.right) ? ray_intersection_bvh_boxe(bvh.right, shapes, ray, bvh_depth) : nothing
+
+
+    if isnothing(left_hit) && isnothing(right_hit)
+        return nothing
+    elseif isnothing(left_hit)
+        return right_hit
+    elseif isnothing(right_hit)
+        return left_hit
+    else
+        return left_hit.t < right_hit.t ? left_hit : right_hit
+    end
+end

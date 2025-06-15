@@ -53,7 +53,7 @@ function ray_intersection(W::World, ray::Ray)
     closest = nothing
 
     if !isnothing(W.bvh)
-        return ray_intersection_bvh(W.bvh, W.shapes, ray)            
+        return ray_intersection_bvh(W.bvh, W.shapes, ray, 0)            
     end
 
     for i in 1:dim

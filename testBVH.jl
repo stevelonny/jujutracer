@@ -8,10 +8,9 @@ using Logging
 using TerminalLoggers
 using LoggingExtras
 
-filename = "output_rand"
-renderertype = "flat" # "path" or "flat"
-width = 3840
-height = 2160
+filename = "output_rand_depth_2"
+width = 1920
+height = 1080
 n_rays = 4
 depth = 5
 russian = 3
@@ -22,15 +21,6 @@ if aa != 0
     aatype = "_" * string(aa) * "aa"
 end
 fullname = filename
-if renderertype == "flat"
-    fullname = fullname * "flat_" * string(width) * "x" * string(height) * aatype
-elseif renderertype == "path"
-    fullname = fullname * "path_" * string(width) * "x" * string(height) * aatype * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus" * aatype
-elseif renderertype == "point"
-    fullname = fullname * "point_" * string(width) * "x" * string(height) * aatype * "_" * string(point_depth) * "depth"
-else
-    throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
-end
 png_output = filename * ".png"
 pfm_output = filename * ".pfm"
 
@@ -97,20 +87,25 @@ global_logger(filtered_logger)
 pcg = PCG()
 
 # generate random triangles
-number_of_triangles = 2048
+number_of_triangles = 24
 rand_triangles = Vector{AbstractShape}(undef, number_of_triangles)
 for i in 1:length(rand_triangles)
     rand_triangles[i] = generate_triangle(pcg, isodd(i))
 end
 
 # build the bvh tree
-bvh = BuildBVH(rand_triangles; use_sah=false)
-bvhshape = BVHShape(bvh, rand_triangles)
+bvh_sah, depth_sah = BuildBVH(rand_triangles; use_sah=true)
+bvh_simple, depth_simple = BuildBVH(rand_triangles; use_sah=false)
+
+max_depth = max(depth_sah, depth_simple)
+
+bvhshape = BVHShape(bvh_simple, rand_triangles)
+bvhshapebox = BVHShapeDebug(bvh_simple, rand_triangles)
 
 sky = Sphere(Scaling(10.0, 10.0, 10.0), Material(UniformPigment(RGB(0.5, 0.7, 1.0)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.7, 1.0)))))
 
 shapes = Vector{AbstractShape}()
-push!(shapes, bvhshape)
+push!(shapes, bvhshapebox)
 #push!(shapes, sky)
 
 world = World(shapes)
@@ -121,23 +116,15 @@ hdr = hdrimg(width, height)
 ImgTr = ImageTracer(hdr, cam)
 pcg = PCG()
 renderer = nothing
-if renderertype == "flat"
-    renderer = Flat(world, RGB(0.1, 0.1, 0.1))
-elseif renderertype == "path"
-    renderer = PathTracer(world, RGB(0.1, 0.1, 0.1), pcg, n_rays, depth, russian)
-elseif renderertype == "point"
-    renderer = PointLight(world, RGB(0.5, 0.7, 1.0), RGB(0.1, 0.1, 0.1), point_depth)
-else
-    throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
-end
-if aa != 0
-    ImgTr(renderer, aa, pcg)
-else
-    ImgTr(renderer)
-end
+#renderer = Flat(world, RGB(0.1, 0.1, 0.1))
+renderer = DepthBoxBVHRender(world; bvh_max_depth=depth_simple)
+#renderer = DepthBVHRender(world; bvh_max_depth=max_depth)
+#renderer = PathTracer(world, RGB(0.1, 0.1, 0.1), pcg, n_rays, depth, russian)
+#renderer = PointLight(world, RGB(0.1, 0.1, 0.15), RGB(0.1, 0.1, 0.1), 0)
+ImgTr(renderer)
 
-toned_img = tone_mapping(hdr)
+#= toned_img = tone_mapping(hdr)
 # Save the LDR image
 save_ldrimage(get_matrix(toned_img), png_output)
 write_pfm_image(hdr, pfm_output)
-println("Done")
+println("Done") =#
