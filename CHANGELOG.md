@@ -1,5 +1,5 @@
 # HEAD
-
+- Implement `Meshes` [#32](https://github.com/stevelonny/jujutracer/pull/32)
 # Version 0.3.0
 - Implement `PathTracer` renderer [#20](https://github.com/stevelonny/jujutracer/pull/18)
 - Implement Antialiasing
