@@ -55,7 +55,7 @@ julia demoPath.jl <output_file> <width> <height> <cam_angle>
 ```
 <div align="center">
 
-![Reflective](path.png)
+![Reflective](asset/path.png)
 
 </div>
 
@@ -65,7 +65,7 @@ To showcase all the newly added shapes by [#18](https://github.com/stevelonny/ju
 <div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
 
 <div style="text-align: center; margin: 10px;">
-<img src="allFlat.png" alt="demoAll Flat" width="300"/>
+<img src="asset/allFlat.png" alt="demoAll Flat" width="300"/>
 <br/>
 <strong>Flat renderer</strong>
 <br/>
@@ -73,7 +73,7 @@ To showcase all the newly added shapes by [#18](https://github.com/stevelonny/ju
 </div>
 
 <div style="text-align: center; margin: 10px;">
-<img src="allPath.png" alt="demoAll Path" width="300"/>
+<img src="asset/allPath.png" alt="demoAll Path" width="300"/>
 <br/>
 <strong>Path Tracer</strong>
 <br/>
@@ -85,7 +85,7 @@ To showcase all the newly added shapes by [#18](https://github.com/stevelonny/ju
 <div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
 
 <div style="text-align: center; margin: 10px;">
-<img src="allPoint.png" alt="demoAll Point" width="300"/>
+<img src="asset/allPoint.png" alt="demoAll Point" width="300"/>
 <br/>
 <strong>Point-Light Tracer</strong>
 <br/>
@@ -131,7 +131,7 @@ julia -t auto demogif.jl
 ```
 <div align="center">
 
-![Demo animation](output.gif)
+![Demo animation](asset/output.gif)
 
 </div>
 
