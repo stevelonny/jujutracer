@@ -1,4 +1,9 @@
 # HEAD
+- Implement `Meshes` [#32](https://github.com/stevelonny/jujutracer/pull/32)
+## Bugfixes & optimization
+- Fix spotlights angles
+
+# Version 0.4.0
 - Implement `PointLight` renderer [#20](https://github.com/stevelonny/jujutracer/pull/30)
   - Point and spotlight sources
 

@@ -43,10 +43,9 @@ struct SpotLight <: AbstractLight
     scale::Float64
     cos_total::Float64
     cos_falloff::Float64
-    cos_start::Float64
 
-    function SpotLight(position::Point, direction::Vec, emission::RGB=RGB(1.0, 1.0, 1.0), scale::Float64=100.0, cos_total::Float64=0.9, cos_falloff::Float64=0.93, cos_start::Float64=0.95)
-        new(position, direction, emission, scale, cos_total, cos_falloff, cos_start)     
+    function SpotLight(position::Point, direction::Vec, emission::RGB=RGB(1.0, 1.0, 1.0), scale::Float64=100.0, cos_total::Float64=0.9, cos_falloff::Float64=0.93)
+        new(position, direction, emission, scale, cos_total, cos_falloff)     
     end
 end
 
@@ -124,7 +123,7 @@ function _light_modulation(spot::SpotLight, repo::HitRecord)
 
     distance_factor = (spot.scale / distance)^2
 
-    smoothstep = _smooth_step(cos_theta, spot.cos_falloff, spot.cos_start)
+    smoothstep = _smooth_step(cos_theta, spot.cos_total, spot.cos_falloff)
 
     return spot.emission * distance_factor * smoothstep
 end

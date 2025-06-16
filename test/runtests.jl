@@ -1068,7 +1068,7 @@ end
         @test jujutracer.is_light_visible(world_with_obstacle, light, point) == false
         
         # Test spotlight visibility - point within cone
-        spot_light = SpotLight(Point(0.0, 0.0, 2.0), Vec(1.0, 0.0, -2.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85, 0.9)
+        spot_light = SpotLight(Point(0.0, 0.0, 2.0), Vec(1.0, 0.0, -2.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85)
         @test jujutracer.is_light_visible(world, spot_light, point) == true
         
         # Test spotlight visibility - point outside cone
@@ -1109,7 +1109,7 @@ end
         @test closer_modulation.r > modulation.r
         
         # Test spotlight modulation
-        spot_light = SpotLight(Point(0.0, 0.0, 1.0), Vec(1.0, 0.0, -1.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85, 0.9)
+        spot_light = SpotLight(Point(0.0, 0.0, 1.0), Vec(1.0, 0.0, -1.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85)
         spot_modulation = jujutracer._light_modulation(spot_light, hit_record)
         @test spot_modulation isa RGB
         @test spot_modulation.r >= 0.0 && spot_modulation.g >= 0.0 && spot_modulation.b >= 0.0
