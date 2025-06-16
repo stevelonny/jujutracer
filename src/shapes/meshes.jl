@@ -185,7 +185,16 @@ function read_obj_file(filename::String; Tr::AbstractTransformation=Transformati
     seekstart(io)
     return read_obj_file(io, Tr=Tr, Mat=Mat; order)
 end
+"""
+    ray_intersection(S::mesh, ray::Ray)
 
+# Arguments
+- `S::mesh`: the mesh
+- `ray::Ray`: the ray
+# Returns
+- `HitRecord`: The hit record of the first `Triangle` hit, if any.
+- `nothing` otherwise
+"""
 function ray_intersection(S::mesh, ray::Ray)
     dim = length(S.shapes)
     closest = nothing

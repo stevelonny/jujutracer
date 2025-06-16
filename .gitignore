@@ -24,6 +24,4 @@ docs/site/
 Manifest.toml
 
 # Images
-*.png
-*.jpg
-*.pfm
+Images/*

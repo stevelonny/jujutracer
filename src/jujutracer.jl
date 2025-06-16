@@ -45,6 +45,6 @@ export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBR
 include("shapes/shapes.jl")
 
 include("renderer.jl")
-export OnOff, Flat, PathTracer
+export OnOff, Flat, PathTracer, PointLight
 
 end # module jujutracer

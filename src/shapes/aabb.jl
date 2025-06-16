@@ -125,3 +125,25 @@ Returns the two points defining the axis-aligned bounding box (AABB) `axisbox`.
 function boxed(axisbox::AABB)::Tuple{Point,Point}
     return (axisbox.P1, axisbox.P2)
 end
+
+"""
+    quick_ray_intersection(S::AABB, ray::Ray)::Bool
+Checks if a ray intersects with the Axis-Aligned Bounding Box without calculating the exact intersection point.
+# Arguments
+- `S::AABB`: The Axis-Aligned Bounding Box to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the Axis-Aligned Bounding Box.
+# Returns
+- `Bool`: `true` if the ray intersects with the Axis-Aligned Bounding Box, `false` otherwise.
+"""
+function quick_ray_intersection(S::AABB, ray::Ray)::Bool
+    if !intersected(S, ray)
+        return false
+    else
+        for shape in S.S
+            if quick_ray_intersection(shape, ray)
+                return true
+            end
+        end
+        return false
+    end
+end

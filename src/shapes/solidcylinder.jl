@@ -250,3 +250,43 @@ function boxed(S::Cylinder)::Tuple{Point,Point}
     Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
     return (Pmin, Pmax)
 end
+
+"""
+    quick_ray_intersection(S::Cylinder, ray::Ray)::Bool
+Checks if a ray intersects with the cylinder without calculating the exact intersection point.
+# Arguments
+- `S::Cylinder`: The cylinder to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the cylinder.
+# Returns
+- `Bool`: `true` if the ray intersects with the cylinder, `false` otherwise.
+"""
+function quick_ray_intersection(S::Cylinder, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    O = Vec(inv_ray.origin)
+    d = inv_ray.dir
+
+    O_dot_d = O.x * d.x + O.y * d.y
+    d_squared = d.x^2 + d.y^2
+    O_squared = O.x^2 + O.y^2
+
+    Δrid = (O_dot_d)^2 - d_squared * (O_squared - 1.0)
+
+    (Δrid <= 0.0 && d_squared != 0.0) && return false
+
+    t1z = (0.5 - O.z) / d.z
+    t2z = (-0.5 - O.z) / d.z
+    if d_squared != 0.0
+        sqrot = sqrt(Δrid)
+        t1 = (-O_dot_d - sqrot) / d_squared
+        t2 = (-O_dot_d + sqrot) / d_squared
+    else
+        t1 = t1z
+        t2 = t2z
+    end
+
+    # more concise version but i dont really trust it
+    tmin = max(min(t1, t2), min(t1z, t2z))
+    tmax = min(max(t1, t2), max(t1z, t2z))
+
+    return !(tmax < max(inv_ray.tmin, tmin) || tmax > inv_ray.tmax || (tmin < inv_ray.tmin || tmin > inv_ray.tmax))
+end

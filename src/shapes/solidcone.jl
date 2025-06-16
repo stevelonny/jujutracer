@@ -274,3 +274,35 @@ function boxed(S::Cone)::Tuple{Point, Point}
     Pmax = Point(maximum(xs), maximum(ys), maximum(zs))
     return (Pmin, Pmax)
 end
+
+"""
+    quick_ray_intersection(S::Cone, ray::Ray)::Bool
+Checks if a ray intersects with the cone without calculating the exact intersection point.
+# Arguments
+- `S::Cone`: The cone to check for intersection.
+- `ray::Ray`: The ray to check for intersection with the cone.
+# Returns
+- `Bool`: `true` if the ray intersects with the cone, `false` otherwise.
+"""
+function quick_ray_intersection(S::Cone, ray::Ray)::Bool
+    inv_ray = _unsafe_inverse(S.Tr)(ray)
+    O = Vec(inv_ray.origin)
+    d = inv_ray.dir
+    a = d.x^2 + d.y^2 - d.z^2
+    b = 2.0 * (-O.z * d.z + O.x * d.x + O.y * d.y + d.z)
+    c = -1.0 + O.x^2 + O.y^2 - O.z^2 + 2.0 * O.z
+
+    Δ = b^2 - 4.0*a*c
+    if Δ <= 0.0
+        return false
+    end
+
+    sqrot = sqrt(Δ)
+    t1 = (-b - sqrot) / (2.0*a)
+    t2 = (-b + sqrot) / (2.0*a)
+    
+    z1 = O.z + t1 * d.z
+    z2 = O.z + t2 * d.z
+    
+    return (t1 > inv_ray.tmin && t1 < inv_ray.tmax && z1 > 0.0 && z1 < 1.0) || (t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 > 0.0 && z2 < 1.0)
+end

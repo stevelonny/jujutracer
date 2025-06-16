@@ -29,6 +29,8 @@ end
 # ray_intersection(S::NewSolid, ray::Ray)
 # ray_intersection_list(S::NewSolid, ray::Ray)
 # internal(S::NewSolid, P::Point)
+# boxed(S::NewSolid)::Tuple{Point, Point}
+# quick_intersection(S::NewShape, ray::Ray)
 #=
 function boxed(S::NewSolid)::Tuple{Point, Point}
     # return P1 and P2 of the bounding box of the sphere
