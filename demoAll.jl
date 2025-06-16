@@ -25,7 +25,7 @@ n_rays = 3
 depth = 5
 russian = 3
 point_depth = 1000
-aa = 4
+aa = 0
 aatype = ""
 if aa != 0
     aatype = "_" * string(aa) * "aa"
@@ -106,11 +106,11 @@ A = Point(3.0, 3.0, 5.0)
 B = Point(3.0, -3.0, 5.0)
 C = Point(-3.0, 0.0, 5.0)
 cos_total = cos(π / 8.0)
-cos_falloff = cos(π / 8.5)
-cos_start = cos(π / 9.0)
-spot1 = SpotLight(A, -Vec(A), RGB(0.0, 0.5, 0.0), factor, cos_total, cos_falloff, cos_start)
-spot2 = SpotLight(B, -Vec(B), RGB(0.5, 0.0, 0.0), factor, cos_total, cos_falloff, cos_start)
-spot3 = SpotLight(C, -Vec(C), RGB(0.0, 0.0, 0.5), factor, cos_total, cos_falloff, cos_start)
+cos_falloff = cos(π / 12.0)
+# cos_start = cos(π / 9.0)
+spot1 = SpotLight(A, -Vec(A), RGB(0.0, 0.5, 0.0), factor, cos_total, cos_falloff)
+spot2 = SpotLight(B, -Vec(B), RGB(0.5, 0.0, 0.0), factor, cos_total, cos_falloff)
+spot3 = SpotLight(C, -Vec(C), RGB(0.0, 0.0, 0.5), factor, cos_total, cos_falloff)
 #push!(lights, light1)
 #push!(lights, light2)
 #push!(lights, light3)
