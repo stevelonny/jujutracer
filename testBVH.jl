@@ -8,7 +8,7 @@ using Logging
 using TerminalLoggers
 using LoggingExtras
 
-filename = "output_rand_depth_2"
+filename = "output_rand_depth"
 width = 1920
 height = 1080
 n_rays = 4
@@ -87,25 +87,27 @@ global_logger(filtered_logger)
 pcg = PCG()
 
 # generate random triangles
-number_of_triangles = 24
+number_of_triangles = 2048
 rand_triangles = Vector{AbstractShape}(undef, number_of_triangles)
 for i in 1:length(rand_triangles)
     rand_triangles[i] = generate_triangle(pcg, isodd(i))
 end
 
+rand_triangles = deepcopy(rand_triangles)
+
 # build the bvh tree
-bvh_sah, depth_sah = BuildBVH(rand_triangles; use_sah=true)
-bvh_simple, depth_simple = BuildBVH(rand_triangles; use_sah=false)
+bvh_sah, depth_sah = BuildBVH!(rand_triangles; use_sah=true)
+#bvh_simple, depth_simple = BuildBVH!(rand_triangles; use_sah=false)
 
-max_depth = max(depth_sah, depth_simple)
+#max_depth = max(depth_sah, depth_simple)
 
-bvhshape = BVHShape(bvh_simple, rand_triangles)
-bvhshapebox = BVHShapeDebug(bvh_simple, rand_triangles)
+bvhshape = BVHShape(bvh_sah, rand_triangles)
+bvhshapebox = BVHShapeDebug(bvh_sah, rand_triangles)
 
 sky = Sphere(Scaling(10.0, 10.0, 10.0), Material(UniformPigment(RGB(0.5, 0.7, 1.0)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.7, 1.0)))))
 
 shapes = Vector{AbstractShape}()
-push!(shapes, bvhshapebox)
+push!(shapes, bvhshape)
 #push!(shapes, sky)
 
 world = World(shapes)
@@ -117,8 +119,7 @@ ImgTr = ImageTracer(hdr, cam)
 pcg = PCG()
 renderer = nothing
 #renderer = Flat(world, RGB(0.1, 0.1, 0.1))
-renderer = DepthBoxBVHRender(world; bvh_max_depth=depth_simple)
-#renderer = DepthBVHRender(world; bvh_max_depth=max_depth)
+renderer = DepthBVHRender(world; bvh_max_depth=depth_sah)
 #renderer = PathTracer(world, RGB(0.1, 0.1, 0.1), pcg, n_rays, depth, russian)
 #renderer = PointLight(world, RGB(0.1, 0.1, 0.15), RGB(0.1, 0.1, 0.1), 0)
 ImgTr(renderer)

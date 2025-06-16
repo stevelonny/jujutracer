@@ -105,14 +105,15 @@ function UpdateBoundaries!(node::BVHNode, shapes::Vector{AbstractShape})
     end
     node.p_min = pmin
     node.p_max = pmax
+    #@debug "Updated boundaries for node" node = node p_min = pmin p_max = pmax first_index = node.first_index last_index = node.last_index
 end
 
 """
     Subdivide!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point}, depth::Int64; max_shapes_per_leaf::Int64=2)
-Subdivide a BVH node into left and right child nodes based on the centroids of the shapes.
+Subdivide a BVH node into left and right child nodes based on the centroids of the shapes. Recursive method.
 # Arguments
 - `node::BVHNode`: The BVH node to subdivide.
-- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree. **Note: it will be modified in place.**
 - `centroids::Vector{Point}`: The centroids of the shapes.
 - `depth::Int64`: The current depth of the BVH tree.
 # Keyword Arguments
@@ -176,10 +177,10 @@ end
 
 """
     SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::Vector{Point}, depth::Int64; max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
-Subdivide a BVH node using the Surface Area Heuristic (SAH) method.
+Subdivide a BVH node using the Surface Area Heuristic (SAH) method. Recursive method.
 # Arguments
 - `node::BVHNode`: The BVH node to subdivide.
-- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree. **Note: it will be modified in place.**
 - `centroids::Vector{Point}`: The centroids of the shapes.
 - `depth::Int64`: The current depth of the BVH tree.
 # Keyword Arguments
@@ -193,6 +194,11 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
     # stop if there are too few shapes
     num_shapes = node.last_index - node.first_index + 1
     if num_shapes <= max_shapes_per_leaf
+        #= b_points = Vector{Tuple{Point, Point}}(undef, num_shapes)
+        for i in node.first_index:node.last_index
+            b_points[i - node.first_index + 1] = boxed(shapes[i])
+        end
+        @debug "Creating leaf node" node = node b_points = b_points =#
         return depth
     end
 
@@ -239,7 +245,7 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
         end
         for i in node.first_index:node.last_index
             centroid_offset = offset(centroids[i], node.p_min, node.p_max)
-            b = floor(Int64, 1 + n_buckets * getfield(centroid_offset, axis))
+            b = min(floor(Int64, n_buckets * getfield(centroid_offset, axis)) + 1, n_buckets)
             if b > n_buckets
                 b = n_buckets
             end
@@ -259,7 +265,7 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
         for i in 1:n_buckets
             total_bucketed_shapes += bucket_count[i]
         end
-        @debug "Total bucketed shapes: $(total_bucketed_shapes) out of $(num_shapes)"
+        #@debug "Total bucketed shapes: $(total_bucketed_shapes) out of $(num_shapes)"
         #@debug "Bucket counts and bounds: $(bucket_count) $(bucket_bounds)"
         for i in 1:n_buckets
             if bucket_count[i] == 0
@@ -309,38 +315,38 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
         #   - the cost is lower than the leaf cost
         #   - or the number of shapes is greater than max_shapes_per_leaf
         # - or create a leaf node
-        @debug "Processing node with:" n_buckets=n_buckets p_max = node.p_max p_min = node.p_min axis = axis best_split = best_split best_cost = best_cost leaf_cost = leaf_cost left= node.first_index right = node.last_index
+        #@debug "Processing node with:" n_buckets=n_buckets p_max = node.p_max p_min = node.p_min axis = axis best_split = best_split best_cost = best_cost leaf_cost = leaf_cost left= node.first_index right = node.last_index
         if (best_cost < leaf_cost || num_shapes > max_shapes_per_leaf)
             # reorder shapes and centroids
             left_index = node.first_index
             right_index = node.last_index
             while left_index <= right_index
-                b = floor(Int64, 1 + n_buckets * getfield(offset(centroids[left_index], node.p_min, node.p_max), axis))
-                if b > n_buckets
-                    b = n_buckets
-                end
+            centroid_offset = offset(centroids[left_index], node.p_min, node.p_max)
+            b = min(floor(Int64, n_buckets * getfield(centroid_offset, axis)) + 1, n_buckets)
+            if b > n_buckets
+                b = n_buckets
+            end
                 if b <= best_split
                     left_index += 1
                 else
-                    if left_index < right_index
-                        centroids[left_index], centroids[right_index] = centroids[right_index], centroids[left_index]
-                        shapes[left_index], shapes[right_index] = shapes[right_index], shapes[left_index]
-                    end
+                    centroids[left_index], centroids[right_index] = centroids[right_index], centroids[left_index]
+                    shapes[left_index], shapes[right_index] = shapes[right_index], shapes[left_index]
                     right_index -= 1
                 end
             end #while
             if left_index - node.first_index <= 0 || node.last_index - right_index <= 0
-                @debug "No valid split found, creating leaf node"
+                #@debug "No valid split found, creating leaf node"
                 return depth
             end
 
             node.left = BVHNode(node.first_index, left_index - 1)
             node.right = BVHNode(left_index, node.last_index)
 
+            
             UpdateBoundaries!(node.left, shapes)
-            UpdateBoundaries!(node.right, shapes)
-
             left_depth = SubdivideSAH!(node.left, shapes, centroids, depth; max_shapes_per_leaf=max_shapes_per_leaf)
+            
+            UpdateBoundaries!(node.right, shapes)
             right_depth = SubdivideSAH!(node.right, shapes, centroids, depth; max_shapes_per_leaf=max_shapes_per_leaf)
 
             # return the maximum depth of the tree
@@ -357,10 +363,10 @@ function SubdivideSAH!(node::BVHNode, shapes::Vector{AbstractShape}, centroids::
 end
 
 """
-    BuildBVH(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
+    BuildBVH!(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
 Build a Boundary Volume Hierarchy (BVH) tree from a vector of shapes.
 # Arguments
-- `shapes::Vector{AbstractShape}`: The vector of shapes to build the BVH from.
+- `shapes::Vector{AbstractShape}`: The vector of shapes to build the BVH from. **Note: it will be modified in place.**
 # Keyword Arguments
 - `use_sah::Bool=false`: Whether to use the Surface Area Heuristic (SAH) for subdivision.
 - `max_shapes_per_leaf::Int64=2`: The maximum number of shapes allowed in a leaf node.
@@ -368,7 +374,7 @@ Build a Boundary Volume Hierarchy (BVH) tree from a vector of shapes.
 # Returns
 - `(BVHNode, Int64)`: A tuple containing the root node of the BVH tree and the maximum depth of the tree.
 """
-function BuildBVH(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
+function BuildBVH!(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes_per_leaf::Int64=2, n_buckets::Int64=12)
     root = BVHNode(1, length(shapes))
     @debug "Building BVH tree" shapes = length(shapes) max_shapes_per_leaf = max_shapes_per_leaf use_sah = use_sah n_buckets = n_buckets
 
@@ -386,6 +392,16 @@ function BuildBVH(shapes::Vector{AbstractShape}; use_sah::Bool=false, max_shapes
     return root, depth
 end
 
+"""
+    ray_intersection_aabb(pmin::Point, pmax::Point, ray::Ray)
+Check if a ray intersects with an Axis-Aligned Bounding Box (AABB) defined by `pmin` and `pmax`.
+# Arguments
+- `pmin::Point`: The minimum point of the AABB.
+- `pmax::Point`: The maximum point of the AABB.
+- `ray::Ray`: The ray to check for intersection.
+# Returns
+- `Bool`: `true` if the ray intersects the AABB, `false` otherwise.
+"""
 function ray_intersection_aabb(pmin::Point, pmax::Point, ray::Ray)
     p1 = pmin
     p2 = pmax
@@ -410,6 +426,17 @@ function ray_intersection_aabb(pmin::Point, pmax::Point, ray::Ray)
     return first_hit <= ray.tmax
 end
 
+"""
+    ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray, bvh_depth::Int64)
+Check if a ray intersects with the BVH tree `bvh` containing the shapes in `shapes`.
+# Arguments
+- `bvh::BVHNode`: The root node of the BVH tree.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+- `ray::Ray`: The ray to check for intersection.
+- `bvh_depth::Int64`: The current depth of the BVH tree.
+# Returns
+- `HitRecord` or `nothing`: A `HitRecord` if the ray intersects a shape in the BVH, or `nothing` if it does not. The `bvh_depth` field of the `HitRecord` will be populated.
+"""
 function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray, bvh_depth::Int64)
     bvh_depth += 1
     
@@ -454,17 +481,42 @@ function ray_intersection_bvh(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::
     end
 end
 
-
+"""
+    struct BVHShape <: AbstractShape
+Shape that holds a BVH tree and the relative shapes.
+# Fields
+- `bvhroot::BVHNode`: The root node of the BVH tree.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+# Constructor
+- `BVHShape(bvhroot::BVHNode, shapes::Vector{AbstractShape})`: Creates a new `BVHShape` with the specified BVH root and shapes.
+"""
 struct BVHShape <: AbstractShape
     bvhroot::BVHNode
     shapes::Vector{AbstractShape}
 end
 
-
+"""
+    ray_intersection(bvhshape::BVHShape, ray::Ray)
+Check if a ray intersects with the BVHShape `bvhshape`.
+# Arguments
+- `bvhshape::BVHShape`: The BVHShape containing the BVH tree and shapes.
+- `ray::Ray`: The ray to check for intersection.
+# Returns
+- `HitRecord` or `nothing`: A `HitRecord` if the ray intersects a shape in the BVHShape, or `nothing` if it does not. The `bvh_depth` field of the `HitRecord` will be populated.
+"""
 function ray_intersection(bvhshape::BVHShape, ray::Ray)
     return ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray, 0)
 end
 
+"""
+    quick_ray_intersection(bvhshape::BVHShape, ray::Ray)
+Check if a ray intersects with the BVHShape `bvhshape` using an optimized method that only checks the bounding box.
+# Arguments
+- `bvhshape::BVHShape`: The BVHShape containing the BVH tree and shapes.
+- `ray::Ray`: The ray to check for intersection.
+# Returns
+- `Bool`: `true` if the ray intersects the bounding box of the BVHShape, `false` otherwise.
+"""
 function quick_ray_intersection(bvhshape::BVHShape, ray::Ray)
     return !isnothing(ray_intersection_bvh(bvhshape.bvhroot, bvhshape.shapes, ray, 0))
 end
@@ -550,16 +602,45 @@ function ray_intersection_bvh_optimized(bvh::BVHNode, shapes::Vector{AbstractSha
     return closest
 end
 
-
+"""
+    struct BVHShapeDebug <: AbstractShape
+Shape that holds a BVH tree and the relative shapes, but will return the innermost bounding box hit.
+# Fields
+- `bvhroot::BVHNode`: The root node of the BVH tree.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+# Constructor
+- `BVHShapeDebug(bvhroot::BVHNode, shapes::Vector{AbstractShape})`: Creates a new `BVHShapeDebug` with the specified BVH root and shapes.
+"""
 struct BVHShapeDebug <: AbstractShape
     bvhroot::BVHNode
     shapes::Vector{AbstractShape}
 end
 
+"""
+    ray_intersection(bvhshape::BVHShapeDebug, ray::Ray)
+Check if a ray intersects with the BVHShapeDebug `bvhshape`, returning the innermost bounding box hit.
+# Arguments
+- `bvhshape::BVHShapeDebug`: The BVHShapeDebug containing the BVH tree and shapes.
+- `ray::Ray`: The ray to check for intersection.
+# Returns
+- `HitRecord` or `nothing`: A `HitRecord` if the ray intersects a shape in the BVHShapeDebug, or `nothing` if it does not. The `bvh_depth` field of the `HitRecord` will be populated.
+# Note
+The return value will be populated by placeholder values for `normal`, `surface_P`, and `shape` (the first shape in the BVH).
+"""
 function ray_intersection(bvhshape::BVHShapeDebug, ray::Ray)
-    return ray_intersection_bvh_boxe(bvhshape.bvhroot, bvhshape.shapes, ray, 0)
+    return ray_intersection_bvh_box(bvhshape.bvhroot, bvhshape.shapes, ray, 0)
 end
 
+"""
+    ray_intersection_aabb_withtime(pmin::Point, pmax::Point, ray::Ray)
+Check if a ray intersects with an Axis-Aligned Bounding Box (AABB) defined by `pmin` and `pmax`, and return the time of intersection.
+# Arguments
+- `pmin::Point`: The minimum point of the AABB.
+- `pmax::Point`: The maximum point of the AABB.
+- `ray::Ray`: The ray to check for intersection.
+# Returns
+- `(Bool, Float64)`: A tuple where the first element is `true` if the ray intersects the AABB, and the second element is the time of intersection. If there is no intersection, the first element is `false` and the second element is `Inf`.
+"""
 function ray_intersection_aabb_withtime(pmin::Point, pmax::Point, ray::Ray)
     p1 = pmin
     p2 = pmax
@@ -585,7 +666,20 @@ function ray_intersection_aabb_withtime(pmin::Point, pmax::Point, ray::Ray)
     return (convert(Bool, hit), convert(Float64, first_hit))
 end
 
-function ray_intersection_bvh_boxe(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray, bvh_depth::Int64)
+"""
+    ray_intersection_bvh_box(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray, bvh_depth::Int64)
+Check if a ray intersects with the BVH tree `bvh` containing the shapes in `shapes`, returning the innermost bounding box hit.
+# Arguments
+- `bvh::BVHNode`: The root node of the BVH tree.
+- `shapes::Vector{AbstractShape}`: The vector of shapes used by the BVH Tree.
+- `ray::Ray`: The ray to check for intersection.
+- `bvh_depth::Int64`: The current depth of the BVH tree.
+# Returns
+- `HitRecord` or `nothing`: A `HitRecord` if the ray intersects a shape in the BVH, or `nothing` if it does not. The `bvh_depth` field of the `HitRecord` will be populated.
+# Note
+The return value will be populated by placeholder values for `normal`, `surface_P`, and `shape` (the first shape in the BVH).
+"""
+function ray_intersection_bvh_box(bvh::BVHNode, shapes::Vector{AbstractShape}, ray::Ray, bvh_depth::Int64)
     bvh_depth += 1
     
     hit, first_hit = ray_intersection_aabb_withtime(bvh.p_min, bvh.p_max, ray)
@@ -606,9 +700,8 @@ function ray_intersection_bvh_boxe(bvh::BVHNode, shapes::Vector{AbstractShape}, 
         return nothing
     end
 
-    left_hit = !isnothing(bvh.left) ? ray_intersection_bvh_boxe(bvh.left, shapes, ray, bvh_depth) : nothing
-    right_hit = !isnothing(bvh.right) ? ray_intersection_bvh_boxe(bvh.right, shapes, ray, bvh_depth) : nothing
-
+    left_hit = !isnothing(bvh.left) ? ray_intersection_bvh_box(bvh.left, shapes, ray, bvh_depth) : nothing
+    right_hit = !isnothing(bvh.right) ? ray_intersection_bvh_box(bvh.right, shapes, ray, bvh_depth) : nothing
 
     if isnothing(left_hit) && isnothing(right_hit)
         return nothing
