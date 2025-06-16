@@ -10,23 +10,23 @@ struct mesh <: AbstractShape
     function mesh(file::String, shapes::Vector{Triangle}, points::Vector{Point})
         new(file, shapes, points)
     end
-    function mesh(file::String)
-        sh, p = read_obj_file(file)
+    function mesh(file::String; order = "dwh")
+        sh, p = read_obj_file(file; order)
         new(file, sh, p)
     end
 
-    function mesh(file::String, Tr::AbstractTransformation)
-        sh, p = read_obj_file(file, Tr = Tr)
+    function mesh(file::String, Tr::AbstractTransformation; order = "dwh")
+        sh, p = read_obj_file(file, Tr = Tr; order)
         new(file, sh, p)
     end
 
-    function mesh(file::String, Mat::Material)
-        sh, p = read_obj_file(file, Mat = Mat)
+    function mesh(file::String, Mat::Material; order = "dwh")
+        sh, p = read_obj_file(file, Mat = Mat; order)
         new(file, sh, p)
     end
 
-    function mesh(file::String, Tr::AbstractTransformation, Mat::Material)
-        sh, p = read_obj_file(file, Tr = Tr, Mat = Mat)
+    function mesh(file::String, Tr::AbstractTransformation, Mat::Material; order = "dwh")
+        sh, p = read_obj_file(file, Tr = Tr, Mat = Mat; order)
         new(file, sh, p)
     end
 end
@@ -47,11 +47,23 @@ function trianglize(P::Vector{Point}, Tr::AbstractTransformation, Mat::Material)
     return tr
 end
 
-function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
+function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material(), order = "dwh")
     shapes = Vector{Triangle}()
     points = Vector{Point}()
     faces = Vector{Vector{Int}}()
     total = io.size
+    x, y, z = 1, 2, 3
+    for i in eachindex(order)
+        if order[i] == 'd'
+            x = i
+        end
+        if order[i] == 'w'
+            y = i
+        end
+        if order[i] == 'h'
+            z = i
+        end
+    end
     @debug "Reading OBJ file from IOBuffer with size: $(total) bytes" total=total
         while !eof(io)
             line = split(readline(io), ' ')
@@ -68,9 +80,9 @@ function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation
                     catch
                     end
                 end
-                p = Point(parse(Float64, coord[1]),
-                            parse(Float64, coord[2]),
-                            parse(Float64, coord[3]))
+                p = Point(parse(Float64, coord[x]),
+                            parse(Float64, coord[y]),
+                            parse(Float64, coord[z]))
                 push!(points, p)
             elseif line[1] == "f"
                 # possible formats:
@@ -111,7 +123,7 @@ function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation
     return shapes, points
 end
 
-function read_obj_file(filename::String; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
+function read_obj_file(filename::String; Tr::AbstractTransformation = Transformation(), Mat::Material = Material(), order = "dwh")
     # Check if the file extension is valid
     if !(endswith(filename, ".obj"))
         throw(InvalidFileFormat("Invalid file extension. Only .obj is supported."))
@@ -122,7 +134,7 @@ function read_obj_file(filename::String; Tr::AbstractTransformation = Transforma
         write(io, file)
     end
     seekstart(io)
-    return read_obj_file(io, Tr = Tr, Mat = Mat)
+    return read_obj_file(io, Tr = Tr, Mat = Mat; order)
 end
 
 function ray_intersection(S::mesh, ray::Ray)
