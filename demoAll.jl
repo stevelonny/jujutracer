@@ -17,15 +17,15 @@ global_logger(filtered_logger)
 
 # Welcome to steve's playground
 
-filename = "all_"
+filename = "Images/all_"
 renderertype = "point" # "path" or "flat" or "point"
-width = 1280
-height = 720
+width = 800
+height = 450
 n_rays = 3
 depth = 5
 russian = 3
 point_depth = 1000
-aa = 0
+aa = 4
 aatype = ""
 if aa != 0
     aatype = "_" * string(aa) * "aa"
@@ -54,7 +54,7 @@ gray = RGB(0.2, 0.2, 0.2)
 black = RGB(0.0, 0.0, 0.0)
 white = RGB(1.0, 1.0, 1.0)
 super_white = RGB(10.0, 10.0, 10.0)
-sky = read_pfm_image("sky.pfm")
+sky = read_pfm_image("asset/sky.pfm")
 MatSky = if renderertype == "point"
     Material(UniformPigment(gray), DiffusiveBRDF(ImagePigment(sky)))
 else

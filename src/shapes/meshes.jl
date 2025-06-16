@@ -229,3 +229,21 @@ function boxed(m::mesh)::Tuple{Point,Point}
     end
     return P1, P2
 end
+
+"""
+    quick_ray_intersection(S::mesh, ray::Ray)
+Check if a ray intersects any triangle in the mesh without calculating the exact intersection point. Very inefficient for large meshes.
+# Arguments
+- `S::mesh`: the mesh to be checked for intersection
+- `ray::Ray`: the ray to be checked for intersection
+# Returns
+- `Bool`: `true` if the ray intersects any triangle in the mesh, `false` otherwise.
+"""
+function quick_ray_intersection(S::mesh, ray::Ray)::Bool
+    for tr in S.shapes
+        if quick_ray_intersection(tr, ray)
+            return true
+        end
+    end
+    return false
+end
