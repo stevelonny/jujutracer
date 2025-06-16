@@ -18,13 +18,19 @@ material sphere_material(
     uniform(<0, 0, 0>)
 )
 
-plane (sky_material, translation([0, 0, 100]) * rotation_y(clock))
-plane (ground_material, identity)
+plane pl1(sky_material, translation([0, 0, 100]) * rotation_y(clock))
+plane pl2(ground_material, identity)
 
-sphere(sphere_material, translation([0, 0, 1]))
+sphere sph1(sphere_material, translation([0, 0, 1]))
 
-pointlight([0, 0, 10], <0.25, 0.3, 0>, 100)
-spotlight([5, 5, 10], [-5, -5, -10], <0.45, 0.5, 0.65>, 100, 0.8, 0.84, 0.95)
+pointlight point([0, 0, 10], <0.25, 0.3, 0>, 100)
+spotlight spot([5, 5, 10], [-5, -5, -10], <0.45, 0.5, 0.65>, 100, 0.8, 0.84, 0.95)
 
+add pl1
+add pl2
+add sph1
+
+add point
+add spot
 
 camera(perspective, rotation_z(0.524) * translation([-4, 0, 1]), 1.0, 1.0)
