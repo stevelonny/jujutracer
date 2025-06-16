@@ -35,7 +35,7 @@ include("aabb.jl")
 export AABB, intersected
 
 include("meshes.jl")
-export mesh
+export mesh, read_obj_file
 
 include("world.jl")
 export World

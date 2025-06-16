@@ -56,17 +56,33 @@ function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation
         while !eof(io)
             line = split(readline(io), ' ')
             dim = length(line)
-            
+
             if line[1] == "v"
                 # add a point
-                p = Point(parse(Float64, line[2]),
-                            parse(Float64, line[3]),
-                            parse(Float64, line[4]))
+                # account for empty spaces
+                coord = Vector{SubString{String}}()
+                for i in 2:dim
+                    try
+                        parse(Float64, line[i])
+                        push!(coord, line[i])
+                    catch
+                    end
+                end
+                p = Point(parse(Float64, coord[1]),
+                            parse(Float64, coord[2]),
+                            parse(Float64, coord[3]))
                 push!(points, p)
             elseif line[1] == "f"
+                # possible formats:
+                # f 1 2 3 ...
+                # f 1/1 2/2 3/3 ...
+                # f 1/1/1 2/2/2 3/3/3 ...
+                # f 1//1 2//2 3//3 ...
+                # face/texture/normal
                 face = Vector{Int}()
                 for i in 2:dim
-                    push!(face, parse.(Int, line[i]))
+                    face_index = split(line[i], '/')
+                    push!(face, parse.(Int, face_index[1]))
                 end
                 push!(faces, face)
             end #if/else
