@@ -15,10 +15,10 @@ filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logg
 # Set as the global logger
 global_logger(filtered_logger)
 
-filename = "tree_"
-renderertype = "point" # "path" or "flat"
-width = 720
-height = 1280
+filename = "Images/tree_"
+renderertype = "path" # "path" or "flat"
+width = 450
+height = 800
 n_rays = 3
 depth = 5
 russian = 3
@@ -43,8 +43,9 @@ pfm_output = fullname * ".pfm"
 
 
 Sc = Scaling(1.0 / 1.5, 1.0 / 1.5, 1.0 / 1.5)
-sky = read_pfm_image("sky.pfm")
-bark = read_pfm_image("bark.pfm")
+sky = read_pfm_image("asset/sky.pfm")
+bark = read_pfm_image("asset/bark.pfm")
+leaf = read_pfm_image("asset/leaf.pfm")
 black = RGB(0.0, 0.0, 0.0)
 red = RGB(0.5, 0.0, 0.0)
 gray = RGB(0.5, 0.5, 0.5)
@@ -52,18 +53,23 @@ yellow = RGB(0.5, 0.5, 0.0)
 MatGround = Material(UniformPigment(black), DiffusiveBRDF(UniformPigment(RGB(0.2, 0.3, 0.2))))
 MatSky = Material(ImagePigment(sky), DiffusiveBRDF(UniformPigment(black)))
 MatTree = Material(UniformPigment(black), DiffusiveBRDF(ImagePigment(bark)))
+MatLeaf = Material(UniformPigment(black), DiffusiveBRDF(ImagePigment(leaf)))
 MatSphere = Material(UniformPigment(black), SpecularBRDF(UniformPigment(RGB(1.0, 1.0, 1.0))))
 S = Vector{AbstractShape}(undef, 4)
 
 sky = Sphere(Scaling(18.0, 18.0, 18.0) ⊙ Ry(-π / 4.0), MatSky)
 sphere = Sphere(Translation(4.0, 2.0, 0.0), MatSphere)
 ground = Plane(MatGround)
-tree = mesh("tree.obj", Translation(-5.0, 0.0, -0.05) ⊙ Scaling(1.0 / 1.3, 1.0 / 1.3, 1.0 / 1.3), MatTree)
+tree = mesh("tree.obj", Translation(-5.0, 0.0, -0.05) ⊙ Scaling(1.0 / 1.5, 1.0 / 1.5, 1.0 / 1.5), MatTree; order = "whd")
+leaves = mesh("leaves.obj", Translation(-5.0, 0.0, -0.05) ⊙ Scaling(1.0 / 1.5, 1.0 / 1.5, 1.0 / 1.5), MatLeaf; order = "whd")
 tree_shapes = Vector{AbstractShape}()
 for t in tree.shapes
     push!(tree_shapes, t)
 end
-bvh, bvhdepth = BuildBVH!(tree_shapes; use_sah=true)
+for l in leaves.shapes
+    push!(tree_shapes, l)
+end
+bvh, bvhdepth = BuildBVH!(tree_shapes; use_sah=true, max_shapes_per_leaf=4)
 bvhshape = BVHShape(bvh, tree_shapes)
 
 A, B = bvh.p_min, bvh.p_max
@@ -71,8 +77,8 @@ spot_O = Point(B.x, A.y, 16.0)
 A = Point(A.x, B.y, 0.0)
 cos_total = cos(π / 8.0)
 cos_falloff = cos(π / 12.0)
-spot = SpotLight(spot_O, (A-spot_O), RGB(1.0, 1.0, 0.8), 100.0)
-
+spot = SpotLight(spot_O, (A-spot_O), RGB(1.0, 1.0, 0.8), 100.0, cos_total, cos_falloff)
+light1 = LightSource(Point(0.0, 0.0, 17.90), RGB(0.4, 0.4, 0.3), 100.0)
 
 shapes = Vector{AbstractShape}()
 push!(shapes, sky)
@@ -82,6 +88,7 @@ push!(shapes, bvhshape)
 
 lights = Vector{AbstractLight}()
 push!(lights, spot)
+push!(lights, light1)
 
 world = World(shapes, lights, nothing)
 
@@ -97,7 +104,7 @@ else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end
 
-cam = Perspective(d=2.0, t=Translation(-6.0, 0.0, 2.0) ⊙ Ry(-π / 10.0), a_ratio=9/16)
+cam = Perspective(d=1.8, t=Translation(-8.0, 0.0, 2.0) ⊙ Ry(-π / 10.0), a_ratio=9/16)
 hdr = hdrimg(width, height)
 ImgTr = ImageTracer(hdr, cam)
 

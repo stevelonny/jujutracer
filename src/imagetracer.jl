@@ -111,6 +111,8 @@ function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
         @debug "PathTracer parameters" bg_color = fun.background_color n_rays = fun.n_rays depth = fun.depth russian = fun.russian
     elseif fun isa PointLight
         @debug "PointLight parameters" bg_color = fun.background_color amb_color = fun.ambient_color point_depth = fun.max_depth
+    elseif fun isa DepthBVHRender
+        @debug "DepthBVHRender parameters" background_color = fun.background_color non_bvh_color = fun.non_bvh_color bvh_color_low = fun.bvh_color_low bvh_color_high = fun.bvh_color_high bvh_max_depth = fun.bvh_max_depth
     end
     starting_time = time_ns()
     @withprogress name = "Rendering" begin
