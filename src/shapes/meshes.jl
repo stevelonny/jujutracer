@@ -1,14 +1,29 @@
 #---------------------------------------------------------
 # Meshes
 #---------------------------------------------------------
+"""
+    struct mesh <: AbstractShape
 
+mesh.
+# Fields
+- `file::String`: the source `file.obj` of the mesh
+- `shape::Vector{Triangle}`: the triangles of the mesh
+- `points::Vector{Point}`: the vertices of the triangles of the shape
+
+# Constructor
+- `mesh(shapes::Vector{Triangle})`: creates a mesh frome the `Vector{Triangle}`
+- `mesh(file::String)`: creates a mesh from `file`
+- `mesh(file::String, Tr::AbstractTransformation)`: creates a mesh from `file` with a transformation `Tr` 
+- `mesh(file::String, Mat::Material)`: creates a mesh with `Mat` material from `file`
+- `mesh(file::String, Tr::AbstractTransformation, Mat::Material)`: creates a mesh with `Tr` transformation and a `Mat` material.
+"""
 struct mesh <: AbstractShape
     file::String
     shapes::Vector{Triangle}
     points::Vector{Point}
 
-    function mesh(file::String, shapes::Vector{Triangle}, points::Vector{Point})
-        new(file, shapes, points)
+    function mesh(shapes::Vector{Triangle})
+        new("file.obj", shapes, Vector{Point}())
     end
     function mesh(file::String; order = "dwh")
         sh, p = read_obj_file(file; order)
@@ -34,7 +49,7 @@ end
 """
     trianglize(P::Vector{Points}, Tr::AbstractTransformation, Mat::Material)
 
-Works only convex poygons
+Triangulation method, working only with ordered verteces
 """
 function trianglize(P::Vector{Point}, Tr::AbstractTransformation, Mat::Material)
     tr = Vector{Triangle}()
@@ -46,8 +61,22 @@ function trianglize(P::Vector{Point}, Tr::AbstractTransformation, Mat::Material)
     end
     return tr
 end
+"""
 
-function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material(), order = "dwh")
+    read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material(); order = "dwh")
+
+Method for constructing vectors and points from a buffer
+# Fields
+- `io::IOBuffer`: the buffer
+- `Tr::AbstractTransformation`: an hypotetical transformation to be applied to all the shapes and points
+- `Mat::Material`: an hypotetical material to be applied to all the triangles
+# Keywords
+- `order::String`: the order of the coordinates in the file, default is "dwh" (depth, width, height).
+# Returns
+- `shape::Vector{Triangle}`
+- `points:Vector{Points}`
+"""
+function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     shapes = Vector{Triangle}()
     points = Vector{Point}()
     faces = Vector{Vector{Int}}()
@@ -122,8 +151,22 @@ function read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation
     @info "Read OBJ file: $(length(shapes)) shapes and $(length(points)) points."
     return shapes, points
 end
+"""
 
-function read_obj_file(filename::String; Tr::AbstractTransformation = Transformation(), Mat::Material = Material(), order = "dwh")
+    read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material(); order = "dwh")
+
+Method for constructing vectors and points from a file
+# Fields
+- `filename::String`: the name of the `file.obj`
+- `Tr::AbstractTransformation`: an hypotetical transformation to be applied to all the shapes and points
+- `Mat::Material`: an hypotetical material to be applied to all the triangles
+# Keywords
+- `order::String`: the order of the coordinates in the file, default is "dwh" (depth, width, height).
+# Returns
+- `shape::Vector{Triangle}`
+- `points:Vector{Points}`
+"""
+function read_obj_file(filename::String; Tr::AbstractTransformation = Transformation(), Mat::Material = Material())
     # Check if the file extension is valid
     if !(endswith(filename, ".obj"))
         throw(InvalidFileFormat("Invalid file extension. Only .obj is supported."))
