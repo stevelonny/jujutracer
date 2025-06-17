@@ -137,6 +137,10 @@ mutable struct Scene
     all_shapes::Dict{String, AbstractShape}
     all_lights::Dict{String, AbstractLight}
 
+    shapes::Vector{AbstractShape}
+    acc_shapes::Vector{AbstractShape}
+    bvhdepth::Int64
+
     function Scene(;
         materials=Dict{String,Material}(),
         world=nothing,
@@ -144,9 +148,12 @@ mutable struct Scene
         float_variables=Dict{String,Float64}(),
         overridden_variables=Set{String}(),
         all_shapes=Dict{String, AbstractShape}(),
-        all_lights=Dict{String, AbstractLight}()
+        all_lights=Dict{String, AbstractLight}(),
+        shapes=Vector{AbstractShape}(),
+        acc_shapes=Vector{AbstractShape}(),
+        bvhdepth=0
     )
-        new(materials, world, camera, float_variables, overridden_variables, all_shapes, all_lights)
+        new(materials, world, camera, float_variables, overridden_variables, all_shapes, all_lights, shapes, acc_shapes, bvhdepth)
     end
 end
 
@@ -711,6 +718,28 @@ function _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractS
     return csg_name , shape
 end
 
+function _parse_mesh(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+    name = _expect_identifier(s)
+    _expect_symbol(s, '(')
+
+    material_name = _expect_identifier(s)
+    if !(haskey(dict_material, material_name))
+        throw(GrammarError(s.location, "material '$material_name' not defined"))
+    end
+    _expect_symbol(s, ',')
+    transformation = _parse_transformation(s, dict_float)
+    
+    _expect_symbol(s, ',')
+    filename = _expect_string(s)
+    _expect_symbol(s, ',')
+    order = _expect_string(s)
+    _expect_symbol(s, ')')
+
+    m_mesh = mesh(filename, transformation, dict_material[material_name]; order=order)
+
+    return name, m_mesh
+end
+
 """
     parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String,Float64}())
 Parses a scene from the input stream.
@@ -725,7 +754,6 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
     scene.float_variables = variables
     scene.overridden_variables = Set(keys(variables))
 
-    shapes = Vector{AbstractShape}()
     lights = Vector{AbstractLight}()
 
     while true
@@ -780,15 +808,23 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
             csg_constructor = csg_constructors[token.keyword]
             name, shape = _parse_CSG_operation(s, scene.all_shapes, csg_constructor)
             scene.all_shapes[name] = shape
+        elseif token.keyword == MESH
+            name, m_mesh = _parse_mesh(s, scene.float_variables, scene.materials)
+            scene.all_shapes[name] = m_mesh
         elseif token.keyword == ADD
             name = _expect_identifier(s)
             if haskey(scene.all_shapes, name)
                 # if it is a CSG shape, box them
                 if scene.all_shapes[name] isa Union{CSGUnion, CSGDifference, CSGIntersection}
                     boxedcsg = AABB(scene.all_shapes[name])
-                    push!(shapes, boxedcsg)
+                    push!(scene.shapes, boxedcsg)
+                elseif scene.all_shapes[name] isa jujutracer.mesh
+                    push!(scene.shapes, scene.all_shapes[name])
+                    for t in scene.all_shapes[name].shapes
+                        push!(scene.acc_shapes, t)
+                    end
                 else
-                    push!(shapes, scene.all_shapes[name])
+                    push!(scene.shapes, scene.all_shapes[name])
                 end
             elseif haskey(scene.all_lights, name)
                 push!(lights, scene.all_lights[name])
@@ -808,10 +844,25 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
     if isempty(scene.materials)
         throw(GrammarError(s.location, "no materials defined"))
     end
-    if isempty(shapes)
+    if isempty(scene.shapes)
         throw(GrammarError(s.location, "no shapes defined"))
     end
 
-    scene.world = World(shapes, lights)
+    for sh in scene.shapes
+        if sh isa Plane
+            continue
+        end
+        push!(scene.acc_shapes, sh)
+    end
+
+    if !isempty(scene.acc_shapes)
+        bvh, scene.bvhdepth = BuildBVH!(scene.acc_shapes; use_sah=true)    
+        bvhshape = BVHShape(bvh, scene.acc_shapes)
+        shapes = vcat(filter(x -> x isa Plane, scene.shapes), bvhshape)
+        scene.world = World(shapes, lights)
+    else
+        scene.world = World(scene.shapes, lights)
+    end
+
     return scene
 end
