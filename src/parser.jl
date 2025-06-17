@@ -125,8 +125,24 @@ Represents a complete scene to be rendered, containing materials, shapes, camera
 - `camera::Union{AbstractCamera,Nothing}`: The camera used to view the scene, or `nothing` if not set.
 - `float_variables::Dict{String,Float64}`: A dictionary mapping variable names to their floating-point values.
 - `overridden_variables::Set{String}`: A set of variable names that have been overridden and should not be redefined.
+- `all_shapes::Dict{String, AbstractShape}`: A dictionary containing all shapes defined in the scene.
+- `all_lights::Dict{String, AbstractLight}`: A dictionary containing all lights defined in the scene.
+- `shapes::Vector{AbstractShape}`: A vector of shapes to be rendered, excluding lights.
+- `acc_shapes::Vector{AbstractShape}`: A vector of shapes to be accelerated.
+- `bvhdepth::Int64`: The depth of the BVH (Bounding Volume Hierarchy) used for acceleration.
 # Constructors
-- `Scene(; materials=Dict{String,Material}(), world=nothing, camera=nothing, float_variables=Dict{String,Float64}(), overridden_variables=Set{String}())`: Creates a new `Scene` with the specified parameters.
+- `Scene(;
+    materials=Dict{String,Material}(),
+    world=nothing,
+    camera=nothing,
+    float_variables=Dict{String,Float64}(),
+    overridden_variables=Set{String}(),
+    all_shapes=Dict{String, AbstractShape}(),
+    all_lights=Dict{String, AbstractLight}(),
+    shapes=Vector{AbstractShape}(),
+    acc_shapes=Vector{AbstractShape}(),
+    bvhdepth=0
+)`: Creates a new scene with the specified parameters.
 """
 mutable struct Scene
     materials::Dict{String,Material}
@@ -182,7 +198,7 @@ function _expect_symbol(s::InputStream, symbol::Vararg{Char})
 end
 
 """
-    expect_keywords(s::InputStream, keywords::Vector{KeywordEnum})
+    _expect_keywords(s::InputStream, keywords::Vector{KeywordEnum})
 
 Checks if the next token in the input stream matches one of the expected keywords and returns it.
 # Arguments
@@ -207,7 +223,7 @@ function _expect_keywords(s::InputStream, keywords::Vector{KeywordEnum})
 end
 
 """
-    expect_number(s::InputStream, dictionary::Dict{String, Float64})
+    _expect_number(s::InputStream, dictionary::Dict{String, Float64})
 
 Check if the next token in the input stream is a number and returns it. If it's an identifier, looks up its value in the dictionary.
 # Arguments
@@ -238,7 +254,7 @@ function _expect_number(s::InputStream, dictionary::Dict{String,Float64})
 end
 
 """
-    expect_string(s::InputStream)
+    _expect_string(s::InputStream)
 
 Check if the next token in the input stream is a string and returns it.
 # Arguments
@@ -257,7 +273,7 @@ function _expect_string(s::InputStream)
 end
 
 """
-    expect_identifier(s::InputStream)
+    _expect_identifier(s::InputStream)
 
 Check if the next token in the input stream is an identifier and returns it.
 # Arguments
@@ -718,6 +734,17 @@ function _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractS
     return csg_name , shape
 end
 
+"""
+    _parse_mesh(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
+Parses a mesh from the input stream. The expected format is:
+`mesh(<filename>, <material_name>, <transformation>, <order>)`
+# Arguments
+- `s::InputStream`: The input stream to read from.
+- `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
+- `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
+# Returns
+- `Tuple{String, mesh}`: A tuple containing the name of the mesh and the constructed mesh object.
+"""
 function _parse_mesh(s::InputStream, dict_float::Dict{String,Float64}, dict_material::Dict{String,Material})
     name = _expect_identifier(s)
     _expect_symbol(s, '(')
