@@ -25,7 +25,7 @@ material mat4(
 
 # Shape definitions
 # S[1] = Sphere(Scaling(7.0, 7.0, 7.0) ⊙ Ry(-π / 4.0), Mat4)
-sphere sph1(mat4, scaling([7.0, 7.0, 7.0]) * rotation_y(pi_quarter))
+sphere sph1(mat4, scaling([7.0, 7.0, 7.0]) * rotation_y(-45.0))
 
 # S[2] = Sphere(Translation(0.0, 0.0, 1.0), Mat2)
 sphere sph2(mat2, translation([0.0, 0.0, 1.0]))
@@ -51,4 +51,4 @@ add spot
 # Camera definition
 # cam = Perspective(d=2.0, t=R_cam ⊙ Translation(-1.5, 0.0, 1.0) ⊙ Ry(-π / 10.0))
 # where R_cam = Rz(0) = identity
-camera(perspective, translation([-1.5, 0.0, 1.0]) * rotation_y(pi_tenth), 1.7777777777777, 2.0)
+camera(perspective, translation([-1.5, 0.0, 1.0]) * rotation_y(-0.056), 1.7777777777777, 2.0)

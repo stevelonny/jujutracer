@@ -1,4 +1,4 @@
-float clock(2.618)
+float clock(150.0)
 
 material sky_material(
     diffuse(uniform(<0, 0, 0>)),
@@ -33,4 +33,4 @@ add sph1
 add point
 add spot
 
-camera(perspective, rotation_z(0.524) * translation([-4, 0, 1]), 1.0, 1.0)
+camera(perspective, rotation_z(30.0) * translation([-4, 0, 1]), 1.0, 1.0)

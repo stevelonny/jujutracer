@@ -418,6 +418,7 @@ Parses a transformation from the input stream. The expected format is:
 - `rotation_z(<angle>)`
 - `scaling(<vector>)`
 - `*` to combine transformations.
+Angles are expected in degrees and will be converted to radians.
 # Arguments
 - `s::InputStream`: The input stream to read from.
 - `dictionary::Dict{String, Float64}`: A dictionary containing variable names and their values.
@@ -439,16 +440,19 @@ function _parse_transformation(s::InputStream, dictionary::Dict{String,Float64})
         elseif transformation_keyword == ROTATION_X
             _expect_symbol(s, '(')
             angle = _expect_number(s, dictionary)
+            angle = convert(Float64, angle * (π / 180))
             _expect_symbol(s, ')')
             result = result ⊙ Rx(angle)
         elseif transformation_keyword == ROTATION_Y
             _expect_symbol(s, '(')
             angle = _expect_number(s, dictionary)
+            angle = convert(Float64, angle * (π / 180))
             _expect_symbol(s, ')')
             result = result ⊙ Ry(angle)
         elseif transformation_keyword == ROTATION_Z
             _expect_symbol(s, '(')
             angle = _expect_number(s, dictionary)
+            angle = convert(Float64, angle * (π / 180))
             _expect_symbol(s, ')')
             result = result ⊙ Rz(angle)
         elseif transformation_keyword == SCALING
@@ -771,19 +775,25 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
                 throw(GrammarError(token.location, "camera already defined"))
             end
             scene.camera = _parse_camera(s, scene.float_variables)
+        elseif haskey(csg_constructors, token.keyword)
+            csg_constructor = csg_constructors[token.keyword]
+            name, shape = _parse_CSG_operation(s, scene.all_shapes, csg_constructor)
+            scene.all_shapes[name] = shape
         elseif token.keyword == ADD
             name = _expect_identifier(s)
             if haskey(scene.all_shapes, name)
-                push!(shapes, scene.all_shapes[name])
+                # if it is a CSG shape, box them
+                if scene.all_shapes[name] isa Union{CSGUnion, CSGDifference, CSGIntersection}
+                    boxedcsg = AABB(scene.all_shapes[name])
+                    push!(shapes, boxedcsg)
+                else
+                    push!(shapes, scene.all_shapes[name])
+                end
             elseif haskey(scene.all_lights, name)
                 push!(lights, scene.all_lights[name])
             else
                 throw(GrammarError(token.location, "no shape or light with name '$name' defined"))
             end
-        elseif haskey(csg_constructors, token.keyword)
-            csg_constructor = csg_constructors[token.keyword]
-            name, shape = _parse_CSG_operation(s, scene.all_shapes, csg_constructor)
-            scene.all_shapes[name] = shape
         else
             throw(GrammarError(token.location, "unexpected keyword $token.keyword"))
         end
