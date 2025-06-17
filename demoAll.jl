@@ -18,14 +18,14 @@ global_logger(filtered_logger)
 # Welcome to steve's playground
 
 filename = "Images/all_"
-renderertype = "point" # "path" or "flat" or "point"
-width = 800
-height = 450
+renderertype = "depth" # "path" or "flat" or "point"
+width = 1280
+height = 720
 n_rays = 3
 depth = 5
 russian = 3
 point_depth = 1000
-aa = 4
+aa = 0
 aatype = ""
 if aa != 0
     aatype = "_" * string(aa) * "aa"
@@ -37,6 +37,8 @@ elseif renderertype == "path"
     fullname = fullname * "path_" * string(width) * "x" * string(height) * aatype * "_" * string(n_rays) * "rays_" * string(depth) * "depth_" * string(russian) * "rus" * aatype
 elseif renderertype == "point"
     fullname = fullname * "point_" * string(width) * "x" * string(height) * aatype * "_" * string(point_depth) * "depth"
+elseif renderertype == "depth"
+    fullname = fullname * "depth_" * string(width) * "x" * string(height) * aatype
 else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end
@@ -123,17 +125,27 @@ push!(lights, spot1)
 push!(lights, spot2)
 push!(lights, spot3)
 
-push!(S, S_back)
-push!(S, axisBox)
-push!(S, axisBox3)
-push!(S, T1)
-push!(S, axisBox4)
-push!(S, axisBox5)
-push!(S, Para1)
-push!(S, axisBox2)
-push!(S, Co1)
-push!(S, Ci1)
-push!(S, R1)
+b_shapes = Vector{AbstractShape}()
+push!(b_shapes, S_back)
+push!(b_shapes, axisBox)
+push!(b_shapes, axisBox3)
+push!(b_shapes, T1)
+for s in M1.shapes
+    push!(b_shapes, s)
+end
+for s in M2.shapes
+    push!(b_shapes, s)
+end
+push!(b_shapes, Para1)
+push!(b_shapes, axisBox2)
+push!(b_shapes, Co1)
+push!(b_shapes, Ci1)
+push!(b_shapes, R1)
+
+bvh, bvhdepth = BuildBVH!(b_shapes; use_sah=true)
+bvhshape = BVHShape(bvh, b_shapes)
+
+push!(S, bvhshape)
 push!(S, Plane(Mat5))
 
 world = World(S, lights)
@@ -149,6 +161,8 @@ elseif renderertype == "path"
     renderer = PathTracer(world, gray, pcg, n_rays, depth, russian)
 elseif renderertype == "point"
     renderer = PointLight(world, RGB(0.5, 0.7, 1.0), RGB(0.1, 0.1, 0.1), point_depth)
+elseif renderertype == "depth"
+    renderer = DepthBVHRender(world, bvh_max_depth=bvhdepth)
 else
     throw(ArgumentError("Invalid renderer type. Use 'flat' or 'path'."))
 end
