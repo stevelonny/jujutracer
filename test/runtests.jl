@@ -1541,6 +1541,8 @@ end
             @test result isa csg_type
             @test result.Sh2 == all_shapes["c1"] 
         end
+        
+        # _parse_mesh
     end
 
     @testset "parse_world" begin
@@ -1634,35 +1636,35 @@ end
             UniformPigment(RGB(0.0, 0.0, 0.0)),
             DiffusiveBRDF(CheckeredPigment(4, 4, RGB(0.3, 0.5, 0.1), RGB(0.1, 0.2, 0.5)))
         )
-        @test length(scene.world.shapes) == 11
-        @test scene.world.shapes[1] isa Plane
-        @test scene.world.shapes[1].Mat == sky_material
-        @test scene.world.shapes[1].Tr ≈ Translation(0.0, 0.0, 100.0) ⊙ Ry(150.0 * π /180.0)
-        @test scene.world.shapes[2] isa Plane
-        @test scene.world.shapes[2].Mat == ground_material
-        @test scene.world.shapes[2].Tr ≈ Transformation()
-        @test scene.world.shapes[3] isa Sphere
-        @test scene.world.shapes[3].Mat == sphere_material
-        @test scene.world.shapes[3].Tr ≈ Translation(0.0, 0.0, 1.0)
-        @test scene.world.shapes[4] isa Box
-        @test scene.world.shapes[4].Mat == sphere_material
-        @test scene.world.shapes[4].Tr ≈ Translation(-1.0, -1.0, 0.0) ⊙ Scaling(2.0, 2.0, 2.0)
-        @test scene.world.shapes[5] isa Cone
-        @test scene.world.shapes[5].Mat == sphere_material
-        @test scene.world.shapes[5].Tr ≈ Translation(-2.0, -2.0, 0.0) ⊙ Scaling(1.0, 1.0, 1.0)
-        @test scene.world.shapes[6] isa Cylinder
-        @test scene.world.shapes[6].Mat == sphere_material
-        @test scene.world.shapes[6].Tr ≈ Translation(-3.0, -3.0, 0.0) ⊙ Scaling(1.0, 1.0, 1.0)
-        @test scene.world.shapes[7] isa Triangle
-        @test scene.world.shapes[7].Mat == sphere_material
-        @test scene.world.shapes[7].A ≈ Point(0.0, 0.0, 0.0)
-        @test scene.world.shapes[7].B ≈ Point(1.0, 0.0, 0.0)
-        @test scene.world.shapes[7].C ≈ Point(0.0, 1.0, 0.0)
-        @test scene.world.shapes[8] isa Parallelogram
-        @test scene.world.shapes[8].Mat == sphere_material
-        @test scene.world.shapes[8].A ≈ Point(0.0, 0.0, 0.0)
-        @test scene.world.shapes[8].B ≈ Point(1.0, 0.0, 0.0)
-        @test scene.world.shapes[8].C ≈ Point(0.0, 1.0, 0.0)
+        @test length(scene.shapes) == 11
+        @test scene.shapes[1] isa Plane
+        @test scene.shapes[1].Mat == sky_material
+        @test scene.shapes[1].Tr ≈ Translation(0.0, 0.0, 100.0) ⊙ Ry(150.0 * π /180.0)
+        @test scene.shapes[2] isa Plane
+        @test scene.shapes[2].Mat == ground_material
+        @test scene.shapes[2].Tr ≈ Transformation()
+        @test scene.shapes[3] isa Sphere
+        @test scene.shapes[3].Mat == sphere_material
+        @test scene.shapes[3].Tr ≈ Translation(0.0, 0.0, 1.0)
+        @test scene.shapes[4] isa Box
+        @test scene.shapes[4].Mat == sphere_material
+        @test scene.shapes[4].Tr ≈ Translation(-1.0, -1.0, 0.0) ⊙ Scaling(2.0, 2.0, 2.0)
+        @test scene.shapes[5] isa Cone
+        @test scene.shapes[5].Mat == sphere_material
+        @test scene.shapes[5].Tr ≈ Translation(-2.0, -2.0, 0.0) ⊙ Scaling(1.0, 1.0, 1.0)
+        @test scene.shapes[6] isa Cylinder
+        @test scene.shapes[6].Mat == sphere_material
+        @test scene.shapes[6].Tr ≈ Translation(-3.0, -3.0, 0.0) ⊙ Scaling(1.0, 1.0, 1.0)
+        @test scene.shapes[7] isa Triangle
+        @test scene.shapes[7].Mat == sphere_material
+        @test scene.shapes[7].A ≈ Point(0.0, 0.0, 0.0)
+        @test scene.shapes[7].B ≈ Point(1.0, 0.0, 0.0)
+        @test scene.shapes[7].C ≈ Point(0.0, 1.0, 0.0)
+        @test scene.shapes[8] isa Parallelogram
+        @test scene.shapes[8].Mat == sphere_material
+        @test scene.shapes[8].A ≈ Point(0.0, 0.0, 0.0)
+        @test scene.shapes[8].B ≈ Point(1.0, 0.0, 0.0)
+        @test scene.shapes[8].C ≈ Point(0.0, 1.0, 0.0)
         @test length(scene.world.lights) == 2
         @test scene.world.lights[1] isa SpotLight
         @test scene.world.lights[1].position ≈ Point(0.0, 0.0, 0.0)
@@ -1680,15 +1682,20 @@ end
         @test scene.camera.a_ratio == 1.0
         @test scene.camera.d == 2.0
 
-        @test scene.world.shapes[9] isa AABB
-        @test scene.world.shapes[9].S[1] isa CSGUnion
-        @test scene.world.shapes[9].S[1].Sh2 == scene.world.shapes[5]
-        @test scene.world.shapes[10] isa AABB
-        @test scene.world.shapes[10].S[1] isa CSGIntersection
-        @test scene.world.shapes[10].S[1].Sh2 == scene.world.shapes[6]
-        @test scene.world.shapes[11] isa AABB
-        @test scene.world.shapes[11].S[1] isa CSGDifference
-        @test scene.world.shapes[11].S[1].Sh2 == scene.world.shapes[10].S[1]
+        @test scene.shapes[9] isa AABB
+        @test scene.shapes[9].S[1] isa CSGUnion
+        @test scene.shapes[9].S[1].Sh2 == scene.shapes[5]
+        @test scene.shapes[10] isa AABB
+        @test scene.shapes[10].S[1] isa CSGIntersection
+        @test scene.shapes[10].S[1].Sh2 == scene.shapes[6]
+        @test scene.shapes[11] isa AABB
+        @test scene.shapes[11].S[1] isa CSGDifference
+        @test scene.shapes[11].S[1].Sh2 == scene.shapes[10].S[1]
+
+        @test length(scene.world.shapes) == 3
+        @test length(scene.acc_shapes) == 9
+        @test scene.bvhdepth == 4
+
     end
 
 end
