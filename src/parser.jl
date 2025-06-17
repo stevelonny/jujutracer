@@ -633,7 +633,7 @@ end
 """
     _parse_spotlight(s::InputStream, dict_float::Dict{String,Float64})
 Parses a spotlight source from the input stream. The expected format is:
-- `spotlight(<position>, <direction>, <color>, <scale>, <cos_total>, <cos_falloff>, <cos_start>)`
+- `spotlight(<position>, <direction>, <color>, <scale>, <cos_total>, <cos_falloff>)`
 # Arguments
 - `s::InputStream`: The input stream to read from.
 - `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
@@ -655,11 +655,9 @@ function _parse_spotlight(s::InputStream, dict_float::Dict{String,Float64})
     cos_total = _expect_number(s, dict_float)
     _expect_symbol(s, ',')
     cos_falloff = _expect_number(s, dict_float)
-    _expect_symbol(s, ',')
-    cos_start = _expect_number(s, dict_float)
     _expect_symbol(s, ')')
 
-    return name, SpotLight(Point(position), direction, color, scale, cos_total, cos_falloff, cos_start)
+    return name, SpotLight(Point(position), direction, color, scale, cos_total, cos_falloff)
 end
 
 """

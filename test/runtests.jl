@@ -1406,19 +1406,19 @@ end
         identity
         translation([1.0, 2.0, pippo])
         scaling([2.0, 3.0, 4.0])
-        rotation_x(0.5)
-        rotation_y(1.0)
-        rotation_z(1.5)
-        identity * translation([1.0, pluto, 3.0]) * scaling([2.0, 3.0, 4.0]) * rotation_x(0.5) * rotation_y(1.0) * rotation_z(1.5)
+        rotation_x(45.0)
+        rotation_y(90.0)
+        rotation_z(135.0)
+        identity * translation([1.0, pluto, 3.0]) * scaling([2.0, 3.0, 4.0]) * rotation_x(45.0) * rotation_y(90.0) * rotation_z(135.0)
         """)
         stream = InputStream(input)
         @test jujutracer._parse_transformation(stream, dict) ≈ Transformation()
         @test jujutracer._parse_transformation(stream, dict) ≈ Translation(1.0, 2.0, 500.0)
         @test jujutracer._parse_transformation(stream, dict) ≈ Scaling(2.0, 3.0, 4.0)
-        @test jujutracer._parse_transformation(stream, dict) ≈ Rx(0.5)
-        @test jujutracer._parse_transformation(stream, dict) ≈ Ry(1.0)
-        @test jujutracer._parse_transformation(stream, dict) ≈ Rz(1.5)
-        @test jujutracer._parse_transformation(stream, dict) ≈ Transformation() ⊙ Translation(1.0, 300.0, 3.0) ⊙ Scaling(2.0, 3.0, 4.0) ⊙ Rx(0.5) ⊙ Ry(1.0) ⊙ Rz(1.5)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Rx(45.0 * π / 180.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Ry(90.0 * π / 180.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Rz(135.0 * π / 180.0)
+        @test jujutracer._parse_transformation(stream, dict) ≈ Transformation() ⊙ Translation(1.0, 300.0, 3.0) ⊙ Scaling(2.0, 3.0, 4.0) ⊙ Rx(45.0 * π / 180.0) ⊙ Ry(90.0 * π / 180.0) ⊙ Rz(135.0 * π / 180.0)
 
         # parse_shapes
 
@@ -1513,7 +1513,7 @@ end
 
         # parse_spotlight
         input = IOBuffer("""
-        light_source([1.0, 2.0, pippo], [1.0, 0.0, pluto], <5.0, 500.0, 300.0>, 100.0, 0.8, 0.85, 0.9)
+        light_source([1.0, 2.0, pippo], [1.0, 0.0, pluto], <5.0, 500.0, 300.0>, 100.0, 0.8, 0.85)
         """)
         stream = InputStream(input)
         name, spot1 = jujutracer._parse_spotlight(stream, dict)
@@ -1524,7 +1524,6 @@ end
         @test spot1.scale == 100.0
         @test spot1.cos_total == 0.8
         @test spot1.cos_falloff == 0.85
-        @test spot1.cos_start == 0.9
 
         #_parse_CSG_operation
         all_shapes = Dict{String, AbstractShape}(
@@ -1581,7 +1580,7 @@ end
 
         parallelogram par(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
 
-        spotlight spli([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 0.8, 0.85, 0.9)
+        spotlight spli([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 0.8, 0.85)
 
         pointlight poli([2, 2, 2], <1, 1, 1>, 100)
 
@@ -1638,7 +1637,7 @@ end
         @test length(scene.world.shapes) == 11
         @test scene.world.shapes[1] isa Plane
         @test scene.world.shapes[1].Mat == sky_material
-        @test scene.world.shapes[1].Tr ≈ Translation(0.0, 0.0, 100.0) ⊙ Ry(150.0)
+        @test scene.world.shapes[1].Tr ≈ Translation(0.0, 0.0, 100.0) ⊙ Ry(150.0 * π /180.0)
         @test scene.world.shapes[2] isa Plane
         @test scene.world.shapes[2].Mat == ground_material
         @test scene.world.shapes[2].Tr ≈ Transformation()
@@ -1672,22 +1671,24 @@ end
         @test scene.world.lights[1].scale == 100.0
         @test scene.world.lights[1].cos_total == 0.8
         @test scene.world.lights[1].cos_falloff == 0.85
-        @test scene.world.lights[1].cos_start == 0.9
         @test scene.world.lights[2] isa LightSource
         @test scene.world.lights[2].position ≈ Point(2.0, 2.0, 2.0)
         @test scene.world.lights[2].emission == RGB(1.0, 1.0, 1.0)
         @test scene.world.lights[2].scale == 100.0
         @test scene.camera isa Perspective
-        @test scene.camera.t ≈ Rz(30.0) ⊙ Translation(-4.0, 0.0, 1.0)
+        @test scene.camera.t ≈ Rz(30.0 * π / 180.0) ⊙ Translation(-4.0, 0.0, 1.0)
         @test scene.camera.a_ratio == 1.0
         @test scene.camera.d == 2.0
 
-        @test scene.world.shapes[9] isa CSGUnion
-        @test scene.world.shapes[9].Sh2 == scene.world.shapes[5]
-        @test scene.world.shapes[10] isa CSGIntersection
-        @test scene.world.shapes[10].Sh2 == scene.world.shapes[6]
-        @test scene.world.shapes[11] isa CSGDifference
-        @test scene.world.shapes[11].Sh2 == scene.world.shapes[10]
+        @test scene.world.shapes[9] isa AABB
+        @test scene.world.shapes[9].S[1] isa CSGUnion
+        @test scene.world.shapes[9].S[1].Sh2 == scene.world.shapes[5]
+        @test scene.world.shapes[10] isa AABB
+        @test scene.world.shapes[10].S[1] isa CSGIntersection
+        @test scene.world.shapes[10].S[1].Sh2 == scene.world.shapes[6]
+        @test scene.world.shapes[11] isa AABB
+        @test scene.world.shapes[11].S[1] isa CSGDifference
+        @test scene.world.shapes[11].S[1].Sh2 == scene.world.shapes[10].S[1]
     end
 
 end
