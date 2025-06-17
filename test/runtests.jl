@@ -1196,3 +1196,21 @@ end
         @test color_blocked.r >= 0.05 && color_blocked.g >= 0.05 && color_blocked.b >= 0.05
     end
 end
+@testset "RefractiveBRDF" begin
+    white = RGB(1.0, 1.0, 1.0)
+    black = RGB(0.0, 0.0, 0.0)
+    gray = RGB(0.5, 0.5, 0.5)
+    red = RGB(1.0, 0.0, 0.0)
+    Mat1 = Material(UniformPigment(black), RefractiveBRDF(UniformPigment(white), 2.00))
+    Mat2 = Material(UniformPigment(red), DiffusiveBRDF(UniformPigment(black)))
+    S = Vector{AbstractShape}(undef, 2)
+    S[1] = Sphere(Mat1)
+    S[2] = Box(Translation(1.0, 0.0, 0.0), Mat2)
+    world = World(S)
+
+    pcg = PCG()
+    path = PathTracer(world, gray, pcg, 1, 3, 6)
+    ray = Ray(origin = Point(-1.0, 0.0, 0.0), dir = Vec(1.0, 0.0, 0.0))
+
+    @test path(ray) ≈ red
+end

@@ -40,7 +40,7 @@ black = RGB(0.0, 0.0, 0.0)
 white = RGB(1.0, 1.0, 1.0)
 Mat1 = Material(UniformPigment(black), DiffusiveBRDF(CheckeredPigment(8, 8, gray, yellow)))
 Mat2 = Material(UniformPigment(black), DiffusiveBRDF(CheckeredPigment(12, 12, magenta, blue)))
-Mat3 = Material(UniformPigment(black), RefractiveBRDF(UniformPigment(white), 2.0))
+Mat3 = Material(UniformPigment(black), RefractiveBRDF(UniformPigment(white), 1.3))
 Mat4 = Material(ImagePigment(sky), DiffusiveBRDF(UniformPigment(gray)))
 S = Vector{AbstractShape}(undef, 4)
 

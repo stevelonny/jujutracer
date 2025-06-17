@@ -13,6 +13,7 @@ function (BRDF::DiffusiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, dep
     return Ray(origin=p,
         dir=e1 * cos(ϕ) * cos_θ + e2 * sin(ϕ) * cos_θ + e3 * sin_θ,
         tmin=10e-3,
+        r_ind = ray.r_ind,
         depth=depth)
 end
 
@@ -42,13 +43,14 @@ function (BRDF::RefractiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, de
     if cos2_θt >= 0.0
         cos_θt = sqrt(cos2_θt)
         # compute Fresnel Reflection index R (only transverse polarization)
-        R = ((ind1*cos_θi - ind2*cos_θt)/(ind1*cos_θi + ind2*cos_θt))^2
+        R = ((-ind2*cos_θi - ind1*cos_θt)/(-ind2*cos_θi + ind1*cos_θt))^2
     else
+        # total reflection
         return _reflect_ray(in_dir, p, normal, depth, r_ind = ind1)
     end
 
     if rand_uniform(pcg) > R
-        # standard behaviour
+        # standard behavior
         out_dir = -in_dir / η + ((in_dir ⋅ normal)/η - cos_θt) * normal
         return Ray(origin=p,
                    dir = out_dir,
@@ -56,6 +58,7 @@ function (BRDF::RefractiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, de
                    r_ind = ind2,
                    depth=depth)
     else
+        # reflection
         return _reflect_ray(in_dir, p, normal, depth, r_ind = ind1)
     end     
 end
