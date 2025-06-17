@@ -1,4 +1,6 @@
 # HEAD
+
+# Version 0.5.0
 - Implement `Meshes` [#32](https://github.com/stevelonny/jujutracer/pull/32)
 - Implement Boundary Volume Hierarchies [#32](https://github.com/stevelonny/jujutracer/pull/36)
   - Build binary tree with Surface Area Heuristics or simple splits
