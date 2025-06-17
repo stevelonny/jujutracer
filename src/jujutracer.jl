@@ -40,7 +40,7 @@ include("imagetracer.jl")
 export ImageTracer
 
 include("brdf.jl")
-export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBRDF, SpecularBRDF, Material
+export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBRDF, SpecularBRDF, RefractiveBRDF, Material
 
 include("shapes/shapes.jl")
 

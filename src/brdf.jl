@@ -86,6 +86,16 @@ struct SpecularBRDF <: AbstractBRDF
     Pigment::AbstractPigment
 end
 
+"""
+    RefractiveBRDF(Pigment::AbstractPigment, index::GFloat64)
+
+Refractive BRDF with refractive pigment `Pigment` and refractive index `index`.  
+"""
+struct RefractiveBRDF <: AbstractBRDF
+    Pigment::AbstractPigment
+    index::Float64
+end
+
 #---------------------------------------------------------
 # Material
 #---------------------------------------------------------

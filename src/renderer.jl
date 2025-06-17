@@ -3,7 +3,7 @@
 # BRDF Methods
 #---------------------------------------------------------
 
-function (BRDF::DiffusiveBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+function (BRDF::DiffusiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, depth::Int64)
     e1, e2, e3 = create_onb_from_z(normal)
     sq = rand_uniform(pcg)
     cos_θ = sqrt(sq)
@@ -16,12 +16,48 @@ function (BRDF::DiffusiveBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, 
         depth=depth)
 end
 
-function (BRDF::SpecularBRDF)(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+function (BRDF::SpecularBRDF)(ray::Ray, p::Point, normal::Normal, depth::Int64)
+    in_dir = ray.dir
     return _reflect_ray(in_dir, p, normal, depth)
 end
 
-function (BRDF::SpecularBRDF)(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+function (BRDF::SpecularBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, depth::Int64)
+    in_dir = ray.dir
     return _reflect_ray(in_dir, p, normal, depth)
+end
+
+function (BRDF::RefractiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, depth::Int64)
+    in_dir = ray.dir
+    ind1 = ray.r_ind
+    ind2 = (BRDF.index == ind1) ? 1.0 : BRDF.index # the ray is coming from another refraction on a surface with the same RefractiveBRDF
+    # To be certain that the ray is exactly coming from a refraction with the same BRDF maybe
+    # we can set last_BRDF as a memeber of Ray instead of r_ind. I immediatly think that this would
+    # be erroneous in the case of total riflection so let's keep r_ind
+
+    η = ind2 / ind1
+    cos_θi = in_dir ⋅ normal / squared_norm(in_dir)
+    sin2_θi = 1.0 - cos_θi^2
+    cos2_θt = 1.0 - sin2_θi/(η^2)
+
+    if cos2_θt >= 0.0
+        cos_θt = sqrt(cos2_θt)
+        # compute Fresnel Reflection index R (only transverse polarization)
+        R = ((ind1*cos_θi - ind2*cos_θt)/(ind1*cos_θi + ind2*cos_θt))^2
+    else
+        return _reflect_ray(in_dir, p, normal, depth, r_ind = ind1)
+    end
+
+    if rand_uniform(pcg) > R
+        # standard behaviour
+        out_dir = -in_dir / η + ((in_dir ⋅ normal)/η - cos_θt) * normal
+        return Ray(origin=p,
+                   dir = out_dir,
+                   tmin=10e-3,
+                   r_ind = ind2,
+                   depth=depth)
+    else
+        return _reflect_ray(in_dir, p, normal, depth, r_ind = ind1)
+    end     
 end
 
 function (U::UniformPigment)(p::SurfacePoint)
@@ -51,10 +87,10 @@ end
 """
     _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
 """
-function _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+function _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64; r_ind = 1.0)
     incoming_dir = Vec(Normal(in_dir))
     reflected_dir = incoming_dir - 2 * normal * (normal ⋅ incoming_dir)
-    return Ray(origin=p, dir=reflected_dir, tmin=1e-5, depth=depth)
+    return Ray(origin=p, dir=reflected_dir, tmin=1e-5, r_ind = r_ind, depth=depth)
 end
 
 #---------------------------------------------------------
@@ -165,7 +201,7 @@ function (P::PathTracer)(ray::Ray)
     cum = RGB(0.0, 0.0, 0.0)
     if hit_color_lum > 0.0
         for i in 1:P.n_rays
-            new_ray = hit_material.BRDF(P.rnd, ray.dir, repo.world_P, repo.normal, ray.depth + 1)
+            new_ray = hit_material.BRDF(P.rnd, ray, repo.world_P, repo.normal, ray.depth + 1)
             new_rad = P(new_ray) # recursive call
             cum += hit_color * new_rad # a little bit different from slides. Need to verify
         end
@@ -232,7 +268,7 @@ function (PL::PointLight)(ray::Ray)
     end
 
     if hit_material.BRDF isa SpecularBRDF
-        reflected_ray = hit_material.BRDF(ray.dir, repo.world_P, repo.normal, ray.depth + 1)
+        reflected_ray = hit_material.BRDF(ray, repo.world_P, repo.normal, ray.depth + 1)
         reflected_color = PL(reflected_ray)
         # should it be multiplied by the specular color? where is / π?
         brdf_color = hit_material.BRDF.Pigment(repo.surface_P)
