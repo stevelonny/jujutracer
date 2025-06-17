@@ -15,7 +15,7 @@ filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logg
 # Set as the global logger
 global_logger(filtered_logger)
 
-filename = "output"
+filename = "Images/output_depth"
 width = 900
 height = 1600
 n_rays = 4
@@ -26,10 +26,10 @@ aa = 2
 png_output = filename * ".png"
 pfm_output = filename * ".pfm"
 
-m_tree = mesh("tree.obj", Material(UniformPigment(RGB(0.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.3, 0.1)))))
+m_tree = mesh("asset/tree.obj", Material(UniformPigment(RGB(0.0, 0.0, 0.0)), DiffusiveBRDF(UniformPigment(RGB(0.5, 0.3, 0.1)))); order = "whd")
 
 shapes = Vector{AbstractShape}()
-for t in m_mesh.shapes
+for t in m_tree.shapes
     push!(shapes, t)
 end
 
@@ -48,7 +48,7 @@ light = LightSource(A, RGB(0.2, 0.2, 0.12), 100.0)
 ground_material = Material(UniformPigment(RGB(0.0, 0.0, 0.0)), DiffusiveBRDF(CheckeredPigment(2, 2, RGB(0.2, 0.2, 0.2), RGB(0.7, 0.7, 0.7))))
 
 w_shapes = Vector{AbstractShape}()
-push!(w_shapes, Plane(ground_material))
+#push!(w_shapes, Plane(ground_material))
 #push!(w_shapes, sun) # remove it if using point light
 # push!(w_shapes, box)
 push!(w_shapes, bvhshape)
@@ -58,12 +58,12 @@ push!(lights, light)
 
 world = World(w_shapes, lights, nothing)
 
-cam = Perspective(d=1.0, t=Translation(-6.0, 0.0, 2.0), a_ratio=16/9)
+cam = Perspective(d=2.0, t=Translation(-3.0, 0.0, 7.5), a_ratio=9/16)
 hdr = hdrimg(width, height)
 ImgTr = ImageTracer(hdr, cam)
 #pcg = PCG()
-renderer = Flat(world, RGB(0.1, 0.1, 0.1))
-#renderer = DepthBVHRender(world; bvh_max_depth=bvhdepth)
+#renderer = Flat(world, RGB(0.1, 0.1, 0.1))
+renderer = DepthBVHRender(world; bvh_max_depth=bvhdepth)
 #renderer = PathTracer(world, RGB(0.1, 0.1, 0.1), pcg, n_rays, depth, russian)
 #renderer = PointLight(world, RGB(0.1, 0.1, 0.15), RGB(0.1, 0.1, 0.1), 0)
 ImgTr(renderer)

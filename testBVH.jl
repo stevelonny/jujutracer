@@ -44,9 +44,6 @@ function generate_point(pcg::PCG)
     return Point(rand_uniform(pcg, -2.0, 2.0), rand_uniform(pcg, -4.0, 4.0), rand_uniform(pcg, -3.0, 3.0))
 end
 
-function centroid(t::Triangle)
-    return Point((t.A.x + t.B.x + t.C.x) / 3, (t.A.y + t.B.y + t.C.y) / 3, (t.A.z + t.B.z + t.C.z) / 3)
-end
 function centroid(A::Point, B::Point, C::Point)
     return Point((A.x + B.x + C.x) / 3, (A.y + B.y + C.y) / 3, (A.z + B.z + C.z) / 3)
 end
@@ -92,8 +89,6 @@ rand_triangles = Vector{AbstractShape}(undef, number_of_triangles)
 for i in 1:length(rand_triangles)
     rand_triangles[i] = generate_triangle(pcg, isodd(i))
 end
-
-rand_triangles = deepcopy(rand_triangles)
 
 # build the bvh tree
 bvh_sah, depth_sah = BuildBVH!(rand_triangles; use_sah=true)
