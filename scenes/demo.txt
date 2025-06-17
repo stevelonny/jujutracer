@@ -24,7 +24,7 @@ plane pl2(ground_material, identity)
 sphere sph1(sphere_material, translation([0, 0, 1]))
 
 pointlight point([0, 0, 10], <0.25, 0.3, 0>, 100)
-spotlight spot([5, 5, 10], [-5, -5, -10], <0.45, 0.5, 0.65>, 100, 0.8, 0.84, 0.95)
+spotlight spot([5, 5, 10], [-5, -5, -10], <0.45, 0.5, 0.65>, 100, 38.0, 25.0)
 
 add pl1
 add pl2

@@ -1513,7 +1513,7 @@ end
 
         # parse_spotlight
         input = IOBuffer("""
-        light_source([1.0, 2.0, pippo], [1.0, 0.0, pluto], <5.0, 500.0, 300.0>, 100.0, 0.8, 0.85)
+        light_source([1.0, 2.0, pippo], [1.0, 0.0, pluto], <5.0, 500.0, 300.0>, 100.0, 35.0, 25.0)
         """)
         stream = InputStream(input)
         name, spot1 = jujutracer._parse_spotlight(stream, dict)
@@ -1522,8 +1522,8 @@ end
         @test spot1.direction ≈ Vec(1.0, 0.0, 300.0)
         @test spot1.emission == RGB(5.0, 500.0, 300.0)
         @test spot1.scale == 100.0
-        @test spot1.cos_total == 0.8
-        @test spot1.cos_falloff == 0.85
+        @test spot1.cos_total ≈ cos(35.0 * π / 180.0)
+        @test spot1.cos_falloff ≈ cos(25.0 * π / 180.0)
 
         #_parse_CSG_operation
         all_shapes = Dict{String, AbstractShape}(
@@ -1580,7 +1580,7 @@ end
 
         parallelogram par(sphere_material, [0, 0, 0], [1, 0, 0], [0, 1, 0])
 
-        spotlight spli([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 0.8, 0.85)
+        spotlight spli([0, 0, 0], [1, 0, 0], <1, 1, 1>, 100, 35.0, 25.0)
 
         pointlight poli([2, 2, 2], <1, 1, 1>, 100)
 
@@ -1669,8 +1669,8 @@ end
         @test scene.world.lights[1].direction ≈ Vec(1.0, 0.0, 0.0)
         @test scene.world.lights[1].emission == RGB(1.0, 1.0, 1.0)
         @test scene.world.lights[1].scale == 100.0
-        @test scene.world.lights[1].cos_total == 0.8
-        @test scene.world.lights[1].cos_falloff == 0.85
+        @test scene.world.lights[1].cos_total ≈ cos(35.0 * π / 180.0)
+        @test scene.world.lights[1].cos_falloff ≈ cos(25.0 * π / 180.0)
         @test scene.world.lights[2] isa LightSource
         @test scene.world.lights[2].position ≈ Point(2.0, 2.0, 2.0)
         @test scene.world.lights[2].emission == RGB(1.0, 1.0, 1.0)
