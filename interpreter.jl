@@ -105,7 +105,7 @@ function main()
     pcg = PCG()
 
     if renderer == "flat"
-        render = Flat(world)
+        render = Flat(world, gray)
     elseif renderer == "path_tracer"
         render = PathTracer(world, gray, pcg, n_rays, depth, russian)
     elseif renderer == "on_off"
