@@ -10,6 +10,12 @@ export Plane
 include("flatrectangle.jl")
 export Rectangle
 
+include("flattriangle.jl")
+export Triangle, _sarrus
+
+include("flatparallelogram.jl")
+export Parallelogram
+
 include("solidsphere.jl")
 export Sphere
 
@@ -29,7 +35,10 @@ include("aabb.jl")
 export AABB, intersected
 
 include("meshes.jl")
-export Triangle, Parallelogram
+export mesh, read_obj_file
+
+include("bvh.jl")
+export BVHNode, BuildBVH!, ray_intersection_bvh, ray_intersection_aabb, BVHShape, BVHShapeDebug, ray_intersection, centroid
 
 include("world.jl")
 export World

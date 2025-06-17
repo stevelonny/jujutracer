@@ -61,15 +61,15 @@ end
         # Tests for _parse_endianness
         @test jujutracer._parse_endianness("1.0") == false
         @test jujutracer._parse_endianness("-1.0") == true
-        @test_throws InvalidPfmFileFormat jujutracer._parse_endianness("0.0") #Test if it throws an InvalidPfmFileFormat exception when invalid input
-        @test_throws InvalidPfmFileFormat jujutracer._parse_endianness("abc")
+        @test_throws InvalidFileFormat jujutracer._parse_endianness("0.0") #Test if it throws an InvalidFileFormat exception when invalid input
+        @test_throws InvalidFileFormat jujutracer._parse_endianness("abc")
 
         # Tests for _parse_image_size
         @test jujutracer._parse_image_size("10 8") == (10, 8)
-        @test_throws InvalidPfmFileFormat jujutracer._parse_image_size("10 8 5") #Test if it throws an InvalidPfmFileFormat exception when invalid input
-        @test_throws InvalidPfmFileFormat jujutracer._parse_image_size("10")
-        @test_throws InvalidPfmFileFormat jujutracer._parse_image_size("a b")
-        @test_throws InvalidPfmFileFormat jujutracer._parse_image_size("10.1 3.3")
+        @test_throws InvalidFileFormat jujutracer._parse_image_size("10 8 5") #Test if it throws an InvalidFileFormat exception when invalid input
+        @test_throws InvalidFileFormat jujutracer._parse_image_size("10")
+        @test_throws InvalidFileFormat jujutracer._parse_image_size("a b")
+        @test_throws InvalidFileFormat jujutracer._parse_image_size("10.1 3.3")
 
         # Tests for _read_line
         io = IOBuffer(b"Hello\nWorld\n")
@@ -117,7 +117,7 @@ end
         end
 
         buf = IOBuffer(b"PF\n3 2\n-1.0\nstop")
-        @test_throws InvalidPfmFileFormat read_pfm_image(buf)
+        @test_throws InvalidFileFormat read_pfm_image(buf)
     end
     @testset "Writing_PFM" begin
         #Tests for _write_float!
@@ -277,7 +277,7 @@ end
         p1 = Point(1.0, 2.0, 3.0)
         p2 = Point(1.0, 2.0, 3.0)
         @test p1 ≈ p2
-        @test_throws MethodError p1 * 2
+        @test p1 * 2 ≈ Point(2.0, 4.0, 6.0)
         @test_throws MethodError p1 / 2
     end
 
@@ -1068,7 +1068,7 @@ end
         @test jujutracer.is_light_visible(world_with_obstacle, light, point) == false
         
         # Test spotlight visibility - point within cone
-        spot_light = SpotLight(Point(0.0, 0.0, 2.0), Vec(1.0, 0.0, -2.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85, 0.9)
+        spot_light = SpotLight(Point(0.0, 0.0, 2.0), Vec(1.0, 0.0, -2.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85)
         @test jujutracer.is_light_visible(world, spot_light, point) == true
         
         # Test spotlight visibility - point outside cone
@@ -1109,7 +1109,7 @@ end
         @test closer_modulation.r > modulation.r
         
         # Test spotlight modulation
-        spot_light = SpotLight(Point(0.0, 0.0, 1.0), Vec(1.0, 0.0, -1.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85, 0.9)
+        spot_light = SpotLight(Point(0.0, 0.0, 1.0), Vec(1.0, 0.0, -1.0), RGB(1.0, 1.0, 1.0), 100.0, 0.8, 0.85)
         spot_modulation = jujutracer._light_modulation(spot_light, hit_record)
         @test spot_modulation isa RGB
         @test spot_modulation.r >= 0.0 && spot_modulation.g >= 0.0 && spot_modulation.b >= 0.0

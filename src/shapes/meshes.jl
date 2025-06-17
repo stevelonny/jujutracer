@@ -1,344 +1,249 @@
 #---------------------------------------------------------
-# General Methods
-#---------------------------------------------------------
-
-"""
-    _mat(a::Vec, b::Vec, c::Vec)
-
-Returns a Matrix build with the transposed Vectors aᵗ, bᵗ and cᵗ.
-"""
-function _mat(a::Vec, b::Vec, c::Vec)
-    return [a.x b.x c.x; a.y b.y c.y; a.z b.z c.z]
-end
-
-"""
-    _sarrus(Mat::Matrix)
-
-Implement the Sarrus method for calculation of the determinant of a 3x3 Matrix.
-"""
-function _sarrus(Mat::Matrix)
-    det = Mat[1, 1] * Mat[2, 2] * Mat[3, 3]
-    det += Mat[1, 2] * Mat[2, 3] * Mat[3, 1]
-    det += Mat[1, 3] * Mat[2, 1] * Mat[3, 2]
-    det -= Mat[1, 1] * Mat[2, 3] * Mat[3, 2]
-    det -= Mat[1, 2] * Mat[2, 1] * Mat[3, 3]
-    det -= Mat[1, 3] * Mat[2, 2] * Mat[3, 1]
-    return det
-end
-
-"""
-    _sarrus(a::Vec, b::Vec, c::Vec)
-
-Efficiently computes the determinant of the 3x3 matrix whose columns are `a`, `b`, and `c`, without allocating a matrix.
-"""
-function _sarrus(a::Vec, b::Vec, c::Vec)
-    return a.x * b.y * c.z +
-           a.y * b.z * c.x +
-           a.z * b.x * c.y -
-           a.z * b.y * c.x -
-           a.y * b.x * c.z -
-           a.x * b.z * c.y
-end
-
-#---------------------------------------------------------
-# Triangle
+# Meshes
 #---------------------------------------------------------
 """
-    struct Triangle <: AbstractShape
+    struct mesh <: AbstractShape
 
-Triangle.
+mesh.
 # Fields
-- `t::Transformation`: the transformation applied to the triangle
-- `A, B, C::Point`: the vertices of the triangle
-- `Mat::Material`: the material of the shape
+- `file::String`: the source `file.obj` of the mesh
+- `shape::Vector{Triangle}`: the triangles of the mesh
+- `points::Vector{Point}`: the vertices of the triangles of the shape
 
 # Constructor
-- `Triangle()`: creates a triangle with Identity `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a default material.
-- `Triangle(Tr::AbstractTransformation)`: creates a triangle with `Tr` `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a default material.
-- `Triangle(Mat::Material)`: creates a triangle with Identity `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a `Mat` material.
-- `Triangle(Tr::AbstractTransformation, Mat::Material)`: creates a triangle with `Tr` `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a `Mat` material.
-- `Triangle(A::Point, B::Point, C::Point)`: creates a triangle with Identity `Transformation` and vertices `A`, `B`, `C` and a default material.
-- `Triangle(A::Point, B::Point, C::Point, Mat::Material)`: creates a triangle with Identity `Transformation` and vertices `A`, `B`, `C` and a `Mat` material.
+- `mesh(shapes::Vector{Triangle})`: creates a mesh frome the `Vector{Triangle}`
+- `mesh(file::String)`: creates a mesh from `file`
+- `mesh(file::String, Tr::AbstractTransformation)`: creates a mesh from `file` with a transformation `Tr` 
+- `mesh(file::String, Mat::Material)`: creates a mesh with `Mat` material from `file`
+- `mesh(file::String, Tr::AbstractTransformation, Mat::Material)`: creates a mesh with `Tr` transformation and a `Mat` material.
+For all constructors from obj files, the order of the coordinates in the file is assumed to be "dwh" (depth, width, height) by default.
+If the order is different, you can specify it with the `order` keyword argument.
 """
-struct Triangle <: AbstractShape
-    Tr::AbstractTransformation
-    A::Point
-    B::Point
-    C::Point
-    Mat::Material
+struct mesh <: AbstractShape
+    file::String
+    shapes::Vector{Triangle}
+    points::Vector{Point}
 
-    function Triangle()
-        new(Transformation(), Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Material())
+    function mesh(shapes::Vector{Triangle})
+        new("file.obj", shapes, Vector{Point}())
     end
-    function Triangle(Tr::AbstractTransformation)
-        new(Tr, Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Material())
+    function mesh(file::String; order = "dwh")
+        sh, p = read_obj_file(file; order)
+        new(file, sh, p)
     end
-    function Triangle(Mat::Material)
-        new(Transformation(), Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Mat)
+
+    function mesh(file::String, Tr::AbstractTransformation; order = "dwh")
+        sh, p = read_obj_file(file, Tr = Tr; order)
+        new(file, sh, p)
     end
-    function Triangle(Tr::AbstractTransformation, Mat::Material)
-        new(Tr, Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Mat)
+
+    function mesh(file::String, Mat::Material; order = "dwh")
+        sh, p = read_obj_file(file, Mat = Mat; order)
+        new(file, sh, p)
     end
-    function Triangle(A::Point, B::Point, C::Point)
-        new(Transformation(), A, B, C, Material())
-    end
-    function Triangle(A::Point, B::Point, C::Point, Mat::Material)
-        new(Transformation(), A, B, C, Mat)
+
+    function mesh(file::String, Tr::AbstractTransformation, Mat::Material; order = "dwh")
+        sh, p = read_obj_file(file, Tr = Tr, Mat = Mat; order)
+        new(file, sh, p)
     end
 end
 
 """
-    ray_intersection(S::Triangle, r::Ray)
+    trianglize(P::Vector{Points}, Tr::AbstractTransformation, Mat::Material)
 
-Calculate the intersection of a ray and a triangle.
+Triangulation method, working only with ordered verteces
 # Arguments
-- `S::Triangle`: the triangle to be intersected.
-- `ray::Ray`: the ray intersecting the triangle.
+- `P::Vector{Point}`: the vector of points to be triangulated
+- `Tr::AbstractTransformation`: an hypotetical transformation to be applied to all the shapes and points
+- `Mat::Material`: a material to be applied to all the triangles
 # Returns
-- `HitRecord`: The hit record of the first shape hit, if any.
-- `nothing`: If no intersections occur.
-
-Differently from the other shapes, `ray_intersection(S::Triangle, ray::Ray)` incorporates `_triangle_normal` and `_point_to_uv`
+- `tr::Vector{Triangle}`: a vector of triangles created from the points in `P`
 """
-function ray_intersection(S::Triangle, ray::Ray)
-    A = S.A                         # Point A
-    B = S.B - A                     # Vec B - A
-    C = S.C - A                     # Vec C - A
-    inv_ray = _unsafe_inverse(S.Tr)(ray)
-    O = inv_ray.origin - A          # Vec O - A
-    d = inv_ray.dir
-    # M = (B C -d)
-    # Mx = O
-    # evaluating the determinant of the Matrix moltipling (β, γ, t)ᵗ
-    detM = _sarrus(B, C, -d)
-
-    if detM != 0.0
-        # Cramer's rule for β, γ and t
-        β = _sarrus(O, C, -d) / detM
-        γ = _sarrus(B, O, -d) / detM
-        t = _sarrus(B, C, O) / detM
-
-        if t > inv_ray.tmin && t < inv_ray.tmax && β <= 1.0 && β >= 0.0 && γ <= 1.0 && γ >= 0.0 && β + γ <= 1.0
-            first_hit = t
-        else
-            return nothing
-        end
-    else
-        return nothing
+function trianglize(P::Vector{Point}, Tr::AbstractTransformation, Mat::Material)
+    tr = Vector{Triangle}()
+    p = P[1]
+    #sort!(P, by=x -> norm(x - p))
+    for i in 2:(length(P)-1)
+        add = Triangle(Tr, p, P[i], P[i+1], Mat)
+        push!(tr, add)
     end
-
-    hit_point = inv_ray(first_hit)
-    norm = Normal(B × C)
-    norm = (norm ⋅ d < 0.0) ? S.Tr(norm) : S.Tr(-norm)
-
-    return HitRecord(
-        world_P=S.Tr(hit_point),
-        normal=norm,
-        surface_P=SurfacePoint(β, γ),
-        t=first_hit,
-        ray=ray,
-        shape=S
-    )
+    return tr
 end
-
 """
-    boxed(S::Triangle)::Tuple{Point, Point}
-Returns the two points defining the bounding box of the triangle `S`.
-# Arguments
-- `S::Triangle`: the triangle to be boxed.
-# Returns
-- `Tuple{Point, Point}`: a tuple containing the two points defining the bounding box of the triangle.
-"""
-function boxed(S::Triangle)::Tuple{Point,Point}
-    A = S.Tr(S.A)
-    B = S.Tr(S.B)
-    C = S.Tr(S.C)
-    P1 = Point(min(A.x, B.x, C.x), min(A.y, B.y, C.y), min(A.z, B.z, C.z))
-    P2 = Point(max(A.x, B.x, C.x), max(A.y, B.y, C.y), max(A.z, B.z, C.z))
-    return (P1, P2)
-end
+    read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material(); order = "dwh")
 
-"""
-    quick_ray_intersection(S::Triangle, ray::Ray)::Bool
-Checks if a ray intersects with the triangle without calculating the exact intersection point.
-# Arguments
-- `S::Triangle`: The triangle to check for intersection.
-- `ray::Ray`: The ray to check for intersection with the triangle.
-# Returns
-- `Bool`: `true` if the ray intersects with the triangle, `false` otherwise.
-"""
-function quick_ray_intersection(S::Triangle, ray::Ray)::Bool
-    inv_ray = _unsafe_inverse(S.Tr)(ray)
-    O = inv_ray.origin - S.A
-    d = inv_ray.dir
-
-    detM = _sarrus(S.B - S.A, S.C - S.A, -d)
-
-    if detM != 0.0
-        β = _sarrus(O, S.C - S.A, -d) / detM
-        γ = _sarrus(S.B - S.A, O, -d) / detM
-        t = _sarrus(S.B - S.A, S.C - S.A, O) / detM
-
-        return (t > inv_ray.tmin && t < inv_ray.tmax && β >= 0.0 && γ >= 0.0 && β + γ <= 1.0)
-    else
-        return false
-    end
-end
-
-#---------------------------------------------------------
-# Parallelogram
-#---------------------------------------------------------
-"""
-    struct Parallelogram <: AbstractShape
-
-Parallelogram
-
-```
-   C-----p
-  /     /
- /     /
-A-----B
-```
-
+Method for constructing vectors and points from a buffer.
 # Fields
-- `t::Transformation`: the transformation applied to the Parallelogram.
-- `A, B, C::Point`: the vertices defining the quadrilateral's 
-- `Mat::Material`: the material of the shape
-
-# Constructor
-- `Parallelogram()`: creates a parallelogram with Identity `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a default material.
-- `Parallelogram(Tr::AbstractTransformation)`: creates a parallelogram with `Tr` `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a default material.
-- `Parallelogram(Mat::Material)`: creates a parallelogram with Identity `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a `Mat` material.
-- `Parallelogram(Tr::AbstractTransformation, Mat::Material)`: creates a parallelogram with `Tr` `Transformation` and vertices (0,0,0), (1,0,0), (0,1,0) and a `Mat` material.
-- `Parallelogram(A::Point, B::Point, C::Point)`: creates a parallelogram with Identity `Transformation` and vertices `A`, `B`, `C` and a default material.
-- `Parallelogram(A::Point, B::Point, C::Point, Mat::Material)`: creates a parallelogram with Identity `Transformation` and vertices `A`, `B`, `C` and a `Mat` material.
-- `Parallelogram(A::Point, AB::Vec, AC::Vec)`: creates a parallelogram with Identity `Transformation` and vertices `A`, `A + AB`, `A + AC` and a default material.
-"""
-struct Parallelogram <: AbstractShape
-    Tr::AbstractTransformation
-    A::Point
-    B::Point
-    C::Point
-    Mat::Material
-
-    function Parallelogram()
-        new(Transformation(), Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Material())
-    end
-    function Parallelogram(A::Point, AB::Vec, AC::Vec)
-        new(Transformation(), A, A + AB, A + AC, Material())
-    end
-    function Parallelogram(Tr::AbstractTransformation)
-        new(Tr, Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Material())
-    end
-    function Parallelogram(Mat::Material)
-        new(Transformation(), Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Mat)
-    end
-    function Parallelogram(Tr::AbstractTransformation, Mat::Material)
-        new(Tr, Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Mat)
-    end
-    function Parallelogram(A::Point, B::Point, C::Point)
-        new(Transformation(), A, B, C, Material())
-    end
-    function Parallelogram(A::Point, B::Point, C::Point, Mat::Material)
-        new(Transformation(), A, B, C, Mat)
-    end
-end
-
-"""
-    ray_intersection(S::Parallelogram, r::Ray)
-
-Calculate the intersection of a ray and a plane.
-# Arguments
-- `S::Parallelogram`: the parallelogram to be intersected.
-- `ray::Ray`: the ray intersecting the triangle.
+- `io::IOBuffer`: the buffer
+- `Tr::AbstractTransformation`: an hypotetical transformation to be applied to all the shapes and points
+- `Mat::Material`: an hypotetical material to be applied to all the triangles
+# Keywords
+- `order::String`: the order of the coordinates in the file, default is "dwh" (depth, width, height).
 # Returns
-- `HitRecord`: The hit record of the first shape hit, if any.
-- `nothing`: If no intersections occur.
-
-Differently from the other shapes, `ray_intersection(S::Parallelogram, ray::Ray)` incorporates `_parallelogram_normal` and `_point_to_uv`
+- `shape::Vector{Triangle}`
+- `points:Vector{Points}`
 """
-function ray_intersection(S::Parallelogram, ray::Ray)
-    A = S.A                         # Point A
-    B = S.B - A                     # Vec B - A
-    C = S.C - A                     # Vec C - A
-    inv_ray = _unsafe_inverse(S.Tr)(ray)
-    O = inv_ray.origin - A          # Vec O - A
-    d = inv_ray.dir
-    # M = (B C -d)
-    # Mx = O
-    # evaluating the determinant of the Matrix moltipling (β, γ, t)ᵗ
-    detM = _sarrus(B, C, -d)
-
-    if detM != 0.0
-        # Cramer's rule for β, γ and t
-        β = _sarrus(O, C, -d) / detM
-        γ = _sarrus(B, O, -d) / detM
-        t = _sarrus(B, C, O) / detM
-
-        if t > inv_ray.tmin && t < inv_ray.tmax && β <= 1.0 && β >= 0.0 && γ <= 1.0 && γ >= 0.0
-            first_hit = t
-        else
-            return nothing
+function read_obj_file(io::IOBuffer; Tr::AbstractTransformation=Transformation(), Mat::Material=Material(), order = "dwh")
+    shapes = Vector{Triangle}()
+    points = Vector{Point}()
+    faces = Vector{Vector{Int}}()
+    total = io.size
+    x, y, z = 1, 2, 3
+    for i in eachindex(order)
+        if order[i] == 'd'
+            x = i
         end
-    else
-        return nothing
+        if order[i] == 'w'
+            y = i
+        end
+        if order[i] == 'h'
+            z = i
+        end
     end
+    @debug "Reading OBJ file from IOBuffer with size: $(total) bytes" total = total
+    while !eof(io)
+        line = split(readline(io), ' ')
+        dim = length(line)
 
-    hit_point = inv_ray(first_hit)
-    norm = Normal(B × C)
-    norm = (norm ⋅ d < 0.0) ? S.Tr(norm) : S.Tr(-norm)
+            if line[1] == "v"
+                # add a point
+                # account for empty spaces
+                coord = Vector{SubString{String}}()
+                for i in 2:dim
+                    try
+                        parse(Float64, line[i])
+                        push!(coord, line[i])
+                    catch
+                    end
+                end
+                p = Point(parse(Float64, coord[x]),
+                            parse(Float64, coord[y]),
+                            parse(Float64, coord[z]))
+                push!(points, p)
+            elseif line[1] == "f"
+                # possible formats:
+                # f 1 2 3 ...
+                # f 1/1 2/2 3/3 ...
+                # f 1/1/1 2/2/2 3/3/3 ...
+                # f 1//1 2//2 3//3 ...
+                # face/texture/normal
+                face = Vector{Int}()
+                for i in 2:dim
+                    face_index = split(line[i], '/')
+                    push!(face, parse.(Int, face_index[1]))
+                end
+                push!(faces, face)
+            end #if/else
+        end #while
+    # Convert faces to triangles
+    for face in faces
+        if length(face) == 3
+            tr = Triangle(Tr,
+                points[face[1]],
+                points[face[2]],
+                points[face[3]],
+                Mat)
+            push!(shapes, tr)
+        elseif length(face) > 3
+            P = Vector{Point}()
+            for i in eachindex(face)
+                push!(P, points[face[i]])
+            end
+            tr = jujutracer.trianglize(P, Tr, Mat)
+            append!(shapes, tr)
+        else
+            throw(ArgumentError("Invalid polygon declaration"))
+        end
+    end
+    @info "Read OBJ file: $(length(shapes)) shapes and $(length(points)) points."
+    return shapes, points
+end
+"""
+    read_obj_file(io::IOBuffer; Tr::AbstractTransformation = Transformation(), Mat::Material = Material(); order = "dwh")
 
-    return HitRecord(
-        world_P=S.Tr(hit_point),
-        normal=norm,
-        surface_P=SurfacePoint(β, γ),
-        t=first_hit,
-        ray=ray,
-        shape=S
-    )
+Method for constructing vectors and points from a file
+# Fields
+- `filename::String`: the name of the `file.obj`
+- `Tr::AbstractTransformation`: an hypotetical transformation to be applied to all the shapes and points
+- `Mat::Material`: an hypotetical material to be applied to all the triangles
+# Keywords
+- `order::String`: the order of the coordinates in the file, default is "dwh" (depth, width, height).
+# Returns
+- `shape::Vector{Triangle}`
+- `points:Vector{Points}`
+"""
+function read_obj_file(filename::String; Tr::AbstractTransformation=Transformation(), Mat::Material=Material(), order = "dwh")
+    # Check if the file extension is valid
+    if !(endswith(filename, ".obj"))
+        throw(InvalidFileFormat("Invalid file extension. Only .obj is supported."))
+    end
+    io = IOBuffer()
+    @info("Reading OBJ file from file: $(abspath(filename))")
+    open(filename, "r") do file
+        write(io, file)
+    end
+    seekstart(io)
+    return read_obj_file(io, Tr=Tr, Mat=Mat; order)
+end
+"""
+    ray_intersection(S::mesh, ray::Ray)
+
+# Arguments
+- `S::mesh`: the mesh
+- `ray::Ray`: the ray
+# Returns
+- `HitRecord`: The hit record of the first `Triangle` hit, if any.
+- `nothing` otherwise
+"""
+function ray_intersection(S::mesh, ray::Ray)
+    dim = length(S.shapes)
+    closest = nothing
+    for i in 1:dim
+        inter = ray_intersection(S.shapes[i], ray)
+        if isnothing(inter)
+            continue
+        end
+        if (isnothing(closest) || inter.t < closest.t)
+            closest = inter
+        end
+    end
+    return closest
 end
 
 """
-    boxed(S::Parallelogram)::Tuple{Point, Point}
-Returns the two points defining the bounding box of the parallelogram.
+    boxed(m::mesh)
+
+Returns the two points defining the axis-aligned bounding box (AABB) that contains the mesh.
 # Arguments
-- `S::Parallelogram`: the parallelogram to be boxed.
+- `m::mesh`: the mesh to be boxed.
 # Returns
-- `Tuple{Point, Point}`: a tuple containing the two points defining the bounding box of the parallelogram.
+- `Tuple{Point, Point}`: a tuple containing the two points defining the AABB, where the first point is the minimum corner and the second point is the maximum corner.
 """
-function boxed(S::Parallelogram)::Tuple{Point,Point}
-    A = S.Tr(S.A)
-    B = S.Tr(S.B)
-    C = S.Tr(S.C)
-    D = A + (B - A) + (C - A)  # D = A + AB + AC
-    P1 = Point(min(A.x, B.x, C.x, D.x), min(A.y, B.y, C.y, D.y), min(A.z, B.z, C.z, D.z))
-    P2 = Point(max(A.x, B.x, C.x, D.x), max(A.y, B.y, C.y, D.y), max(A.z, B.z, C.z, D.z))
-    return (P1, P2)
+function boxed(m::mesh)::Tuple{Point,Point}
+    P1 = Point(Inf, Inf, Inf)
+    P2 = Point(-Inf, -Inf, -Inf)
+    for s in m.shapes
+        p1, p2 = boxed(s)
+        P1 = Point(min(P1.x, p1.x), min(P1.y, p1.y), min(P1.z, p1.z))
+        P2 = Point(max(P2.x, p2.x), max(P2.y, p2.y), max(P2.z, p2.z))
+    end
+    return P1, P2
 end
 
 """
-    quick_ray_intersection(S::Parallelogram, ray::Ray)::Bool
-Checks if a ray intersects with the parallelogram without calculating the exact intersection point.
+    quick_ray_intersection(S::mesh, ray::Ray)
+Check if a ray intersects any triangle in the mesh without calculating the exact intersection point. Very inefficient for large meshes.
 # Arguments
-- `S::Parallelogram`: The parallelogram to check for intersection.
-- `ray::Ray`: The ray to check for intersection with the parallelogram.
+- `S::mesh`: the mesh to be checked for intersection
+- `ray::Ray`: the ray to be checked for intersection
 # Returns
-- `Bool`: `true` if the ray intersects with the parallelogram, `false` otherwise.
+- `Bool`: `true` if the ray intersects any triangle in the mesh, `false` otherwise.
 """
-function quick_ray_intersection(S::Parallelogram, ray::Ray)::Bool
-    inv_ray = _unsafe_inverse(S.Tr)(ray)
-    O = inv_ray.origin - S.A
-    d = inv_ray.dir
-
-    detM = _sarrus(S.B - S.A, S.C - S.A, -d)
-
-    if detM != 0.0
-        β = _sarrus(O, S.C - S.A, -d) / detM
-        γ = _sarrus(S.B - S.A, O, -d) / detM
-        t = _sarrus(S.B - S.A, S.C - S.A, O) / detM
-
-        return (t > inv_ray.tmin && t < inv_ray.tmax && β >= 0.0 && γ >= 0.0)
-    else
-        return false
+function quick_ray_intersection(S::mesh, ray::Ray)::Bool
+    for tr in S.shapes
+        if quick_ray_intersection(tr, ray)
+            return true
+        end
     end
+    return false
 end

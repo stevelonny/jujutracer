@@ -55,17 +55,17 @@ julia demoPath.jl <output_file> <width> <height> <cam_angle>
 ```
 <div align="center">
 
-![Reflective](path.png)
+![Reflective](asset/path.png)
 
 </div>
 
 ### Steve's playground
 To showcase all the newly added shapes by [#18](https://github.com/stevelonny/jujutracer/pull/18) and [#23](https://github.com/stevelonny/jujutracer/pull/23) a demo script implmenting CSGs, AABBs, and flat shape is provided with [`demoAll.jl`](/demoAll.jl). Modify the script with the preferred method of rendering, resolution, antialiasing and path tracing parameters.
 
-<div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+<div align="center" style="display: flex; justify-content: center;">
 
 <div style="text-align: center; margin: 10px;">
-<img src="allFlat.png" alt="demoAll Flat" width="300"/>
+<img src="asset/allFlat.png" alt="demoAll Flat" width="300"/>
 <br/>
 <strong>Flat renderer</strong>
 <br/>
@@ -73,19 +73,16 @@ To showcase all the newly added shapes by [#18](https://github.com/stevelonny/ju
 </div>
 
 <div style="text-align: center; margin: 10px;">
-<img src="allPath.png" alt="demoAll Path" width="300"/>
+<img src="asset/allPath.png" alt="demoAll Path" width="300"/>
 <br/>
 <strong>Path Tracer</strong>
 <br/>
 <em>800x450, AA=2, 3 rays, 5 depth, 3 russian</em>
 </div>
 
-</div>
-
-<div align="center" style="display: flex; justify-content: space-around; flex-wrap: wrap;">
 
 <div style="text-align: center; margin: 10px;">
-<img src="allPoint.png" alt="demoAll Point" width="300"/>
+<img src="asset/allPoint.png" alt="demoAll Point" width="300"/>
 <br/>
 <strong>Point-Light Tracer</strong>
 <br/>
@@ -93,6 +90,40 @@ To showcase all the newly added shapes by [#18](https://github.com/stevelonny/ju
 </div>
 
 </div>
+
+### Meshes support
+A basic support for reading `.obj` files and the necessary framework necessary to render triangle meshes has been implemented. Such shapes are accelerated with boundary volume hierarchy leveraging a surface area cost algorithm.
+
+`testBVH.jl` is a script which generate random triangles to bench the BVH tree construction.
+<div align="center">
+
+![Triangles](asset/triangles_path.png)
+
+</div>
+
+`demoPathWTree.jl` is a variation of [`demoPath.jl`](#demo-path), with a tree instead of the central sphere. The tree model is contained in [`tree.obj`](/asset/tree.obj), with his companions [`leaves.obj`](/asset/leaves.obj). The tree model is comprised of 133376 triangles, while the leafes are made of 113218 triangles. Here are some examples made with Point-Light tracer.
+
+<div align="center" style="display: flex; justify-content: center;">
+
+<div style="text-align: center; margin: 10px;">
+<img src="asset/tree_point.png" alt="demoAll Flat" width="300"/>
+<br/>
+<strong>133376 total triangles</strong>
+<br/>
+<em>720x1280, AA=2, depth=5</em>
+</div>
+
+<div style="text-align: center; margin: 10px;">
+<img src="asset/tree_point_leaves.png" alt="demoAll Path" width="300"/>
+<br/>
+<strong>246594 total triangles</strong>
+<br/>
+<em>450x800, AA=2, depth=5</em>
+</div>
+
+
+</div>
+
 
 ### Multi-thread support
 *See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)*
@@ -131,7 +162,7 @@ julia -t auto demogif.jl
 ```
 <div align="center">
 
-![Demo animation](output.gif)
+![Demo animation](asset/output.gif)
 
 </div>
 

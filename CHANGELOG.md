@@ -1,6 +1,14 @@
 # HEAD
 - Implement SceneLang interpreter [#28](https://github.com/stevelonny/jujutracer/pull/28)
 
+# Version 0.5.0
+- Implement `Meshes` [#32](https://github.com/stevelonny/jujutracer/pull/32)
+- Implement Boundary Volume Hierarchies [#32](https://github.com/stevelonny/jujutracer/pull/36)
+  - Build binary tree with Surface Area Heuristics or simple splits
+
+## Bugfixes & optimization
+- Fix `SpotLight` angles
+
 # Version 0.4.0
 - Implement `PointLight` renderer [#20](https://github.com/stevelonny/jujutracer/pull/30)
   - Point and spotlight sources
