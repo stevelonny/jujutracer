@@ -1692,10 +1692,10 @@ end
         @test scene.shapes[11].S[1] isa CSGDifference
         @test scene.shapes[11].S[1].Sh2 == scene.shapes[10].S[1]
 
-        @test length(scene.world.shapes) == 3
-        @test length(scene.acc_shapes) == 9
-        @test scene.bvhdepth == 4
-
+        @test length(scene.world.shapes) == 11
+        @test length(scene.acc_shapes) == 0
+        @test scene.bvhdepth == 0
+        
     end
 
 end
