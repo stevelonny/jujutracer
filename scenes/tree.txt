@@ -1,0 +1,47 @@
+material mat_ground(
+    diffuse(checkered(<0.5, 0.5, 0.5>, <1.0, 1.0, 0.0>, 8)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat_tree(
+    diffuse(uniform(<0.7, 0.47, 0.3>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat_sun(
+    diffuse(uniform(<1.0, 1.0, 0.8>)),
+    uniform(<1.0, 1.0, 0.8>)
+)
+
+material mat_sky(
+    diffuse(uniform(<0.1, 0.1, 0.2>)),
+    image("asset/sky.pfm")
+)
+
+material mat_mirror(
+    specular(uniform(<1.0,  1.0, 1.0>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+float scale(0.5)
+float tree_scale(0.666666667)
+
+sphere sky(mat_sky, scaling([30.0, 30.0, 30.0]))
+sphere sun(mat_sun, translation([5.0, 0.0, 7.0]) * scaling([scale, scale, scale]))
+sphere mirror(mat_mirror, translation([4.0, 2.0, 0.0]))
+mesh tree(mat_tree, translation([-5.0, 0.0, -0.05]) * scaling([tree_scale, tree_scale, tree_scale]), "asset/tree.obj", "whd")
+plane ground(mat_ground, identity)
+
+pointlight point([0, 0, 20.0], <0.1, 0.1, 0.07>, 100)
+spotlight spot([4.21, -3.1, 16.0], [-5.7, 0.0, -16.1], <1.0, 1.0, 0.8>, 100, 22.5, 12.5)
+
+add sky
+add sun
+add tree
+add mirror
+add ground
+
+add point
+add spot
+
+camera(perspective, translation([-8.0, 0.0, 2.0]) * rotation_y(-18.0), 0.5625, 1.8)

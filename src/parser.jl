@@ -875,17 +875,10 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
         throw(GrammarError(s.location, "no shapes defined"))
     end
 
-    for sh in scene.shapes
-        if sh isa Plane
-            continue
-        end
-        push!(scene.acc_shapes, sh)
-    end
-
     if !isempty(scene.acc_shapes)
         bvh, scene.bvhdepth = BuildBVH!(scene.acc_shapes; use_sah=true)    
         bvhshape = BVHShape(bvh, scene.acc_shapes)
-        shapes = vcat(filter(x -> x isa Plane, scene.shapes), bvhshape)
+        shapes = vcat(filter(x -> !(x isa mesh), scene.shapes), bvhshape)
         scene.world = World(shapes, lights)
     else
         scene.world = World(scene.shapes, lights)
