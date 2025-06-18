@@ -56,8 +56,35 @@ function parse_cli()
     return parse_args(s)
 end
 
-function main()
-    parsed_args = parse_cli()
+function parse_repl(scene_file="";
+    width=640,
+    height=360,
+    png_output="output.png",
+    pfm_output="output.pfm",
+    renderer="path_tracer",
+    antialiasing=2,
+    n_rays=3,
+    depth=3,
+    russian=2
+)
+    parsed_args = Dict{String,Any}()
+    parsed_args["width"] = width
+    parsed_args["height"] = height
+    parsed_args["output"] = png_output
+    parsed_args["pfm_output"] = pfm_output
+    parsed_args["renderer"] = renderer
+    parsed_args["antialiasing"] = antialiasing
+    parsed_args["scene_file"] = scene_file
+    parsed_args["n_rays"] = n_rays
+    parsed_args["depth"] = depth
+    parsed_args["russian"] = russian
+    if scene_file == ""
+        throw(ArgumentError("Scene file must be provided"))
+    end
+    return parsed_args
+end
+
+function interpret(parsed_args::Dict{String,Any})
     width = parsed_args["width"]
     height = parsed_args["height"]
     png_output = parsed_args["output"]
@@ -132,6 +159,12 @@ function main()
     save_ldrimage(get_matrix(toned_img), png_output)
     write_pfm_image(hdr, pfm_output)
     println("Done")
+    #return scene, render, imgtr, hdr
+end
+
+function main()
+    parsed_args = parse_cli()
+    interpret(parsed_args)
 end
 
 main()
