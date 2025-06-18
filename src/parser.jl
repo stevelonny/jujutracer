@@ -690,20 +690,23 @@ end
     _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractShape}, T::Type{<:typeCSG})
 
 Parses a Constructive Solid Geometry (CSG) operation from the input stream. The expected format is:
-- `union name(<shape1>, <shape2>, ...)`
-- `difference name(<shape1>, <shape2>, ...)`
-- `intersection name(<shape1>, <shape2>, ...)`
+- `union name(<transformation>, <shape1>, <shape2>)`
+- `difference name(<transformation>, <shape1>, <shape2>)`
+- `intersection name(<transformation>, <shape1>, <shape2>)`
 # Arguments
 - `s::InputStream`: The input stream to read from.
 - `all_shapes::Dict{String, AbstractShape}`: A dictionary containing all defined shapes.
+- `dict_float::Dict{String,Float64}`: A dictionary containing variable names and their values. 
 - `T::Type{<:typeCSG}`: The type of CSG operation to parse, which must be one of the defined CSG types. See [`typeCSG`](@ref) and [`csg_constructors`](@ref).
 # Returns
 - `Tuple{String, T}`: A tuple containing the name of the CSG operation and the constructed CSG shape.
 """
-function _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractShape}, T::Type{<:typeCSG})
+function _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractShape}, dict_float::Dict{String,Float64}, T::Type{<:typeCSG})
     csg_name = _expect_identifier(s)
     _expect_symbol(s, '(')
 
+    transformation = _parse_transformation(s, dict_float)
+    _expect_symbol(s, ',')
 
     shape1_name = _expect_identifier(s)
     if !(haskey(all_shapes, shape1_name))
@@ -715,8 +718,10 @@ function _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractS
     if !(haskey(all_shapes, shape2_name))
         throw(GrammarError(s.location, "shape '$shape2_name' not defined"))
     end
-
-    shape = T(Transformation(), all_shapes[shape1_name] , all_shapes[shape2_name])
+    
+    _expect_symbol(s, ')')
+    shape = T(transformation, all_shapes[shape1_name] , all_shapes[shape2_name])
+    #=
     while true
         symbol= _expect_symbol(s, ',', ')')
 
@@ -731,6 +736,7 @@ function _parse_CSG_operation(s::InputStream, all_shapes::Dict{String, AbstractS
 
         shape = T(Transformation(),shape , all_shapes[shape_name])
     end
+    =#
     return csg_name , shape
 end
 
@@ -833,7 +839,7 @@ function parse_scene(s::InputStream, variables::Dict{String,Float64}=Dict{String
             scene.camera = _parse_camera(s, scene.float_variables)
         elseif haskey(csg_constructors, token.keyword)
             csg_constructor = csg_constructors[token.keyword]
-            name, shape = _parse_CSG_operation(s, scene.all_shapes, csg_constructor)
+            name, shape = _parse_CSG_operation(s, scene.all_shapes, scene.float_variables, csg_constructor)
             scene.all_shapes[name] = shape
         elseif token.keyword == MESH
             name, m_mesh = _parse_mesh(s, scene.float_variables, scene.materials)

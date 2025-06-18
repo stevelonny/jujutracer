@@ -1532,10 +1532,10 @@ end
            "c1" => Box(),
        )
        for (sym, csg_type) in jujutracer.csg_constructors
-            input = IOBuffer("name(s1, s2, c1)")  # nome fittizio, ignorato nel test
+            input = IOBuffer("name(identity, s2, c1)")  # nome fittizio, ignorato nel test
             stream = InputStream(input)
 
-            name, result = jujutracer._parse_CSG_operation(stream, all_shapes, csg_type)
+            name, result = jujutracer._parse_CSG_operation(stream, all_shapes, dict, csg_type)
 
             @test name == "name"
             @test result isa csg_type
@@ -1588,9 +1588,9 @@ end
 
         camera(perspective, rotation_z(30) * translation([-4, 0, 1]), 1.0, 2.0)
 
-        union un(bx1, cy1, cn1)
-        intersection in(sp1, cy1)
-        difference di(sp1, cn1, in)
+        union un(identity, cy1, cn1)
+        intersection in(identity, sp1, cy1)
+        difference di(identity, cn1, in)
 
         add pl1
         add pl2

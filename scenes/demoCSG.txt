@@ -1,0 +1,45 @@
+# float definition
+float sc(0.6666666666666)
+
+# Material definition
+
+material mat1(
+    diffuse(uniform(<0.5, 0.5,0.5>)),
+    checkered(<0.0, 1.0, 0.0>, <1.0, 0.0, 0.0>, 32)
+)
+
+material mat2(
+    diffuse(uniform(<0.5, 0.5, 0.5>)),
+    checkered(<0.0, 0.0, 1.0>, <1.0, 1.0, 0.0>, 32)
+)
+
+material mat3(
+    diffuse(uniform(<0.5, 0.5, 0.5>)),
+    checkered(<0.0, 1.0, 1.0>, <1.0, 0.0, 1.0>, 32)
+)
+
+# shape definition
+sphere sph1(mat1, translation([0.0, 0.5, 0.0]) * scaling([sc, sc, sc]))
+
+sphere sph2(mat2, translation([0.0, -0.5, 0.0]) * scaling([sc, sc, sc]))
+
+cone con(mat3, identity)
+
+# csg construction
+union s1us2(identity, sph1, sph2)
+intersection s1INTs2(identity, sph1, sph2)
+
+union S1(translation([0.0, 0.0, 2.0]) * rotation_z(6) * rotation_y(-12), s1us2, con)
+
+difference S2(translation([0.0, 2.0, 0.0]) * rotation_x(12) * rotation_y(-12), s1us2, con)
+
+intersection S3(translation([0.0, -2.0, 0.0]) * rotation_y(12) * scaling([1.2, 1.2, 1.2]), s1INTs2, con)
+
+# adding to scene
+
+add S1
+add S2
+add S3
+
+# Camera definition
+camera(perspective, translation([-2.5, 0.0, 1.0]), 1.7777777777777, 2.0)
