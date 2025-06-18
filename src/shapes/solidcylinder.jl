@@ -113,7 +113,7 @@ function ray_intersection(S::Cylinder, ray::Ray)
     hit_point = inv_ray(first_hit)
     return HitRecord(
         world_P=S.Tr(hit_point),
-        normal=S.Tr(_sphere_normal(hit_point, ray.dir)),
+        normal=S.Tr(_cylinder_normal(hit_point, d)),
         surface_P=_point_to_uv(S, hit_point),
         t=first_hit,
         ray=ray,
