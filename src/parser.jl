@@ -109,6 +109,11 @@ const csg_constructors = Dict(
     INTERSECTION => CSGIntersection
 )
 
+"""
+    typeCSG
+A Union type of all CSG operation types supported in the scene description language.
+Used for type annotations and dispatch to ensure proper CSG operation handling.
+"""
 const typeCSG = Union{CSGUnion, CSGDifference, CSGIntersection}
 
 

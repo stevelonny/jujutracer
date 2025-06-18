@@ -7,7 +7,7 @@ using Logging
 using TerminalLoggers
 using LoggingExtras
 
-function parse_cli()
+function parse_cli(args)
     s = ArgParseSettings()
     @add_arg_table! s begin
         "--width", "-W"
@@ -52,12 +52,48 @@ function parse_cli()
         default = 2
         help = "Russian roulette level (for path tracer)"
     end
+    @add_arg_table! s begin
+        "--variables", "-v"
+        nargs = '*'
+        help = "Variables to be overidden in the scene file. Expected format: name value pairs, e.g. --variables var1 1.0 var2 2.0"
+    end
 
-    return parse_args(s)
+    return parse_args(args, s)
 end
 
-function main()
-    parsed_args = parse_cli()
+function parse_variables_dict(input_dict::Dict{String, Any})::Dict{String, Float64}
+    if !haskey(input_dict, "variables")
+        return Dict{String, Float64}()
+    end
+    
+    variables_array = input_dict["variables"]
+    result = Dict{String, Float64}()
+
+    if isnothing(variables_array) || length(variables_array) == 0
+        return result
+    end
+    
+    if length(variables_array) % 2 != 0
+        throw(ArgumentError("Variables array must have even number of elements (name-value pairs)"))
+    end
+    
+    for i in 1:2:length(variables_array)
+        name = string(variables_array[i])
+        value_str = string(variables_array[i + 1])
+        
+        try
+            value = parse(Float64, value_str)
+            result[name] = value
+        catch
+            throw(ArgumentError("Cannot parse '$(value_str)' as Float64 for variable '$(name)'"))
+        end
+    end
+    
+    return result
+end
+
+
+function interpret(parsed_args::Dict{String,Any})
     width = parsed_args["width"]
     height = parsed_args["height"]
     png_output = parsed_args["output"]
@@ -68,6 +104,8 @@ function main()
     n_rays = parsed_args["n_rays"]
     depth = parsed_args["depth"]
     russian = parsed_args["russian"]
+
+    overriden_variables = parse_variables_dict(parsed_args)
     @info """
     Parsed arguments:
     - Width: $width
@@ -81,6 +119,7 @@ function main()
     - Depth: $depth
     - Russian roulette: $russian
     """
+    @info "Parsed variables:" overriden_variables = overriden_variables
 
     # Create a filtered logger
     module_filter(log) = log._module == jujutracer || log.level > Logging.Debug
@@ -94,7 +133,7 @@ function main()
         throw(ArgumentError("Scene file does not exist: $scene_file"))
     end
     stream = open_InputStream(scene_file)
-    scene = parse_scene(stream)
+    scene = parse_scene(stream, overriden_variables)
 
     world = scene.world
     camera = scene.camera
@@ -132,6 +171,12 @@ function main()
     save_ldrimage(get_matrix(toned_img), png_output)
     write_pfm_image(hdr, pfm_output)
     println("Done")
+    #return scene, render, imgtr, hdr
 end
 
-main()
+function main(args)
+    parsed_args = parse_cli(args)
+    interpret(parsed_args)
+end
+
+main(ARGS)
