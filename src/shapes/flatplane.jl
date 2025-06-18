@@ -81,7 +81,7 @@ function ray_intersection(pl::Plane, ray::Ray)
     end
 
     hit_point = inv_ray(first_hit)
-    norm = pl.Tr(_plane_normal(hit_point, ray.dir))
+    norm = pl.Tr(_plane_normal(hit_point, d))
     return HitRecord(
         world_P=pl.Tr(hit_point),
         normal=norm,

@@ -81,7 +81,7 @@ function ray_intersection(S::Rectangle, ray::Ray)
 
 
     hit_point = inv_ray(first_hit)
-    norm = S.Tr(_rectangle_normal(hit_point, ray.dir))
+    norm = S.Tr(_rectangle_normal(hit_point, d))
     return HitRecord(
         world_P=S.Tr(hit_point),
         normal=norm,
