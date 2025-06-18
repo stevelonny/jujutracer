@@ -130,7 +130,7 @@ end
 
 """
     _smooth_step(x, edge0, edge1)
-Calculate a smooth step function value. Used in [`SpotLight`](@ref) for light modulation.
+Calculate a smooth step function value. Used in [`SpotLight`]() for light modulation.
 # Arguments
 - `x`: the input value.
 - `edge0`: the lower edge of the step.
