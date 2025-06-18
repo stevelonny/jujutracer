@@ -57,7 +57,7 @@ function (it::ImageTracer)(fun::Function)
     progress = Threads.Atomic{Int}(0)
     update_interval = max(1, div(total, 500)) # update progress every 0.2% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
-    @info "Starting image tracing with $(Threads.nthreads()) threads.\nStarting rendering with $(renderer_type) renderer\nImage size: $(it.img.w) x $(it.img.h)\nNo antialising applied."
+    @info "Starting image tracing." threads=(Threads.nthreads()) render=(renderer_type) w=(it.img.w) h=(it.img.h) aa=0
     if fun isa OnOff
         @debug "OnOff renderer parameters" bg_color = fun.background_color fg_color = fun.foreground_color
     elseif fun isa Flat
@@ -102,7 +102,7 @@ function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
     progress = Threads.Atomic{Int}(0)
     update_interval = max(1, div(total, 500)) # update progress every 0.2% of total
     renderer_type = typeof(fun).name.name  # Get type name as Symbol
-    @info "Starting image tracing with $(Threads.nthreads()) threads.\nStarting rendering with $(renderer_type) renderer\nImage size: $(it.img.w) x $(it.img.h)\nAnti-Aliasing factor: $(AA)"
+    @info "Starting image tracing."  threads=(Threads.nthreads()) render=(renderer_type) w=(it.img.w) h=(it.img.h) aa=(AA)
     if fun isa OnOff
         @debug "OnOff renderer parameters" bg_color = fun.background_color fg_color = fun.foreground_color
     elseif fun isa Flat
@@ -111,6 +111,8 @@ function (it::ImageTracer)(fun::Function, AA::Int64, pcg::PCG)
         @debug "PathTracer parameters" bg_color = fun.background_color n_rays = fun.n_rays depth = fun.depth russian = fun.russian
     elseif fun isa PointLight
         @debug "PointLight parameters" bg_color = fun.background_color amb_color = fun.ambient_color point_depth = fun.max_depth
+    elseif fun isa DepthBVHRender
+        @debug "DepthBVHRender parameters" background_color = fun.background_color non_bvh_color = fun.non_bvh_color bvh_color_low = fun.bvh_color_low bvh_color_high = fun.bvh_color_high bvh_max_depth = fun.bvh_max_depth
     end
     starting_time = time_ns()
     @withprogress name = "Rendering" begin

@@ -5,7 +5,7 @@
 """
     struct Cylinder <: AbstractSolid
 
-A cylinder of unitary radiuos and height centered in the origin.
+A cylinder of unitary radius and height centered in the origin.
 This structure is a subtype of [`AbstractSolid`](@ref).
 # Fields
 - `Tr::Transformation`: the transformation applied to the sphere.

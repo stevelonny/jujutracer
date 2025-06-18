@@ -9,11 +9,17 @@ import Base: *, +, -
 Struct representing a point in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
+# Constructors
+- `Point(x::Float64, y::Float64, z::Float64)`: Create a Point from x, y, z coordinates.
+- `Point(p::Vec)`: Create a Point from a Vec.
 """
 struct Point
     x::Float64
     y::Float64
     z::Float64
+    function Point(x, y, z)
+        new(x, y, z)
+    end
 end
 
 #--------------------------------------------------------------------------
@@ -25,7 +31,8 @@ end
 A struct representing a vector in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
-# Methods
+# Constructors
+- `Vec(x::Float64, y::Float64, z::Float64)`: Create a Vec from x, y, z coordinates.
 - `Vec(n::Normal)`: Create a Vec from a Normal.
 - `Vec(p::Point)`: Create a Vec from a Point.
 """
@@ -50,7 +57,7 @@ end
 Struct representing a unit vector (normal) in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
-# Methods
+# Constructors
 - `Normal(v::Vec)`: Create a Normal from a Vec.
 - `Normal(x::Float64, y::Float64, z::Float64)`: Create a Normal from x, y, z coordinates.
 # Throws
@@ -79,6 +86,10 @@ end
 # Outside constructors
 function Vec(n::Normal)
     return Vec(n.x, n.y, n.z)
+end
+
+function Point(p::Vec)
+    return Point(p.x, p.y, p.z)
 end
 
 #--------------------------------------------------------------------------
@@ -149,13 +160,16 @@ end
 #--------------------------------------------------------------------------
 Base.:+(a::T, b::Vec) where {T<:Union{Vec, Point}} = T(a.x + b.x, a.y + b.y, a.z + b.z)
 Base.:+(a::Normal, b::Normal)= Normal(a.x + b.x, a.y + b.y, a.z + b.z)
+Base.:+(a::Point, b::Point) = Point(a.x + b.x, a.y + b.y, a.z + b.z)
 Base.:-(a::T, b::Vec) where {T<:Union{Vec, Point}} = T(a.x - b.x, a.y - b.y, a.z - b.z)
 Base.:-(a::Normal, b::Normal) = Normal(a.x - b.x, a.y - b.y, a.z - b.z)
 Base.:-(v::T) where {T<:Union{Vec, Normal}} = T(-v.x, -v.y, -v.z)
 Base.:-(a::Point,b::Point) = Vec(a.x-b.x, a.y-b.y, a.z-b.z)
 Base.:*(a::Union{Vec, Normal}, b::Union{Vec, Normal}) = a.x * b.x + a.y * b.y + a.z * b.z
 Base.:*(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = Vec(v.x * scalar, v.y * scalar, v.z * scalar)
-Base.:*(scalar::Real, v::T) where {T<:Union{Vec, Normal}} = Vec(v.x * scalar, v.y * scalar, v.z * scalar) 
+Base.:*(p::Point, scalar::Real) = Point(p.x * scalar, p.y * scalar, p.z * scalar)
+Base.:*(scalar::Real, v::T) where {T<:Union{Vec, Normal}} = Vec(v.x * scalar, v.y * scalar, v.z * scalar)
+Base.:*(scalar::Real, p::Point) = Point(p.x * scalar, p.y * scalar, p.z * scalar)
 Base.:/(v::T, scalar::Real) where {T<:Union{Vec, Normal}} = Vec(v.x / scalar, v.y / scalar, v.z / scalar)
 Base.:≈(v1::T, v2::D) where {T<:Union{Vec, Normal}, D<:Union{Vec, Normal}} = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
 Base.:≈(v1::Point, v2::Point) = v1.x ≈ v2.x && v1.y ≈ v2.y && v1.z ≈ v2.z
