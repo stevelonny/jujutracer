@@ -42,7 +42,7 @@ function parse_cli(args)
         "--n_rays"
         arg_type = Int
         default = 3
-        help = "Number of rays per pixel (for path tracer)"
+        help = "Number of rays fired at each intersection (for path tracer)"
         "--depth"
         arg_type = Int
         default = 3
