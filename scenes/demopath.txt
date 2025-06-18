@@ -9,7 +9,7 @@ material mat2(
 )
 
 material mat3(
-    specular(uniform(<1.0, 0.0, 0.0>)),
+    refractive(uniform(<1.0, 1.0, 1.0>), 1.3),
     uniform(<0.0, 0.0, 0.0>)
 )
 
@@ -22,7 +22,7 @@ sphere sph1(mat4, scaling([7.0, 7.0, 7.0]) * rotation_y(-45.0))
 
 sphere sph2(mat2, translation([0.0, 0.0, 1.0]))
 
-sphere sph3(mat3, translation([0.0, 2.0, 0.0]) * scaling([0.6666666666666666, 0.6666666666666666, 0.6666666666666666]))
+cylinder sph3(mat3, translation([0.0, 2.0, 0.5]) * scaling([0.6666666666666666, 0.6666666666666666, 1.0]))
 
 plane pl1(mat1, identity)
 

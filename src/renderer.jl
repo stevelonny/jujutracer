@@ -43,7 +43,7 @@ function (BRDF::RefractiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, de
     if cos2_θt >= 0.0
         cos_θt = sqrt(cos2_θt)
         # compute Fresnel Reflection index R (only transverse polarization)
-        R = ((-ind2*cos_θi - ind1*cos_θt)/(-ind2*cos_θi + ind1*cos_θt))^2
+        R = ((-ind1*cos_θi - ind2*cos_θt)/(-ind1*cos_θi + ind2*cos_θt))^2
     else
         # total reflection
         return _reflect_ray(in_dir, p, normal, depth, r_ind = ind1)

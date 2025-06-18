@@ -18,7 +18,8 @@ in the scene description language. Used for validating BRDF keywords in the pars
 """
 const BRDFS = [
     DIFFUSE,
-    SPECULAR
+    SPECULAR,
+    REFRACTIVE
 ]
 
 """
@@ -406,11 +407,18 @@ function _parse_brdf(s::InputStream, dictionary::Dict{String,Float64})
 
     _expect_symbol(s, '(')
     pigment = _parse_pigment(s, dictionary)
-    _expect_symbol(s, ')')
+    
     if brdf_keyword == DIFFUSE
+        _expect_symbol(s, ')')
         return DiffusiveBRDF(pigment)
     elseif brdf_keyword == SPECULAR
+        _expect_symbol(s, ')')
         return SpecularBRDF(pigment)
+    elseif brdf_keyword == REFRACTIVE
+        _expect_symbol(s, ',')
+        value = _expect_number(s, dictionary)
+        _expect_symbol(s, ')')
+        return RefractiveBRDF(pigment, value)
     else
         throw(GrammarError(s.location, "unexpected BRDF type $brdf_keyword"))
     end

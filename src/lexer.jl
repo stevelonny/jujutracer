@@ -55,6 +55,7 @@ const SYMBOLS = ['(', ')', '[', ']', '<', '>', ',', '*'] #Add here if some missi
     MATERIAL
     DIFFUSE
     SPECULAR
+    REFRACTIVE
     IDENTITY
     TRANSLATION
     ROTATION_X
@@ -92,6 +93,7 @@ const KEYWORDS = Dict(
     "material" => MATERIAL,
     "diffuse" => DIFFUSE,
     "specular" => SPECULAR,
+    "refractive" => REFRACTIVE,
     "identity" => IDENTITY,
     "translation" => TRANSLATION,
     "rotation_x" => ROTATION_X,
