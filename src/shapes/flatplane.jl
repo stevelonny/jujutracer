@@ -6,7 +6,7 @@
     struct Plane <: AbstractShape
 
 A plane.
-This structure is a subtype of [`AbstractShape`](@ref).
+This structure is a subtype of [`AbstractShape`]().
 # Fields
 - `t::Transformation`: the transformation applied to the plane
 - `Mat::Material`: the material of the shape

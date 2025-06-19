@@ -513,7 +513,7 @@ Parses a shape from the input stream. The expected format is:
 - `circle(<material_name>, <transformation>)`
 - `rectangle(<material_name>, <transformation>)`
 # Arguments
-- `shape::T`: The type of shape to parse, which must be one of the defined shape types. See [`typeshapes`](@ref), [`shapes_constructors`](@ref) and [`SHAPES`](@ref).
+- `shape::T`: The type of shape to parse, which must be one of the defined shape types. See [`typeshapes`](), [`shapes_constructors`]() and [`SHAPES`]().
 - `s::InputStream`: The input stream to read from.
 - `dict_float::Dict{String, Float64}`: A dictionary containing variable names and their values.
 - `dict_material::Dict{String, Material}`: A dictionary containing material names and their definitions.
@@ -702,7 +702,7 @@ Parses a Constructive Solid Geometry (CSG) operation from the input stream. The 
 - `s::InputStream`: The input stream to read from.
 - `all_shapes::Dict{String, AbstractShape}`: A dictionary containing all defined shapes.
 - `dict_float::Dict{String,Float64}`: A dictionary containing variable names and their values. 
-- `T::Type{<:typeCSG}`: The type of CSG operation to parse, which must be one of the defined CSG types. See [`typeCSG`](@ref) and [`csg_constructors`](@ref).
+- `T::Type{<:typeCSG}`: The type of CSG operation to parse, which must be one of the defined CSG types. See [`typeCSG`]() and [`csg_constructors`]().
 # Returns
 - `Tuple{String, T}`: A tuple containing the name of the CSG operation and the constructed CSG shape.
 """

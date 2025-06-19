@@ -8,10 +8,15 @@ makedocs(
         prettyurls=get(ENV, "CI", nothing) == "true",
         size_threshold=500_000
     ),
-    modules=[jujutracer],
+    #modules=[jujutracer],
+    pagesonly=true,
     pages=[
         "Home" => "index.md",
-        "Detailed API" => "detail.md"
+        "Scene Usage" => "scene_usage.md",
+        "Repl Usage" => "repl_usage.md",
+        "Detailed API" => Any[
+            "API" =>"detail.md"   
+        ]
         # Add your other pages here
     ]
 )
