@@ -35,11 +35,15 @@ difference S2(translation([0.0, 2.0, 0.0]) * rotation_x(12) * rotation_y(-12), s
 
 intersection S3(translation([0.0, -2.0, 0.0]) * rotation_y(12) * scaling([1.2, 1.2, 1.2]), s1INTs2, con)
 
+# pointlight
+pointlight point([0, 0, 0], <1.0, 1.0, 1.0>, 100)
+
 # adding to scene
 
 add S1
 add S2
 add S3
+add point
 
 # Camera definition
 camera(perspective, translation([-2.5, 0.0, 1.0]), 1.7777777777777, 2.0)
