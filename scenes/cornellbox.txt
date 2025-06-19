@@ -25,9 +25,9 @@ rectangle back(mat1, translation([2.0, 0.0, 2.0]) * rotation_y(90) * scaling([sc
 
 rectangle light(bright, translation([0.0, 0.0, 3.9999]))
 
-box boxr(mat1, translation([0.0, -1.0, 0.5]) * rotation_z(-30.0))
+box boxr(mat1, translation([0.0, -1.0, 0.5]) * rotation_z(-40.0))
 
-box boxl(mat1, scaling([1.0, 1.0, 2.0]) * translation([0.0, 1.0, 0.5]) * rotation_z(30.0))
+box boxl(mat1, scaling([1.0, 1.0, 2.0]) * translation([0.0, 1.0, 0.5]) * rotation_z(40.0))
 
 add floor
 add ceiling
