@@ -27,8 +27,8 @@ function (BRDF::SpecularBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, dept
     return _reflect_ray(in_dir, p, normal, depth)
 end
 
-function (BRDF::RefractiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, depth::Int64)
-    in_dir = ray.dir
+function (BRDF::RefractiveBRDF)(ray::Ray, p::Point, normal::Normal, depth::Int64)
+    in_dir = ray.dir / squared_norm(ray.dir)
     ind1 = ray.r_ind
     ind2 = (BRDF.index == ind1) ? 1.0 : BRDF.index # the ray is coming from another refraction on a surface with the same RefractiveBRDF
     # To be certain that the ray is exactly coming from a refraction with the same BRDF maybe
@@ -36,22 +36,49 @@ function (BRDF::RefractiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, de
     # be erroneous in the case of total riflection so let's keep r_ind
 
     η = ind2 / ind1
-    cos_θi = in_dir ⋅ normal / squared_norm(in_dir)
+    cos_θi = in_dir ⋅ normal
+    sin2_θi = 1.0 - cos_θi^2
+    cos2_θt = 1.0 - sin2_θi/(η^2)
+
+    if cos2_θt >= 0.0
+        cos_θt = sqrt(cos2_θt)
+        out_dir = in_dir / η - (cos_θi/η + cos_θt) * normal
+        return Ray(origin=p,
+                   dir = out_dir,
+                   tmin=10e-3,
+                   r_ind = ind2,
+                   depth=depth)
+    else
+        # total reflection
+        return _reflect_ray(in_dir, p, normal, depth, r_index = ind1)
+    end
+end
+
+function (BRDF::RefractiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, depth::Int64)
+    in_dir = ray.dir / squared_norm(ray.dir)
+    ind1 = ray.r_ind
+    ind2 = (BRDF.index == ind1) ? 1.0 : BRDF.index # the ray is coming from another refraction on a surface with the same RefractiveBRDF
+    # To be certain that the ray is exactly coming from a refraction with the same BRDF maybe
+    # we can set last_BRDF as a memeber of Ray instead of r_ind. I immediatly think that this would
+    # be erroneous in the case of total riflection so let's keep r_ind
+
+    η = ind2 / ind1
+    cos_θi = in_dir ⋅ normal #/ squared_norm(in_dir)
     sin2_θi = 1.0 - cos_θi^2
     cos2_θt = 1.0 - sin2_θi/(η^2)
 
     if cos2_θt >= 0.0
         cos_θt = sqrt(cos2_θt)
         # compute Fresnel Reflection index R (only transverse polarization)
-        R = ((-ind1*cos_θi - ind2*cos_θt)/(-ind1*cos_θi + ind2*cos_θt))^2
+        R = ((ind1*cos_θi + ind2*cos_θt)/(ind1*cos_θi - ind2*cos_θt))^2
     else
         # total reflection
-        return _reflect_ray(in_dir, p, normal, depth, r_ind = ind1)
+        return _reflect_ray(in_dir, p, normal, depth, r_index = ind1)
     end
 
     if rand_uniform(pcg) > R
         # standard behavior
-        out_dir = -in_dir / η + ((in_dir ⋅ normal)/η - cos_θt) * normal
+        out_dir = in_dir / η - (cos_θi/η + cos_θt) * normal
         return Ray(origin=p,
                    dir = out_dir,
                    tmin=10e-3,
@@ -59,7 +86,7 @@ function (BRDF::RefractiveBRDF)(pcg::PCG, ray::Ray, p::Point, normal::Normal, de
                    depth=depth)
     else
         # reflection
-        return _reflect_ray(in_dir, p, normal, depth, r_ind = ind1)
+        return _reflect_ray(in_dir, p, normal, depth, r_index = ind1)
     end     
 end
 
@@ -90,10 +117,10 @@ end
 """
     _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
 """
-function _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64; r_ind = 1.0)
+function _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64; r_index = 1.0)
     incoming_dir = Vec(Normal(in_dir))
     reflected_dir = incoming_dir - 2 * normal * (normal ⋅ incoming_dir)
-    return Ray(origin=p, dir=reflected_dir, tmin=1e-5, r_ind = r_ind, depth=depth)
+    return Ray(origin=p, dir=reflected_dir, tmin=1e-5, r_ind = r_index, depth=depth)
 end
 
 #---------------------------------------------------------
@@ -270,7 +297,7 @@ function (PL::PointLight)(ray::Ray)
         end
     end
 
-    if hit_material.BRDF isa SpecularBRDF
+    if hit_material.BRDF isa SpecularBRDF || hit_material.BRDF isa RefractiveBRDF
         reflected_ray = hit_material.BRDF(ray, repo.world_P, repo.normal, ray.depth + 1)
         reflected_color = PL(reflected_ray)
         # should it be multiplied by the specular color? where is / π?
