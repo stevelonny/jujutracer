@@ -5,8 +5,8 @@
 """
     struct Cylinder <: AbstractSolid
 
-A cylinder of unitary radiuos and height centered in the origin.
-This structure is a subtype of [`AbstractSolid`](@ref).
+A cylinder of unitary radius and height centered in the origin.
+This structure is a subtype of [`AbstractSolid`]().
 # Fields
 - `Tr::Transformation`: the transformation applied to the sphere.
 - `Mat::Material`: the material of the shape
@@ -113,7 +113,7 @@ function ray_intersection(S::Cylinder, ray::Ray)
     hit_point = inv_ray(first_hit)
     return HitRecord(
         world_P=S.Tr(hit_point),
-        normal=S.Tr(_sphere_normal(hit_point, ray.dir)),
+        normal=S.Tr(_cylinder_normal(hit_point, d)),
         surface_P=_point_to_uv(S, hit_point),
         t=first_hit,
         ray=ray,

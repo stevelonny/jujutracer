@@ -6,7 +6,7 @@
     struct Cone <: AbstractSolid
 
 A cone of unitary radiuos and height resting on the xy plane.
-This structure is a subtype of [`AbstractSolid`](@ref).
+This structure is a subtype of [`AbstractSolid`]().
 # Fields
 - `Tr::Transformation`: the transformation applied to the sphere.
 - `Mat::Material`: the material of the shape
@@ -100,7 +100,7 @@ function ray_intersection(S::Cone, ray::Ray)
             if hit_base.x^2 + hit_base.y^2 <= 1.0
                 return HitRecord(
                 world_P = S.Tr(hit_base),
-                normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+                normal = S.Tr(_circle_normal(hit_base, d)),
                 surface_P = _circle_point_to_uv(hit_base),
                 t = tz,
                 ray = ray,
@@ -116,7 +116,7 @@ function ray_intersection(S::Cone, ray::Ray)
             if hit_base.x^2 + hit_base.y^2 <= 1.0
                 return HitRecord(
                 world_P = S.Tr(hit_base),
-                normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+                normal = S.Tr(_circle_normal(hit_base, d)),
                 surface_P = _circle_point_to_uv(hit_base),
                 t = tz,
                 ray = ray,
@@ -132,7 +132,7 @@ function ray_intersection(S::Cone, ray::Ray)
         end
         return HitRecord(
             world_P = S.Tr(hit_base),
-            normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+            normal = S.Tr(_circle_normal(hit_base, d)),
             surface_P = _circle_point_to_uv(hit_base),
             t = tz,
             ray = ray,
@@ -145,7 +145,7 @@ function ray_intersection(S::Cone, ray::Ray)
     hit_point = inv_ray(first_hit)
     return HitRecord(
         world_P = S.Tr(hit_point),
-        normal = S.Tr(_cone_normal(hit_point, ray.dir)),
+        normal = S.Tr(_cone_normal(hit_point, d)),
         surface_P = _point_to_uv(S, hit_point),
         t = first_hit,
         ray = ray,
@@ -188,7 +188,7 @@ function ray_intersection_list(S::Cone, ray::Ray)
         if hit_base.x^2 + hit_base.y^2 <= 1.0
         HR_base = HitRecord(
             world_P = S.Tr(hit_base),
-            normal = S.Tr(_circle_normal(hit_base, ray.dir)),
+            normal = S.Tr(_circle_normal(hit_base, d)),
             surface_P = _circle_point_to_uv(hit_base),
             t = tz,
             ray = ray,
@@ -200,7 +200,7 @@ function ray_intersection_list(S::Cone, ray::Ray)
     if t1 > inv_ray.tmin && t1 < inv_ray.tmax && z1 > 0.0 && z1 < 1.0
         HR1 = HitRecord(
             world_P = S.Tr(inv_ray(t1)),
-            normal = S.Tr(_cone_normal(inv_ray(t1), inv_ray.dir)),
+            normal = S.Tr(_cone_normal(inv_ray(t1), d)),
             surface_P = _point_to_uv(S, inv_ray(t1)),
             t = t1,
             ray = ray,
@@ -211,7 +211,7 @@ function ray_intersection_list(S::Cone, ray::Ray)
     if t2 > inv_ray.tmin && t2 < inv_ray.tmax && z2 > 0.0 && z2 < 1.0
         HR2 = HitRecord(
             world_P = S.Tr(inv_ray(t2)),
-            normal = S.Tr(_cone_normal(inv_ray(t2), inv_ray.dir)),
+            normal = S.Tr(_cone_normal(inv_ray(t2), d)),
             surface_P = _point_to_uv(S, inv_ray(t2)),
             t = t2,
             ray = ray,

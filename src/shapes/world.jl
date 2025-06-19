@@ -13,9 +13,9 @@ A struct representing a collection of shapes (and lights) in a 3D world.
 - `World(S::Vector{AbstractShape})`: creates a new `World` with the specified vector of shapes. Lights are initialized to an empty vector.
 - `World(S::Vector{AbstractShape}, L::Vector{AbstractLight})`: creates a new `World` with the specified vector of shapes and light sources.
 # See also
-- [`AbstractShape`](@ref): the abstract type for all shapes.
-- [`Sphere`](@ref): a concrete implementation of `AbstractShape` representing a sphere.
-- [`Plane`](@ref): a concrete implementation of `AbstractShape` representing a plane.
+- [`AbstractShape`](): the abstract type for all shapes.
+- [`Sphere`](): a concrete implementation of `AbstractShape` representing a sphere.
+- [`Plane`](): a concrete implementation of `AbstractShape` representing a plane.
 """
 struct World
     shapes::Vector{AbstractShape}
@@ -72,7 +72,7 @@ end
 """
     is_point_visible(W::World, pos::Point, observer::Point)
 Checks if a point is visible from an observer's position in the world.
-See also [`is_light_visible`](@ref).
+See also [`is_light_visible`]().
 # Arguments
 - `W::World`: the world containing the shapes
 - `pos::Point`: the position of the point to check visibility for

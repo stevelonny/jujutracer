@@ -1,7 +1,10 @@
 #---------------------------------------------------------
 # Pigment
 #---------------------------------------------------------
-
+"""
+    abstract type AbstractPigment
+Abstract type for pigments.
+"""
 abstract type AbstractPigment end
 
 """
@@ -56,7 +59,6 @@ Print the image `img` as pigment of the surface
 - `img::hdrimg` the image in hdr format
 # Functional Usage
 `ImagePigment(p::SurfacePoint)` return the `RGB` of to the `(u, v)` coordinates of the `SurfacePoint` associated to the corresponding element of `img`
-
 """
 struct ImagePigment <: AbstractPigment
     img::hdrimg
@@ -110,4 +112,34 @@ struct Material
     function Material(Emition::AbstractPigment, BRDF::AbstractBRDF)
         new(Emition, BRDF)
     end
+end
+
+# ---------------------------------------------------------
+# == operators, useful for testing
+# ---------------------------------------------------------
+
+function Base.:(==)(p1::AbstractPigment, p2::AbstractPigment)
+    if p1 isa UniformPigment && p2 isa UniformPigment
+        return p1.color == p2.color
+    elseif p1 isa CheckeredPigment && p2 isa CheckeredPigment
+        return p1.col == p2.col && p1.row == p2.row && p1.dark == p2.dark && p1.bright == p2.bright
+    elseif p1 isa ImagePigment && p2 isa ImagePigment
+        return p1.img == p2.img
+    else
+        return false
+    end
+end
+
+function Base.:(==)(brdf1::AbstractBRDF, brdf2::AbstractBRDF)
+    if brdf1 isa DiffusiveBRDF && brdf2 isa DiffusiveBRDF
+        return brdf1.Pigment == brdf2.Pigment
+    elseif brdf1 isa SpecularBRDF && brdf2 isa SpecularBRDF
+        return brdf1.Pigment == brdf2.Pigment
+    else
+        return false
+    end
+end
+
+function Base.:(==)(m1::Material, m2::Material)
+    return m1.Emition == m2.Emition && m1.BRDF == m2.BRDF
 end

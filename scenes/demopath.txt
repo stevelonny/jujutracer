@@ -1,0 +1,40 @@
+material mat1(
+    diffuse(checkered(<0.5, 0.5, 0.5>, <1.0, 1.0, 0.0>, 8)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat2(
+    diffuse(checkered(<1.0, 0.0, 1.0>, <0.0, 0.0, 1.0>, 12)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat3(
+    specular(uniform(<1.0, 0.0, 0.0>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat4(
+    diffuse(uniform(<0.5, 0.5, 0.5>)),
+    image("asset/sky.pfm")
+)
+
+sphere sph1(mat4, scaling([7.0, 7.0, 7.0]) * rotation_y(-45.0))
+
+sphere sph2(mat2, translation([0.0, 0.0, 1.0]))
+
+sphere sph3(mat3, translation([0.0, 2.0, 0.0]) * scaling([0.6666666666666666, 0.6666666666666666, 0.6666666666666666]))
+
+plane pl1(mat1, identity)
+
+pointlight light([0, 0, 6.9], <0.25, 0.3, 0.1>, 100)
+spotlight spot([4, 4, 4], [-4, -4, -4], <0.45, 0.5, 0.65>, 100, 35.0, 25.0)
+
+add sph1
+add sph2
+add sph3
+add pl1
+
+add light
+add spot
+
+camera(perspective, translation([-1.5, 0.0, 1.0]) * rotation_y(-0.056), 1.7777777777777, 2.0)

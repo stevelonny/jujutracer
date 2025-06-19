@@ -1,0 +1,131 @@
+# Translated from demoAll.jl - Complex showcase scene
+
+# Float variables
+float sc_factor(0.625)
+float factor(100.0)
+
+# Materials
+material mat_sky(
+    diffuse(uniform(<0.1, 0.1, 0.1>)),
+    image("asset/sky.pfm")
+)
+
+material mat1(
+    diffuse(checkered(<0.2, 0.2, 0.2>, <0.0, 1.0, 0.0>, 6)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat2(
+    diffuse(checkered(<1.0, 0.0, 1.0>, <0.0, 0.0, 1.0>, 12)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat3(
+    specular(uniform(<1.0, 1.0, 1.0>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat4(
+    diffuse(uniform(<1.0, 1.0, 1.0>)),
+    uniform(<0.2, 0.2, 0.2>)
+)
+
+material mat5(
+    diffuse(checkered(<0.0, 0.0, 0.0>, <0.2, 0.2, 0.2>, 10)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat_cone(
+    specular(checkered(<1.0, 0.0, 0.0>, <0.0, 1.0, 0.0>, 12)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat_box(
+    specular(uniform(<1.0, 0.0, 0.0>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat_triangle(
+    specular(uniform(<0.0, 1.0, 0.0>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat_para(
+    specular(uniform(<0.0, 0.0, 1.0>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+material mat_rect(
+    specular(uniform(<1.0, 0.0, 1.0>)),
+    uniform(<0.0, 0.0, 0.0>)
+)
+
+# Shapes
+sphere s_back(mat_sky, scaling([7.0, 7.0, 7.0]) * rotation_y(-45.0))
+
+box b1(mat5, translation([-0.25, 0.0, 1.0]) * rotation_z(45.0))
+sphere s1(mat3, translation([-0.25, 0.0, 1.0]) * scaling([sc_factor, sc_factor, sc_factor]))
+sphere s2(mat4, translation([-0.25, 0.0, 1.0]) * scaling([0.4, 0.4, 0.4]))
+
+triangle t1(mat_triangle, [1.5, 1.5, 2.0], [0.5, 2.5, 2.0], [0.5, 2.0, 3.0])
+
+# Meshes
+mesh m1(mat_box, translation([1.5, 2.5, 0.0]) * scaling([0.1, 0.1, 0.1]) * translation([0.0, 0.0, -3.05]), "asset/humanoid_tri.obj", "dwh")
+mesh m2(mat_para, translation([0.5, 1.5, 0.0]) * scaling([0.1, 0.1, 0.1]) * translation([0.0, 0.0, -3.05]), "asset/humanoid_quad.obj", "dwh")
+
+parallelogram para1(mat_para, [1.5, -1.5, 0.0], [0.5, -2.5, 0.0], [0.5, -2.0, 1.0])
+
+box b2(mat_box, rotation_z(45.0))
+box b3(mat5, translation([0.0, 0.0, 0.5]) * rotation_z(45.0))
+
+cylinder cy1(mat_cone, rotation_y(-30.0) * rotation_x(-30.0) * scaling([0.4, 0.4, 1.5]))
+cylinder cy2(mat_para, rotation_y(-30.0) * rotation_x(-30.0) * scaling([0.2222, 0.2222, 1.5]))
+
+cone co1(mat_cone, scaling([0.4, 0.4, 0.4]) * translation([-5.0, 5.0, 2.55]) * rotation_y(180.0) * rotation_x(60.0))
+cone co2(mat_cone, identity)
+
+sphere s3(mat3, translation([0.0, -0.5, 1.0]) * scaling([0.5, 0.5, 0.5]))
+
+circle ci1(mat_rect, translation([0.0, 0.0, 0.01]))
+rectangle r1(mat_rect, translation([-2.5, 0.0, 0.01]))
+
+plane ground(mat5, identity)
+
+# CSG Operations
+difference csg1(identity, b1, s1)
+union csg1_final(identity, csg1, s2)
+
+difference csg2_temp(identity, b2, cy1)
+union csg2(translation([-2.75, -1.5, 1.0]) * scaling([sc_factor, sc_factor, sc_factor]) * rotation_z(-30.0), csg2_temp, cy2)
+
+union csg3_temp(identity, b3, co2)
+difference csg3(translation([-2.5, 1.5, 0.0]) * scaling([sc_factor, sc_factor, sc_factor]), csg3_temp, s3)
+
+# Lights
+pointlight light4([0.0, 0.0, 6.9], <0.1, 0.1, 0.1>, 50.0)
+spotlight spot1([3.0, 3.0, 5.0], [-3.0, -3.0, -5.0], <0.0, 0.5, 0.0>, factor, 22.5, 14.5)
+spotlight spot2([3.0, -3.0, 5.0], [-3.0, 3.0, -5.0], <0.5, 0.0, 0.0>, factor, 22.5, 14.5)
+spotlight spot3([-3.0, 0.0, 5.0], [3.0, 0.0, -5.0], <0.0, 0.0, 0.5>, factor, 22.5, 14.5)
+
+# Add shapes to scene
+add s_back
+add csg1_final
+add csg3
+add t1
+add m1
+add m2
+add para1
+add csg2
+add co1
+add ci1
+add r1
+add ground
+
+# Add lights to scene
+add light4
+add spot1
+add spot2
+add spot3
+
+# Camera
+camera(perspective, translation([-3.25, 0.0, 1.5]) * rotation_y(30.0), 1.7777777777777, 2.0)

@@ -1,5 +1,6 @@
 using Pkg
-Pkg.activate(".")
+project_root = dirname(@__DIR__)
+Pkg.activate(project_root)
 
 using jujutracer
 using Base.Threads
@@ -8,7 +9,7 @@ using Logging
 using TerminalLoggers
 using LoggingExtras
 
-filename = "output_rand_depth"
+filename = joinpath(project_root, "Images", "randtriangles_")
 width = 1920
 height = 1080
 n_rays = 4
@@ -119,8 +120,8 @@ renderer = DepthBVHRender(world; bvh_max_depth=depth_sah)
 #renderer = PointLight(world, RGB(0.1, 0.1, 0.15), RGB(0.1, 0.1, 0.1), 0)
 ImgTr(renderer)
 
-#= toned_img = tone_mapping(hdr)
+toned_img = tone_mapping(hdr)
 # Save the LDR image
 save_ldrimage(get_matrix(toned_img), png_output)
 write_pfm_image(hdr, pfm_output)
-println("Done") =#
+println("Done")

@@ -1,5 +1,6 @@
 using Pkg
-Pkg.activate(".")
+project_root = dirname(@__DIR__)
+Pkg.activate(project_root)
 
 using jujutracer
 using Base.Threads
@@ -15,7 +16,7 @@ filtered_logger = EarlyFilteredLogger(module_filter, TerminalLogger(stderr, Logg
 # Set as the global logger
 global_logger(filtered_logger)
 
-filename = "Images/tree_"
+filename = joinpath(project_root, "Images", "tree_")
 renderertype = "path" # "path" or "flat"
 width = 450
 height = 800
@@ -66,9 +67,9 @@ tree_shapes = Vector{AbstractShape}()
 for t in tree.shapes
     push!(tree_shapes, t)
 end
-for l in leaves.shapes
+#= for l in leaves.shapes
     push!(tree_shapes, l)
-end
+end =#
 bvh, bvhdepth = BuildBVH!(tree_shapes; use_sah=true, max_shapes_per_leaf=4)
 bvhshape = BVHShape(bvh, tree_shapes)
 

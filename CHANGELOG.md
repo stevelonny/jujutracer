@@ -1,5 +1,8 @@
 # HEAD
 
+# Version 1.0.0
+- Implement SceneLang interpreter [#28](https://github.com/stevelonny/jujutracer/pull/28)
+
 # Version 0.5.0
 - Implement `Meshes` [#32](https://github.com/stevelonny/jujutracer/pull/32)
 - Implement Boundary Volume Hierarchies [#32](https://github.com/stevelonny/jujutracer/pull/36)

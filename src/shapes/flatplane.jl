@@ -6,7 +6,7 @@
     struct Plane <: AbstractShape
 
 A plane.
-This structure is a subtype of [`AbstractShape`](@ref).
+This structure is a subtype of [`AbstractShape`]().
 # Fields
 - `t::Transformation`: the transformation applied to the plane
 - `Mat::Material`: the material of the shape
@@ -81,7 +81,7 @@ function ray_intersection(pl::Plane, ray::Ray)
     end
 
     hit_point = inv_ray(first_hit)
-    norm = pl.Tr(_plane_normal(hit_point, ray.dir))
+    norm = pl.Tr(_plane_normal(hit_point, d))
     return HitRecord(
         world_P=pl.Tr(hit_point),
         normal=norm,
