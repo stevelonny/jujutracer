@@ -1,6 +1,8 @@
 # Introduction
 The jujutracer module allows creating 3D scenes by following a well defined physical model. It is based on a ray tracing algorithm that simulates the interaction of light with objects in a scene.
 
+The intersection of rays with objects is the core of the rendering process. A full geometry framework is provided as the basis for the instersection logic, which handles all the transformation from the local coordinates of the shapes to the world coordinates, and vice versa.
+
 ## Shapes
 All shapes are defined as objects which hold a material and a transformation. The material defines the appearance of the shape, while the transformation defines its position and orientation in the scene. The following shapes are supported:
 - plane
@@ -24,7 +26,7 @@ CSG can be applied only to *water-tight* shapes, which are:
 
 ## Materials
 Materials defines how a ray interacts with a shape. Materials can be emissive, and the interaction modeled by the material's surface is defined by a BRDF (Bidirectional Reflectance Distribution Function). Both emission and BRDF are defined upon pigments, which define the material's texture.
-### BRDF
+### BRDFs
 In jujutracer, there are two brdf types:
 - **diffuse**: This type of BRDF models a surface that scatters light uniformly in all directions.
 - **specular**: This type of BRDF models a surface that reflects light as a perfect mirror.

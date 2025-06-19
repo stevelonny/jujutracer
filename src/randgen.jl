@@ -11,7 +11,6 @@ A Pseudo-Random Number Generator (PRNG) based on the PCG algorithm.
 # Constructor
 - `PCG(init_state::UInt64, init_seq::UInt64)`: Creates a new PCG instance with the given initial state and sequence. Defaults are `42` and `54` respectively.
 """
-
 mutable struct PCG
     @atomic state::UInt64
     inc::UInt64

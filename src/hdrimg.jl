@@ -2,7 +2,7 @@
 # hdrimg
 #-------------------------------------------------------------
 """
-    hdrimg(w::Int, h::Int)
+    struct hdrimg(w::Int, h::Int)
 
 A struct representing a high dynamic range image (HDR image).
 Getter and setter methods are defined for accessing and modifying pixel values.
