@@ -1,0 +1,41 @@
+float sc(4.0)
+
+material mat1(diffuse(uniform(<1.0, 1.0, 1.0>)),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+material mat_red(diffuse(uniform(<1.0, 0.0, 0.0>)),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+material mat_green(diffuse(uniform(<0.0, 1.0, 0.0>)),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+material bright(diffuse(uniform(<0.0, 0.0, 0.0>)),
+              uniform(<1.0, 1.0, 1.0>)
+              )
+
+rectangle floor(mat1, scaling([sc, sc, sc]))
+
+rectangle ceiling(mat1, translation([0.0, 0.0, sc]) * scaling([sc, sc, sc]))
+
+rectangle left(mat_green, translation([0.0, 2.0, 2.0]) * rotation_x(-90) * scaling([sc, sc, sc]))
+
+rectangle right(mat_red, translation([0.0, -2.0, 2.0]) * rotation_x(90) * scaling([sc, sc, sc]))
+
+rectangle back(mat1, translation([2.0, 0.0, 2.0]) * rotation_y(90) * scaling([sc, sc, sc]))
+
+rectangle light(bright, translation([0.0, 0.0, 3.9999]))
+
+box boxr(mat1, translation([0.0, -1.0, 0.5]) * rotation_z(-40.0))
+
+box boxl(mat1, scaling([1.0, 1.0, 2.0]) * translation([0.0, 1.0, 0.5]) * rotation_z(40.0))
+
+add floor
+add ceiling
+add left
+add right
+add light
+add back
+add boxr
+add boxl
+
+camera(perspective, translation([-2.0, 0.0, 2.0]), 1.7777777777777, 1.0)

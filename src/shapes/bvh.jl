@@ -33,7 +33,7 @@ end
 
 """
     centroid(t::AbstractShape)
-Calculate the centroid of a shape `t` using the [`boxed`](@ref) method.
+Calculate the centroid of a shape `t` using the [`boxed`]() method.
 # Arguments
 - `t::AbstractShape`: The shape for which to calculate the centroid.
 # Returns

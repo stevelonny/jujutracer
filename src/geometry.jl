@@ -9,11 +9,17 @@ import Base: *, +, -
 Struct representing a point in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
+# Constructors
+- `Point(x::Float64, y::Float64, z::Float64)`: Create a Point from x, y, z coordinates.
+- `Point(p::Vec)`: Create a Point from a Vec.
 """
 struct Point
     x::Float64
     y::Float64
     z::Float64
+    function Point(x, y, z)
+        new(x, y, z)
+    end
 end
 
 #--------------------------------------------------------------------------
@@ -25,7 +31,8 @@ end
 A struct representing a vector in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
-# Methods
+# Constructors
+- `Vec(x::Float64, y::Float64, z::Float64)`: Create a Vec from x, y, z coordinates.
 - `Vec(n::Normal)`: Create a Vec from a Normal.
 - `Vec(p::Point)`: Create a Vec from a Point.
 """
@@ -50,7 +57,7 @@ end
 Struct representing a unit vector (normal) in 3D space.
 # Fields
 - `x::Float64`,`y::Float64`,`z::Float64`: Coordinates.
-# Methods
+# Constructors
 - `Normal(v::Vec)`: Create a Normal from a Vec.
 - `Normal(x::Float64, y::Float64, z::Float64)`: Create a Normal from x, y, z coordinates.
 # Throws
@@ -79,6 +86,10 @@ end
 # Outside constructors
 function Vec(n::Normal)
     return Vec(n.x, n.y, n.z)
+end
+
+function Point(p::Vec)
+    return Point(p.x, p.y, p.z)
 end
 
 #--------------------------------------------------------------------------
@@ -187,7 +198,7 @@ end
 """
     struct Unsafe
 A singleton struct used to indicate unsafe operations in transformations.
-See also [`Transformation`](@ref) and [`_unsafe_inverse`](@ref).
+See also [`Transformation`]() and [`_unsafe_inverse`]().
 """
 struct Unsafe end
 
@@ -195,7 +206,7 @@ struct Unsafe end
     AbstractTransformation
 
 An abstract type that serves as a base for defining various geometric transformations.
-Made concrete by [`Transformation`](@ref), [`Translation`](@ref), [`Scaling`](@ref), [`Rx`](@ref), [`Ry`](@ref), and [`Rz`](@ref).
+Made concrete by [`Transformation`](), [`Translation`](), [`Scaling`](), [`Rx`](), [`Ry`](), and [`Rz`]().
 """
 abstract type AbstractTransformation end
 
@@ -204,7 +215,7 @@ abstract type AbstractTransformation end
     struct Transformation <: AbstractTransformation
 
 Represents a transformation in 3D space with homogeneous coordinates.
-This structure is a subtype of [`AbstractTransformation`](@ref).
+This structure is a subtype of [`AbstractTransformation`]().
 
 # Fields
 - `M::Matrix{Float64}`: The 4x4 transformation matrix.
@@ -255,7 +266,7 @@ end
     struct Translation <: AbstractTransformation
 
 Represents a translation in 3D space with homogeneous coordinates.
-This structure is a subtype of [`AbstractTransformation`](@ref).
+This structure is a subtype of [`AbstractTransformation`]().
 
 # Fields
 - `M::Matrix{Float64}`: The 4x4 transformation matrix.
@@ -288,7 +299,7 @@ end
     struct Scaling <: AbstractTransformation
 
 Represents a scaling transformation in 3D space.
-This structure is a subtype of [`AbstractTransformation`](@ref).
+This structure is a subtype of [`AbstractTransformation`]().
 
 # Fields
 - `M::Matrix{Float64}`: The 4x4 transformation matrix.
@@ -319,7 +330,7 @@ end
     struct Rx <: AbstractTransformation
 
 Represents a rotation transformation around the x-axis in 3D space.
-This structure is a subtype of [`AbstractTransformation`](@ref).
+This structure is a subtype of [`AbstractTransformation`]().
 
 # Fields
 - `M::Matrix{Float64}`: The 4x4 transformation matrix.
@@ -329,8 +340,8 @@ This structure is a subtype of [`AbstractTransformation`](@ref).
 - `Rx(θ)`: Creates an `Rx` instance for a given rotation `θ` (in radians).
 
 # See also
-- [`Ry`](@ref): For rotation around the y-axis.
-- [`Rz`](@ref): For rotation around the z-axis.
+- [`Ry`](): For rotation around the y-axis.
+- [`Rz`](): For rotation around the z-axis.
 """
 struct Rx <: AbstractTransformation
     M::Matrix{Float64}
@@ -349,7 +360,7 @@ end
     struct Ry <: AbstractTransformation
 
 Represents a rotation transformation around the y-axis in 3D space.
-This structure is a subtype of [`AbstractTransformation`](@ref).
+This structure is a subtype of [`AbstractTransformation`]().
 
 # Fields
 - `M::Matrix{Float64}`: The 4x4 transformation matrix.
@@ -359,8 +370,8 @@ This structure is a subtype of [`AbstractTransformation`](@ref).
 - `Ry(θ)`: Creates an `Ry` instance for a given rotation `θ` (in radians).
 
 # See also
-- [`Rx`](@ref): For rotation around the x-axis.
-- [`Rz`](@ref): For rotation around the z-axis.
+- [`Rx`](): For rotation around the x-axis.
+- [`Rz`](): For rotation around the z-axis.
 """
 struct Ry <: AbstractTransformation
     M::Matrix{Float64}
@@ -379,7 +390,7 @@ end
     struct Rz <: AbstractTransformation
 
 Represents a rotation transformation around the z-axis in 3D space.
-This structure is a subtype of [`AbstractTransformation`](@ref).
+This structure is a subtype of [`AbstractTransformation`]().
 
 # Fields
 - `M::Matrix{Float64}`: The 4x4 transformation matrix.
@@ -389,8 +400,8 @@ This structure is a subtype of [`AbstractTransformation`](@ref).
 - `Rz(θ)`: Creates an `Rz` instance for a given rotation `θ` (in radians).
 
 # See also
-- [`Rx`](@ref): For rotation around the x-axis.
-- [`Ry`](@ref): For rotation around the y-axis.
+- [`Rx`](): For rotation around the x-axis.
+- [`Ry`](): For rotation around the y-axis.
 """
 struct Rz <: AbstractTransformation
     M::Matrix{Float64}

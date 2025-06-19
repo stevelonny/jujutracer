@@ -1,4 +1,6 @@
 # HEAD
+- Implement `RefractiveBRDF` [#39](https://github.com/stevelonny/jujutracer/pull/39)
+- Implement SceneLang interpreter [#28](https://github.com/stevelonny/jujutracer/pull/28)
 
 # Version 0.5.0
 - Implement `Meshes` [#32](https://github.com/stevelonny/jujutracer/pull/32)

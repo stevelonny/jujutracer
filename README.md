@@ -39,7 +39,7 @@ julia demo.jl <output_file> <width> <height> <cam_angle>
 ```
 
 #### CSG Showacase
-A demo scene is provided for showcasing Constructive Solid Geometry capabilities. `demoCSG.jl` provides a perspective view of a few operations between 3 identical spheres translated along the three axis: union between 3 spheres, union of 2 spheres from which is substracted a 3rd one, and finally the intersection of all 3 spheres. Rotations are applied to the CSG shapes.
+A demo scene is provided for showcasing Constructive Solid Geometry capabilities. `demoCSG.jl` provides a perspective view of a few operations between 2 spheres and a cone: union between 3 shapes, union of 2 spheres from which is substracted the cone, and finally the intersection of all 3 shapes. Rotations are applied to the CSG shapes.
 
 Usage of the script is similar to `demo.jl`:
 ```bash

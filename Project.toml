@@ -4,28 +4,33 @@ authors = ["Michele Boldini <michele.boldini@studenti.unimi.it>", "Giovanni Gala
 version = "0.1.0"
 
 [deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+LoggingExtras = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+ArgParse = "1.2.0"
 ColorTypes = "0.12.0"
 Colors = "0.13.0"
 FileIO = "1.17.0"
 ImageIO = "0.6.9"
 Images = "0.26.2"
 Logging = "1.11.0"
+LoggingExtras = "1.1.0"
 ProgressLogging = "0.1.4"
 TerminalLoggers = "0.1.7"
 Test = "1.9.2"
 
 [extras]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 LoggingExtras = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 TerminalLoggers = "5d786b92-1e48-4d6f-9151-6b4477ca9bed"

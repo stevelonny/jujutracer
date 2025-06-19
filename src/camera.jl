@@ -17,11 +17,12 @@ struct Ray
     dir::Vec
     tmin::Float64 
     tmax::Float64
+    r_ind::Float64
     depth::Int
     #Should vec be normalised?
 
-    function Ray(;origin::Point, dir::Vec, tmin=1e-5, tmax=Inf, depth=0)
-        new(origin, dir, tmin, tmax, depth)
+    function Ray(;origin::Point, dir::Vec, tmin=1e-5, tmax=Inf, r_ind=1.0, depth=0)
+        new(origin, dir, tmin, tmax, r_ind, depth)
     end
 
 end
@@ -45,7 +46,8 @@ function (Tr::AbstractTransformation)(ray::Ray)
     return Ray(origin = Tr(ray.origin), 
     dir = Tr(ray.dir), 
     tmin = ray.tmin, 
-    tmax = ray.tmax, 
+    tmax = ray.tmax,
+    r_ind = ray.r_ind, 
     depth = ray.depth)
 end
 

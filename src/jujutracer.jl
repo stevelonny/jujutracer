@@ -9,7 +9,7 @@ using Logging
 
 # import
 import Base:
-    +, -, *, ≈, /, sort, sign
+    +, -, *, ≈, /, sort, sign, (==)
 import ColorTypes: ColorTypes, RGB
 import Colors
 
@@ -31,7 +31,7 @@ include("inputoutput.jl")
 export save_ldrimage, get_matrix, write_pfm_image, InvalidFileFormat, read_pfm_image
 
 include("geometry.jl")
-export Vec, Point, Normal, squared_norm, norm, normalize, to_string, ⋅, ×, AbstractTransformation, Transformation, Translation, Scaling, Rx, Ry, Rz, ⊙, inverse, _unsafe_inverse, create_onb_from_z 
+export Vec, Point, Normal, squared_norm, norm, normalize, to_string, ⋅, ×, AbstractTransformation, Transformation, Translation, Scaling, Rx, Ry, Rz, ⊙, inverse, _unsafe_inverse, create_onb_from_z
 
 include("camera.jl")
 export Ray, AbstractCamera, Orthogonal, Perspective
@@ -40,11 +40,17 @@ include("imagetracer.jl")
 export ImageTracer
 
 include("brdf.jl")
-export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBRDF, SpecularBRDF, Material
+export UniformPigment, CheckeredPigment, ImagePigment, AbstractBRDF, DiffusiveBRDF, SpecularBRDF, RefractiveBRDF, Material
 
 include("shapes/shapes.jl")
 
 include("renderer.jl")
 export OnOff, Flat, PathTracer, PointLight, DepthBVHRender, DepthBoxBVHRender
+
+include("lexer.jl")
+export SourceLocation, InputStream, InputStreamError, open_InputStream, _update_pos!, AbstractToken, IdentifierToken, StringToken, NumberToken, SymbolToken, KeywordToken, StopToken, KeywordEnum
+
+include("parser.jl")
+export Scene, parse_scene
 
 end # module jujutracer
