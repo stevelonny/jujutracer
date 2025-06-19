@@ -1,5 +1,6 @@
 using Pkg
-Pkg.activate(".")
+project_root = dirname(@__DIR__)
+Pkg.activate(project_root)
 
 using jujutracer
 using Base.Threads
@@ -42,7 +43,8 @@ flat = Flat(world)
     # padding
     idx_angle = lpad(string(angle), 3, '0')
     println("Angle: ", idx_angle)
-    filename = "./demo/demo_" * idx_angle * ".png"
+    filename = joinpath(project_root, "demo", "demo_")
+    filename *= idx_angle * ".png"
     # check if file exists
     if isfile(filename)
         println("File already exists: ", filename)

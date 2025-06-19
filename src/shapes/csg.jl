@@ -10,8 +10,8 @@ Represents the union of two solid shapes.
 - `Tr::AbstractTransformation`: The transformation applied to the union.
 - `Sh1::AbstractSolid`, `Sh2::AbstractSolid`: The two solid shapes being united.
 # See also
-- [`CSGDifference`](@ref): Represents the difference of two solid shapes.
-- [`CSGIntersection`](@ref): Represents the intersection of two solid shapes.
+- [`CSGDifference`](): Represents the difference of two solid shapes.
+- [`CSGIntersection`](): Represents the intersection of two solid shapes.
 """
 struct CSGUnion <: AbstractSolid
     Tr::AbstractTransformation
@@ -27,8 +27,8 @@ Represents the difference of two solid shapes.
 - `Tr::AbstractTransformation`: The transformation applied to the difference.
 - `Sh1::AbstractSolid`, `Sh2::AbstractSolid`: The two solid shapes where `Sh1 - Sh2` is computed.
 # See also
-- [`CSGUnion`](@ref): Represents the union of two solid shapes.
-- [`CSGIntersection`](@ref): Represents the intersection of two solid shapes.
+- [`CSGUnion`](): Represents the union of two solid shapes.
+- [`CSGIntersection`](): Represents the intersection of two solid shapes.
 """
 struct CSGDifference <: AbstractSolid
     Tr::AbstractTransformation
@@ -44,8 +44,8 @@ Represents the intersection of two solid shapes.
 - `Tr::AbstractTransformation`: The transformation applied to the intersection.
 - `Sh1::AbstractSolid`, `Sh2::AbstractSolid`: The two solid shapes being intersected.
 # See also
-- [`CSGUnion`](@ref): Represents the union of two solid shapes.
-- [`CSGDifference`](@ref): Represents the difference of two solid shapes.
+- [`CSGUnion`](): Represents the union of two solid shapes.
+- [`CSGDifference`](): Represents the difference of two solid shapes.
 """
 struct CSGIntersection <: AbstractSolid
     Tr::AbstractTransformation
@@ -74,7 +74,7 @@ Calculates the intersection of a ray with the union of two solid shapes.
 - `U::CSGUnion`: The union of solid shapes.
 - `ray::Ray`: The ray to intersect.
 # Returns
-- [`HitRecord`](@ref): The hit record of the first shape hit, if any.
+- [`HitRecord`](): The hit record of the first shape hit, if any.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(U::CSGUnion, ray::Ray)
@@ -153,7 +153,7 @@ Calculates the intersection of a ray with the difference of two solid shapes.
 - `D::CSGDifference`: The difference of solid shapes.
 - `ray::Ray`: The ray to intersect.
 # Returns
-- [`HitRecord`](@ref): The hit record of the first shape hit, if any.
+- [`HitRecord`](): The hit record of the first shape hit, if any.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(D::CSGDifference, ray::Ray)
@@ -222,7 +222,7 @@ Calculates the intersection of a ray with the intersection of two solid shapes.
 - `I::CSGIntersection`: The intersection of solid shapes.
 - `ray::Ray`: The ray to intersect.
 # Returns
-- [`HitRecord`](@ref): The hit record of the first shape hit, if any.
+- [`HitRecord`](): The hit record of the first shape hit, if any.
 - `nothing`: If no intersection occurs.
 """
 function ray_intersection(I::CSGIntersection, ray::Ray)

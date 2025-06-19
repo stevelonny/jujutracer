@@ -105,7 +105,7 @@ function ray_intersection(S::Circle, ray::Ray)
     end
 
     hit_point = inv_ray(first_hit)
-    norm = S.Tr(_circle_normal(hit_point, ray.dir))
+    norm = S.Tr(_circle_normal(hit_point, d))
     return HitRecord(
         world_P=S.Tr(hit_point),
         normal=norm,

@@ -1,7 +1,10 @@
 #---------------------------------------------------------
 # Pigment
 #---------------------------------------------------------
-
+"""
+    abstract type AbstractPigment
+Abstract type for pigments.
+"""
 abstract type AbstractPigment end
 
 """
@@ -56,7 +59,6 @@ Print the image `img` as pigment of the surface
 - `img::hdrimg` the image in hdr format
 # Functional Usage
 `ImagePigment(p::SurfacePoint)` return the `RGB` of to the `(u, v)` coordinates of the `SurfacePoint` associated to the corresponding element of `img`
-
 """
 struct ImagePigment <: AbstractPigment
     img::hdrimg

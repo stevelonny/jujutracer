@@ -1,5 +1,6 @@
 using Pkg
-Pkg.activate(".")
+project_root = dirname(@__DIR__)
+Pkg.activate(project_root)
 
 using jujutracer
 using Base.Threads
@@ -17,7 +18,7 @@ global_logger(filtered_logger)
 
 # Welcome to steve's playground
 
-filename = "Images/all_"
+filename = joinpath(project_root, "Images", "all_")
 renderertype = "depth" # "path" or "flat" or "point"
 width = 1280
 height = 720

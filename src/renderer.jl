@@ -289,7 +289,7 @@ end
     DepthBVHRender(world::World; background_color::RGB=RGB(0.1, 0.1, 0.1), non_bvh_color::RGB=RGB(1.0, 0.0, 0.0), 
                    bvh_color_low::RGB=RGB(0.0, 0.0, 1.0), bvh_color_high::RGB=RGB(1.0, 1.0, 0.0), bvh_max_depth::Int64)
 DepthBVHRender renderer of the scene. Renders the depth of the BVH tree. Useful for debugging and visualization of the BVH structure.
-Use this when rendereing a [`BVHShapeDebug`](@ref).
+Use this when rendereing a [`BVHShapeDebug`]().
 # Fields
 - `world::World`: the world containing the scene. Must contain at least one BVHShape
 - `background_color::RGB`: the color of the background when the ray doesn't hit anything

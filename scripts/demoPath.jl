@@ -1,5 +1,6 @@
 using Pkg
-Pkg.activate(".")
+project_root = dirname(@__DIR__)
+Pkg.activate(project_root)
 
 using jujutracer
 using Base.Threads
