@@ -63,10 +63,6 @@ save_ldrimage(get_matrix(toned_img), png_output)
 
 ## Contents
 ```@contents
-Pages = ["repl/repl_usage.md",
-         "repl/world.md",
-         "repl/rendering.md",
-         "repl/repl_examples.md",
-        ]
-Depth = 1
+Pages = Main.SCENE_USAGE_SUBSECTION
+Depth = 5
 ```

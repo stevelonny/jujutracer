@@ -2,6 +2,17 @@ push!(LOAD_PATH, "../src/")
 using Documenter
 using jujutracer  # Replace with your actual package name
 
+REPL_USAGE_SUBSECTION = [
+        "repl/repl_usage.md",
+        "repl/world.md",
+        "repl/rendering.md",
+        "repl/repl_examples.md",
+    ]
+SCENE_USAGE_SUBSECTION = [
+        "scene/scene_usage.md",
+        "scene/interpreter.md",
+    ]
+
 makedocs(
     sitename="jujutracer",
     format=Documenter.HTML(
@@ -17,17 +28,9 @@ makedocs(
             "introduction.md",
             ],
         "Usage" => Any[
-            "Scene Usage" => Any[
-                "scene/scene_usage.md",
-                "scene/interpreter.md",
-                ],
-            "REPL Usage" => Any[
-                            "repl/repl_usage.md",
-                            "repl/world.md",
-                            "repl/rendering.md",
-                            "repl/repl_examples.md",
-                            ]
-        ],
+            "Scene Usage" => SCENE_USAGE_SUBSECTION,
+            "REPL Usage" => REPL_USAGE_SUBSECTION,
+            ],
         # Add your other pages here
     ]
 )
