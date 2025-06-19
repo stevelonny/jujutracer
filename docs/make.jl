@@ -12,19 +12,22 @@ makedocs(
     #modules=[jujutracer],
     pagesonly=true,
     pages=[
-        "Home" => "index.md",
-        "Introdcution" => "introduction.md",
+        "Home" => Any[
+            "index.md",
+            "introduction.md",
+            ],
         "Usage" => Any[
-            "Scene Usage" => "scene_usage.md",
+            "Scene Usage" => Any[
+                "scene/scene_usage.md",
+                "scene/interpreter.md",
+                ],
             "REPL Usage" => Any[
                             "repl/repl_usage.md",
                             "repl/world.md",
                             "repl/rendering.md",
-                            "repl/repl_examples.md",]
+                            "repl/repl_examples.md",
+                            ]
         ],
-        "Detailed API" => Any[
-            "API" =>"detail.md"   
-        ]
         # Add your other pages here
     ]
 )
