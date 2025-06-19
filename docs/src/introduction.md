@@ -1,4 +1,4 @@
-# Introduction
+# Overall
 The jujutracer module allows creating 3D scenes by following a well defined physical model. It is based on a ray tracing algorithm that simulates the interaction of light with objects in a scene.
 
 The intersection of rays with objects is the core of the rendering process. A full geometry framework is provided as the basis for the instersection logic, which handles all the transformation from the local coordinates of the shapes to the world coordinates, and vice versa.

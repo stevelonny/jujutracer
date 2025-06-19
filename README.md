@@ -23,107 +23,34 @@ Clone this repository.
 git clone https://github.com/stevelonny/jujutracer.git
 ```
 
+Then activate the environment and instantiate the dependencies.
+
+```bash
+cd jujutracer
+julia --project=.
+```
+
+```julia
+using Pkg
+Pkg.activate(".")
+Pkg.instantiate()
+```
+
+Enjoy the code! Either use the REPL or use the scene definition language to define your scene and render it as per [documentation](https://stevelonny.github.io/jujutracer/stable/).
+
+
 ## Usage
+
+### Renderings
+The code can be used either as a library in the REPL as showcased in the [scripts](/scripts) folder, or with the provided [`interpreter`](/interpreter.jl) to define scenes such as the ones provided in the [`scenes`](/scenes) folder.
+
+For further details on how REPL and scene definition usage, please refer to the [documentation](https://stevelonny.github.io/jujutracer/stable/).
 
 ### Conversion PFM -> LDR formats
 The user must provide the input file in the correct PFM format, the _a_ value and _gamma_ correction value, and the output file, which must be of the `.png` or `.jpg` extension.
 ```bash
 julia main.jl <pfm_file> <a> <gamma> <output_file>
 ```
-
-### Demo version
-A demo scene is provided with the `demo.jl` script. The scene is composed by 8 spheres with a uniform pigment positioned on the edges of a cube, and 2 checkered spheres placed in the middle of two adiacent faces.
-The user must provide the output filename, which will be used to saved the output image in both `.pfm` and `.png` formats, the width and height of the image and the camera angle.
-```bash
-julia demo.jl <output_file> <width> <height> <cam_angle>
-```
-
-#### CSG Showacase
-A demo scene is provided for showcasing Constructive Solid Geometry capabilities. `demoCSG.jl` provides a perspective view of a few operations between 2 spheres and a cone: union between 3 shapes, union of 2 spheres from which is substracted the cone, and finally the intersection of all 3 shapes. Rotations are applied to the CSG shapes.
-
-Usage of the script is similar to `demo.jl`:
-```bash
-julia demoCSG.jl <output_file> <width> <height> <cam_angle>
-```
-
-### Demo Path
-A demo scene is provided for showcasing the path-tracer algorithm implemented. The scene is composed by a checkered diffusive plane used as a floor, which cut in half a reflective red sphere. Hovering the floor there is a checkered diffusive sphere, and a bright sky is provided.
-
-Usage of the script is the same:
-```bash
-julia demoPath.jl <output_file> <width> <height> <cam_angle>
-```
-<div align="center">
-
-![Reflective](asset/path.png)
-
-</div>
-
-### Steve's playground
-To showcase all the newly added shapes by [#18](https://github.com/stevelonny/jujutracer/pull/18) and [#23](https://github.com/stevelonny/jujutracer/pull/23) a demo script implmenting CSGs, AABBs, and flat shape is provided with [`demoAll.jl`](/demoAll.jl). Modify the script with the preferred method of rendering, resolution, antialiasing and path tracing parameters.
-
-<div align="center" style="display: flex; justify-content: center;">
-
-<div style="text-align: center; margin: 10px;">
-<img src="asset/allFlat.png" alt="demoAll Flat" width="300"/>
-<br/>
-<strong>Flat renderer</strong>
-<br/>
-<em>800x450, AA=4</em>
-</div>
-
-<div style="text-align: center; margin: 10px;">
-<img src="asset/allPath.png" alt="demoAll Path" width="300"/>
-<br/>
-<strong>Path Tracer</strong>
-<br/>
-<em>800x450, AA=2, 3 rays, 5 depth, 3 russian</em>
-</div>
-
-
-<div style="text-align: center; margin: 10px;">
-<img src="asset/allPoint.png" alt="demoAll Point" width="300"/>
-<br/>
-<strong>Point-Light Tracer</strong>
-<br/>
-<em>1280x720, AA=4, depth=1000</em>
-</div>
-
-</div>
-
-### Meshes support
-A basic support for reading `.obj` files and the necessary framework necessary to render triangle meshes has been implemented. Such shapes are accelerated with boundary volume hierarchy leveraging a surface area cost algorithm.
-
-`testBVH.jl` is a script which generate random triangles to bench the BVH tree construction.
-<div align="center">
-
-![Triangles](asset/triangles_path.png)
-
-</div>
-
-`demoPathWTree.jl` is a variation of [`demoPath.jl`](#demo-path), with a tree instead of the central sphere. The tree model is contained in [`tree.obj`](/asset/tree.obj), with his companions [`leaves.obj`](/asset/leaves.obj). The tree model is comprised of 133376 triangles, while the leafes are made of 113218 triangles. Here are some examples made with Point-Light tracer.
-
-<div align="center" style="display: flex; justify-content: center;">
-
-<div style="text-align: center; margin: 10px;">
-<img src="asset/tree_point.png" alt="demoAll Flat" width="300"/>
-<br/>
-<strong>133376 total triangles</strong>
-<br/>
-<em>720x1280, AA=2, depth=5</em>
-</div>
-
-<div style="text-align: center; margin: 10px;">
-<img src="asset/tree_point_leaves.png" alt="demoAll Path" width="300"/>
-<br/>
-<strong>246594 total triangles</strong>
-<br/>
-<em>450x800, AA=2, depth=5</em>
-</div>
-
-
-</div>
-
 
 ### Multi-thread support
 *See issue [#22](https://github.com/stevelonny/jujutracer/issues/22)*
@@ -153,20 +80,6 @@ To leverage multi-thread, launch `julia` with the correct flag `t` and the numbe
 julia -t auto demo.jl <output_file> <width> <height> <cam_angle>
 julia -t auto demoCSG.jl <output_file> <width> <height> <cam_angle>
 ```
-
-#### Animation
-`demogif.jl` creates 360 png images of the [`demo.jl`](#demo-version) scene by rotating the camera around the z-axis. The images can then be used as frames to generate a GIF. This script leverages multi-threading by paralallelizing the frame generation with the `@threads` macro. It will save into the `demo` folder, and won't overwrite existing frames, so that the process can be interrupted and recovered at a later moment. With the parallalization the generated frames won't be in order.
-To launch execute:
-```bash
-julia -t auto demogif.jl
-```
-<div align="center">
-
-![Demo animation](asset/output.gif)
-
-</div>
-
-
 
 ## Contributing
 

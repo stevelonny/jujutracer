@@ -1,8 +1,9 @@
 # Scene Usage
-The main feature of this project is developed in `interpreter.jl` <!--[`interpreter.jl`](https://github.com/stevelonny/jujutracer/blob/main/interpreter.jl)--> which, from a `scene.txt` file, is able to parse the construction of the desired scene. The rendering of the scene is not completly yield from the scene file:  the type of renderer, the image resolution, the antialiasing and other parameters are specified at the time of execution.
+jujutracer provides all the necessary pieces to interpret a `scene.txt` file, and is able to parse the construction of the desired scene.
 
-Follows some instruction for writing a correct `scene.txt`.
+The rendering of the scene is not completly yield from the scene file: the type of renderer, the image resolution, the antialiasing and other parameters are specified at the time of execution. These instructions are provided in the [Interpreter](interpreter.md) section.
 
+# Scene Definition Language
 ## Float variables
 Float variables are used to define some constants that can be used in the scene.
 
