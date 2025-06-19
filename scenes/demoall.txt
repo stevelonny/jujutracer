@@ -70,8 +70,8 @@ sphere s2(mat4, translation([-0.25, 0.0, 1.0]) * scaling([0.4, 0.4, 0.4]))
 triangle t1(mat_triangle, [1.5, 1.5, 2.0], [0.5, 2.5, 2.0], [0.5, 2.0, 3.0])
 
 # Meshes
-mesh m1(mat_box, translation([1.5, 2.5, 0.0]) * scaling([0.1, 0.1, 0.1]) * translation([0.0, 0.0, -3.05]), "humanoid_tri.obj", "dwh")
-mesh m2(mat_para, translation([0.5, 1.5, 0.0]) * scaling([0.1, 0.1, 0.1]) * translation([0.0, 0.0, -3.05]), "humanoid_quad.obj", "dwh")
+mesh m1(mat_box, translation([1.5, 2.5, 0.0]) * scaling([0.1, 0.1, 0.1]) * translation([0.0, 0.0, -3.05]), "asset/humanoid_tri.obj", "dwh")
+mesh m2(mat_para, translation([0.5, 1.5, 0.0]) * scaling([0.1, 0.1, 0.1]) * translation([0.0, 0.0, -3.05]), "asset/humanoid_quad.obj", "dwh")
 
 parallelogram para1(mat_para, [1.5, -1.5, 0.0], [0.5, -2.5, 0.0], [0.5, -2.0, 1.0])
 
