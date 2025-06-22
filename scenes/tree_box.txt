@@ -1,0 +1,79 @@
+float sc(4.0)
+
+material mat1(diffuse(uniform(<1.0, 1.0, 1.0>)),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+material mat_square(diffuse(checkered(<1.0, 1.0, 1.0>,
+                            <0.5, 0.5, 0.5>, 8)),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+material mat_red(diffuse(uniform(<1.0, 0.0, 0.0>)),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+material mat_green(diffuse(uniform(<0.0, 1.0, 0.0>)),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+material bright(diffuse(uniform(<0.0, 0.0, 0.0>)),
+              uniform(<1.0, 1.0, 1.0>)
+              )
+material mat_sphere(specular(uniform(<1.0, 1.0, 1.0>)),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+material mat_hole(specular(uniform(<1.0, 1.0, 1.0>)),
+              uniform(<1.0, 1.0, 1.0>)
+              )
+material mat_tree(diffuse(image("asset/bark.pfm")),
+              uniform(<0.0, 0.0, 0.0>)
+              )
+
+rectangle floor(mat_square, scaling([sc, 4.02, sc]))
+
+rectangle ceiling(mat_square, translation([0.0, 0.0, sc]) * scaling([sc, 4.02, sc])) # 10 10 sc
+
+
+rectangle left_down(mat_green, translation([0.0, 2.0, 0.0]) * rotation_x(-90) * scaling([sc, sc, 2.0]))
+rectangle left_up(mat_green, translation([-1.0, 2.0, 2.0]) * scaling([3.0, sc, sc]) * rotation_x(-90))
+
+rectangle back(mat1, translation([2.0, 0.0, 2.0]) * rotation_y(90) * scaling([sc, 4.02, sc]))
+
+#rectangle left_back(mat_red, translation([2.0, 4.0, 4.0]) * rotation_y(90) * scaling([sc, sc, sc]))
+rectangle hole_back(mat_hole, translation([2.0, 3.5, 2.0]) * rotation_y(90) * scaling([10.0, 3.0, 4.0]))
+rectangle hole_front(mat_hole, translation([0.5, 3.5, 2.0]) * rotation_y(90) * scaling([10.0, 3.0, 4.0]))
+rectangle hole_ceiling(mat_hole, translation([0.0, 4.0, sc]) * scaling([sc, sc, sc])) # 10 10 sc
+rectangle hole_floor(mat_hole, translation([2.0, 4.0, 2.0]) * scaling([sc, sc, sc]))
+rectangle hole_left(mat_hole, translation([3.0, 5.0, 4.0]) * rotation_x(-90) * scaling([sc, sc, sc]))
+
+sphere sphere1(mat_sphere, translation([1.0, -1.0, 3.0]) * scaling([0.5, 0.5, 0.5]))
+
+mesh tree(mat_tree, translation([-1.5, 0.5, -0.01]) * scaling([0.23, 0.23, 0.23]), "asset/tree.obj", "whd")
+
+
+rectangle right(mat_red, translation([0.0, -2.0, 2.0]) * rotation_x(90) * scaling([sc, sc, sc]))
+
+# rectangle back(mat1, translation([2.0, 0.0, 2.0]) * rotation_y(90) * scaling([sc, sc, sc]))
+
+rectangle light(bright, translation([0.0, 0.0, 3.9999]))
+
+box boxr(mat1, translation([0.0, -1.0, 0.5]) * rotation_z(-40.0))
+
+box boxl(mat1, scaling([1.0, 1.0, 2.0]) * translation([0.0, 1.0, 0.5]) * rotation_z(40.0))
+
+add floor
+add ceiling
+add left_down
+add left_up
+add hole_front
+add hole_back
+add hole_ceiling
+add hole_floor
+add hole_left
+add right
+#add light
+add back
+add sphere1
+add tree
+# add boxr
+# add boxl
+
+
+camera(perspective, translation([-1.0, 0.0, 2.0]), 1.0, 1.0)

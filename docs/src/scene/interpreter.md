@@ -3,18 +3,20 @@ Once a scene is defined in a text file such as `scene.txt`, it can be interprete
 
 Parameters available are:
 
-| Parameter             | Keyword(s)            | Default Value   | Description                       |
-|-----------------------|-----------------------|-----------------|-----------------------------------|
-| Image Width           | `--width`, `-W`       | 640             | Width of the output image         |
-| Image Height          | `--height`, `-H`      | round(width / camera.a_ratio)                | Height of the output image        |
-| Output Image          | `--output`, `-o`      | output.png      | Output image file name            |
-| Output PFM            | `--pfm_output`, `-p`  | output.pfm      | Output PFM file name              |
-| Renderer              | `--renderer`, -`r`    | path_tracer     | Rendering algorithm               |
-| Antialiasing          | `--antialiasing`, `-a`| 2               | Antialiasing level                |
-| Rays per Hit          | `--n_rays`            | 3               | Rays fired at each intersection   |
-| Max Ray Depth         | `--depth`             | 3               | Maximum ray recursion depth       |
-| Russian Roulette      | `--russian`           | 2               | Russian roulette level            |
-| Overriden Variables   | `-v [var1 1.0...]`    | None            | Override scene variables          |
+| Parameter                 | Keyword(s)            | Default Value                                         | Description                               |
+|---------------------------|-----------------------|-------------------------------------------------------|-------------------------------------------|
+| Image Width               | `--width`, `-W`       | 640                                                   | Width of the output image                 |
+| Image Height              | `--height`, `-H`      | round(width / camera.a_ratio)                         | Height of the output image                |
+| Output Image              | `--output`, `-o`      | `<scene_filename>_<renderer>_<width>x<height>.png`    | Output image file name                    |
+| Output PFM                | `--pfm_output`, `-p`  | `<scene_filename>_<renderer>_<width>x<height>.pfm`    | Output PFM file name                      |
+| Renderer                  | `--renderer`, -`r`    | path_tracer                                           | Rendering algorithm                       |
+| Antialiasing              | `--antialiasing`, `-a`| 2                                                     | Antialiasing level                        |
+| Rays per Hit              | `--n_rays`            | 3                                                     | Rays fired at each intersection           |
+| Max Ray Depth             | `--depth`             | 3                                                     | Maximum ray recursion depth               |
+| Russian Roulette          | `--russian`           | 2                                                     | Russian roulette level                    |
+| Overriden Variables       | `-v [var1 1.0...]`    | None                                                  | Override scene variables                  |
+| Seed for PCG              | `--seed`              | 42                                                    | Seed for the random number generator      |
+| Sequence number for PCG   | `--sequence`          | 54                                                    | Unique sequence identifier for the RNG    |
 
 The name of the scene file must be provided as the first argument when running the script. All other parameters are optional and will use their default values if not specified.
 

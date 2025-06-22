@@ -74,6 +74,10 @@ abstract type AbstractBRDF end
     DiffusiveBRDF(Pigment::AbstractPigment)
 
 Diffusive BRDF with reflective pigment `Pigment`.
+# Fields
+- `Pigment::AbstractPigment`: the pigment used for the BRDF.
+# Functional Usage
+`DiffusiveBRDF(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)` returns a Ray sampled with diffusion.
 """
 struct DiffusiveBRDF <: AbstractBRDF
     Pigment::AbstractPigment
@@ -83,6 +87,10 @@ end
     SpecularBRDF(Pigment::AbstractPigment)
 
 Specular BRDF with reflective pigment `Pigment`.
+# Fields
+- `Pigment::AbstractPigment`: the pigment used for the BRDF.
+# Functional Usage
+`SpecularBRDF(pcg::PCG, in_dir::Vec, p::Point, normal::Normal, depth::Int64)` returns a Ray sampled with specular reflection. Can also be called withtout `pcg`.
 """
 struct SpecularBRDF <: AbstractBRDF
     Pigment::AbstractPigment

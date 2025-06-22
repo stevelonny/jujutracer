@@ -32,9 +32,8 @@ A struct representing a spotlight source.
 - `scale::Float64`: the scale factor for the spotlight, affecting its intensity.
 - `cos_total::Float64`: the cosine of the angle that defines the total light cone.
 - `cos_falloff::Float64`: the cosine of the angle that defines the falloff region of the spotlight.
-- `cos_start::Float64`: the cosine of the angle that defines the start of the falloff region.
 # Constructors
-- `SpotLight(position::Point, direction::Vec, emission::RGB=RGB(1.0, 1.0, 1.0), scale::Float64=100.0, cos_total::Float64=0.9, cos_falloff::Float64=0.93, cos_start::Float64=0.95)`: Creates a new spotlight with the specified parameters.
+- `SpotLight(position::Point, direction::Vec, emission::RGB=RGB(1.0, 1.0, 1.0), scale::Float64=100.0, cos_total::Float64=0.9, cos_falloff::Float64=0.93)`: Creates a new spotlight with the specified parameters.
 """
 struct SpotLight <: AbstractLight
     position::Point

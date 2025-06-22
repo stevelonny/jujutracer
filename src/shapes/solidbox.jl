@@ -8,14 +8,14 @@
 An axis-aligned box (rectangular cuboid) defined by two opposite corners.
 # Fields
 - `Tr::AbstractTransformation`: The transformation applied to the box.
-- `P1::Point`: One corner of the box (minimum x, y, z).
-- `P2::Point`: The opposite corner of the box (maximum x, y, z).
+- `P1::Point`: One corner of the box (minimum x, y, z) in the Box's local coordinate system.
+- `P2::Point`: The opposite corner of the box (maximum x, y, z) in the Box's local coordinate system.
 - `Mat::Material`: The material of the box.
 # Constructors
 - `Box()`: Creates a new box with default transformation and material.
-- `Box(Tr::AbstractTransformation)`: Creates a new box with the specified transformation and default material.
 - `Box(P1::Point, P2::Point)`: Creates a new box with the specified corners and default transformation and material.
 - `Box(P1::Point, P2::Point, Mat::Material)`: Creates a new box with the specified corners and material.
+- `Box(Tr::AbstractTransformation)`: Creates a new box with the specified transformation and default material.
 - `Box(Tr::AbstractTransformation, P1::Point, P2::Point)`: Creates a new box with the specified transformation and corners.
 - `Box(Tr::AbstractTransformation, P1::Point, P2::Point, Mat::Material)`: Creates a new box with the specified transformation, corners, and material.
 - `Box(Mat::Material)`: Creates a new box with the default transformation and the specified material.
@@ -77,16 +77,20 @@ end
 Calculate the UV coordinates of a point on the surface of a box, using the surface normal to determine which face is being mapped.
 The UV mapping follows a cube-unwrapping scheme:
 ```
-    +----+------+-----+----+
+  1 +----+------+-----+----+
+    |xxxxxxxxxxxxxxxxxxxxxx|
+    |xxxxxxxxxxxxxxxxxxxxxx|
+3/4 +----+------+-----+----+
     |xxxx| Top  |xxxxxxxxxx|
     |xxxx| (Y+) |xxxxxxxxxx| 
-2/3 +----+------+-----+----+
+2/4 +----+------+-----+----+
     |Left|Front |Right|Back|
     |(X-)|(Z+)  |(X+) |(Z-)|
-1/3 +----+------+-----+----+
+1/4 +----+------+-----+----+
     |xxxx|Bottom|xxxxxxxxxx|
     |xxxx| (Y-) |xxxxxxxxxx|
-    +----+------+-----+----+
+  0 +----+------+-----+----+
+    0   1/4    2/4   3/4   1
 ```
 # Arguments
 - `box::Box`: The box shape.
@@ -97,7 +101,6 @@ The UV mapping follows a cube-unwrapping scheme:
 """
 function _point_to_uv(box::Box, p::Point, norm::Normal)
     # Transform point to box local space
-    # Get box bounds
     p1, p2 = box.P1, box.P2
 
     # Normalize coordinates to [0,1] on each axis

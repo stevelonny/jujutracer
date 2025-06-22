@@ -8,7 +8,9 @@ mesh.
 # Fields
 - `file::String`: the source `file.obj` of the mesh
 - `shape::Vector{Triangle}`: the triangles of the mesh
-- `points::Vector{Point}`: the vertices of the triangles of the shape
+
+# Keywords
+`order::String`: the order of the coordinates in the file, default is "dwh" (depth, width, height). If the order is different, you can specify it with this keyword argument.
 
 # Constructor
 - `mesh(shapes::Vector{Triangle})`: creates a mesh frome the `Vector{Triangle}`
@@ -22,29 +24,28 @@ If the order is different, you can specify it with the `order` keyword argument.
 struct mesh <: AbstractShape
     file::String
     shapes::Vector{Triangle}
-    points::Vector{Point}
 
     function mesh(shapes::Vector{Triangle})
-        new("file.obj", shapes, Vector{Point}())
+        new("file.obj", shapes)
     end
     function mesh(file::String; order = "dwh")
         sh, p = read_obj_file(file; order)
-        new(file, sh, p)
+        new(file, sh)
     end
 
     function mesh(file::String, Tr::AbstractTransformation; order = "dwh")
         sh, p = read_obj_file(file, Tr = Tr; order)
-        new(file, sh, p)
+        new(file, sh)
     end
 
     function mesh(file::String, Mat::Material; order = "dwh")
         sh, p = read_obj_file(file, Mat = Mat; order)
-        new(file, sh, p)
+        new(file, sh)
     end
 
     function mesh(file::String, Tr::AbstractTransformation, Mat::Material; order = "dwh")
         sh, p = read_obj_file(file, Tr = Tr, Mat = Mat; order)
-        new(file, sh, p)
+        new(file, sh)
     end
 end
 
