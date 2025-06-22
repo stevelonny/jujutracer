@@ -50,6 +50,15 @@ end
 
 """
     _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
+
+Calculate the reflected ray from a given incoming direction, point of intersection, and surface normal.
+# Arguments
+- `in_dir::Vec`: The incoming direction of the ray.
+- `p::Point`: The world point of intersection.
+- `normal::Normal`: The normal vector.
+- `depth::Int64`: The current depth of the ray.
+# Returns
+- `Ray`: The reflected ray.
 """
 function _reflect_ray(in_dir::Vec, p::Point, normal::Normal, depth::Int64)
     incoming_dir = Vec(Normal(in_dir))
