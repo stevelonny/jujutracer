@@ -8,14 +8,14 @@
 An axis-aligned box (rectangular cuboid) defined by two opposite corners.
 # Fields
 - `Tr::AbstractTransformation`: The transformation applied to the box.
-- `P1::Point`: One corner of the box (minimum x, y, z).
-- `P2::Point`: The opposite corner of the box (maximum x, y, z).
+- `P1::Point`: One corner of the box (minimum x, y, z) in the Box's local coordinate system.
+- `P2::Point`: The opposite corner of the box (maximum x, y, z) in the Box's local coordinate system.
 - `Mat::Material`: The material of the box.
 # Constructors
 - `Box()`: Creates a new box with default transformation and material.
-- `Box(Tr::AbstractTransformation)`: Creates a new box with the specified transformation and default material.
 - `Box(P1::Point, P2::Point)`: Creates a new box with the specified corners and default transformation and material.
 - `Box(P1::Point, P2::Point, Mat::Material)`: Creates a new box with the specified corners and material.
+- `Box(Tr::AbstractTransformation)`: Creates a new box with the specified transformation and default material.
 - `Box(Tr::AbstractTransformation, P1::Point, P2::Point)`: Creates a new box with the specified transformation and corners.
 - `Box(Tr::AbstractTransformation, P1::Point, P2::Point, Mat::Material)`: Creates a new box with the specified transformation, corners, and material.
 - `Box(Mat::Material)`: Creates a new box with the default transformation and the specified material.
