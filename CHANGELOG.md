@@ -1,4 +1,10 @@
 # HEAD
+
+- Specify random number generator seed and sequence by CLI [#43](https://github.com/stevelonny/jujutracer/issues/43)
+
+## Bugfixes & optimization
+- Fix `tone_mapping` which would modify original hdrimage [#44](https://github.com/stevelonny/jujutracer/issues/44)
+
 # Version 1.0.1
 - Managing image dimension in `interpreter.jl`[#40](https://github.com/stevelonny/jujutracer/pull/41)
 
