@@ -57,6 +57,14 @@ function parse_cli(args)
         nargs = '*'
         help = "Variables to be overidden in the scene file. Expected format: name value pairs, e.g. --variables var1 1.0 var2 2.0"
     end
+    @add_arg_table! s begin
+        "--seed"
+        arg_type = Int
+        help = "Seed for random number generator (default: 42)"
+        "--sequence"
+        arg_type = Int
+        help = "Sequence number for random number generator (default: 54)"
+    end
 
     return parse_args(args, s)
 end
@@ -126,12 +134,7 @@ function interpret(parsed_args::Dict{String,Any})
     world = scene.world
     camera = scene.camera
     aspect_ratio = camera.a_ratio
-
-    gray = RGB(0.2, 0.2, 0.2)
-    ambient = RGB(0.1, 0.1, 0.1)
-    render = nothing
-    pcg = PCG()
-
+    
     if height == 0
         height = Int(round(width / aspect_ratio))
         @info "Height not provided, computed using width=$width and aspect_ratio=$aspect_ratio → height=$height"
@@ -142,20 +145,22 @@ function interpret(parsed_args::Dict{String,Any})
         end
     end
 
-    @info """
-    Parsed arguments:
-    - Width: $width
-    - Height: $height
-    - Output PNG: $png_output
-    - Output PFM: $pfm_output
-    - Renderer: $renderer
-    - Antialiasing: $antialiasing
-    - Scene file: $scene_file
-    - Number of rays: $n_rays
-    - Depth: $depth
-    - Russian roulette: $russian
-    """
+    @info "Parsed arguments" width = width height = height output = png_output pfm_output = pfm_output renderer = renderer antialiasing = antialiasing scene_file = scene_file n_rays = n_rays depth = depth russian = russian seed = seed sequence = sequence
+    
+    pcg = nothing
+    if isnothing(seed) && isnothing(sequence)
+        pcg = PCG()
+    elseif !isnothing(seed) && isnothing(sequence)
+        pcg = PCG(UInt64(seed))
+    elseif isnothing(seed) && !isnothing(sequence)
+        pcg = PCG(UInt64(42), UInt64(sequence))
+    else
+        pcg = PCG(UInt64(seed), UInt64(sequence))
+    end
 
+    gray = RGB(0.2, 0.2, 0.2)
+    ambient = RGB(0.1, 0.1, 0.1)
+    render = nothing
     if renderer == "flat"
         render = Flat(world, gray)
     elseif renderer == "path_tracer"
