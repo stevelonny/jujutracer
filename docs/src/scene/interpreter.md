@@ -6,7 +6,7 @@ Parameters available are:
 | Parameter             | Keyword(s)            | Default Value   | Description                       |
 |-----------------------|-----------------------|-----------------|-----------------------------------|
 | Image Width           | `--width`, `-W`       | 640             | Width of the output image         |
-| Image Height          | `--height`, `-H`      | 360             | Height of the output image        |
+| Image Height          | `--height`, `-H`      | round(width / camera.a_ratio)                | Height of the output image        |
 | Output Image          | `--output`, `-o`      | output.png      | Output image file name            |
 | Output PFM            | `--pfm_output`, `-p`  | output.pfm      | Output PFM file name              |
 | Renderer              | `--renderer`, -`r`    | path_tracer     | Rendering algorithm               |
