@@ -8,7 +8,7 @@ This folder contains a collections of `.txt` files which define scene interpret 
 ![Demo](../asset/demo.png)
 
 ## Tree
-
+![Tree](../asset/tree.png)
 
 ## Tree Box
 Modified cornell box with a tree and reflective sphere.

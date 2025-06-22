@@ -14,8 +14,8 @@ material mat_sun(
 )
 
 material mat_sky(
-    diffuse(uniform(<0.1, 0.1, 0.2>)),
-    image("asset/sky.pfm")
+    diffuse(image("asset/sky.pfm")),
+    uniform(<0.0, 0.0, 0.0>)
 )
 
 material mat_mirror(
