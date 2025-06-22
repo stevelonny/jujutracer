@@ -14,6 +14,9 @@
 Simple raytracer built in julia by Boldini M., Galafassi G. and Lonardoni S. during _Calcolo Numerico per la Generazione di Immagini Fotorealistiche_ (AY 2024/25) @ UNIMI.
 
 </div>
+<p align="center">
+  <img src="asset/path.png" alt="Reflective surface" width="100%"/>
+</p>
 
 ## Installation
 
@@ -39,10 +42,6 @@ Pkg.instantiate()
 Enjoy the code! Either use the REPL or use the scene definition language to define your scene and render it as per [documentation](https://stevelonny.github.io/jujutracer/stable/).
 
 ## Renderings
-<p align="center">
-  <img src="asset/path.png" alt="Reflective surface" width="100%"/>
-</p>
-
 The code can be used in two main ways:
 
 - **As a library in the REPL**, as demonstrated in the [`scripts`](/scripts) folder. Examples of these scenes are shown in [`examples`](/scripts/script.md).
