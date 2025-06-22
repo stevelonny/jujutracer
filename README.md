@@ -38,13 +38,21 @@ Pkg.instantiate()
 
 Enjoy the code! Either use the REPL or use the scene definition language to define your scene and render it as per [documentation](https://stevelonny.github.io/jujutracer/stable/).
 
+## Renderings
+<p align="center">
+  <img src="asset/path.png" alt="Reflective surface" width="100%"/>
+</p>
+
+The code can be used in two main ways:
+
+- **As a library in the REPL**, as demonstrated in the [`scripts`](/scripts) folder.
+  Usage example: 
+  `julia -t auto interpreter.jl scenes/<file_name>`
+- **Using the provided [`interpreter`](/interpreter.jl)** to define scenes, like those in the [`scenes`](/scenes) folder. Examples of these scenes are shown in [`scene_examples`](/scenes/scene.md).
+
+For more details on using the REPL or defining scenes, please refer to the [official documentation](https://stevelonny.github.io/jujutracer/stable/).
 
 ## Usage
-
-### Renderings
-The code can be used either as a library in the REPL as showcased in the [scripts](/scripts) folder, or with the provided [`interpreter`](/interpreter.jl) to define scenes such as the ones provided in the [`scenes`](/scenes) folder.
-
-For further details on how REPL and scene definition usage, please refer to the [documentation](https://stevelonny.github.io/jujutracer/stable/).
 
 ### Conversion PFM -> LDR formats
 The user must provide the input file in the correct PFM format, the _a_ value and _gamma_ correction value, and the output file, which must be of the `.png` or `.jpg` extension.
