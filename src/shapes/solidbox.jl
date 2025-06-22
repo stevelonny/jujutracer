@@ -77,16 +77,20 @@ end
 Calculate the UV coordinates of a point on the surface of a box, using the surface normal to determine which face is being mapped.
 The UV mapping follows a cube-unwrapping scheme:
 ```
-    +----+------+-----+----+
+  1 +----+------+-----+----+
+    |xxxxxxxxxxxxxxxxxxxxxx|
+    |xxxxxxxxxxxxxxxxxxxxxx|
+3/4 +----+------+-----+----+
     |xxxx| Top  |xxxxxxxxxx|
     |xxxx| (Y+) |xxxxxxxxxx| 
-2/3 +----+------+-----+----+
+2/4 +----+------+-----+----+
     |Left|Front |Right|Back|
     |(X-)|(Z+)  |(X+) |(Z-)|
-1/3 +----+------+-----+----+
+1/4 +----+------+-----+----+
     |xxxx|Bottom|xxxxxxxxxx|
     |xxxx| (Y-) |xxxxxxxxxx|
-    +----+------+-----+----+
+  0 +----+------+-----+----+
+    0   1/4    2/4   3/4   1
 ```
 # Arguments
 - `box::Box`: The box shape.
@@ -97,7 +101,6 @@ The UV mapping follows a cube-unwrapping scheme:
 """
 function _point_to_uv(box::Box, p::Point, norm::Normal)
     # Transform point to box local space
-    # Get box bounds
     p1, p2 = box.P1, box.P2
 
     # Normalize coordinates to [0,1] on each axis
