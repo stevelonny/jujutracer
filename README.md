@@ -45,10 +45,12 @@ Enjoy the code! Either use the REPL or use the scene definition language to defi
 
 The code can be used in two main ways:
 
-- **As a library in the REPL**, as demonstrated in the [`scripts`](/scripts) folder.
+- **As a library in the REPL**, as demonstrated in the [`scripts`](/scripts) folder. Examples of these scenes are shown in [`examples`](/scripts/script.md).
+- **Using the provided [`interpreter`](/interpreter.jl)** to define scenes, like those in the [`scenes`](/scenes) folder. 
   Usage example: 
-  `julia -t auto interpreter.jl scenes/<file_name>`
-- **Using the provided [`interpreter`](/interpreter.jl)** to define scenes, like those in the [`scenes`](/scenes) folder. Examples of these scenes are shown in [`scene_examples`](/scenes/scene.md).
+  ```bash
+  julia -t auto interpreter.jl scenes/<file_name>
+  ```
 
 For more details on using the REPL or defining scenes, please refer to the [official documentation](https://stevelonny.github.io/jujutracer/stable/).
 
