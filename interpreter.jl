@@ -16,7 +16,7 @@ function parse_cli(args)
         help = "Image width"
         "--height", "-H"
         arg_type = Int
-        default = 360
+        default = 0
         help = "Image height"
         "--output", "-o"
         default = "output.png"
@@ -106,19 +106,7 @@ function interpret(parsed_args::Dict{String,Any})
     russian = parsed_args["russian"]
 
     overriden_variables = parse_variables_dict(parsed_args)
-    @info """
-    Parsed arguments:
-    - Width: $width
-    - Height: $height
-    - Output PNG: $png_output
-    - Output PFM: $pfm_output
-    - Renderer: $renderer
-    - Antialiasing: $antialiasing
-    - Scene file: $scene_file
-    - Number of rays: $n_rays
-    - Depth: $depth
-    - Russian roulette: $russian
-    """
+    
     @info "Parsed variables:" overriden_variables = overriden_variables
 
     # Create a filtered logger
@@ -137,11 +125,36 @@ function interpret(parsed_args::Dict{String,Any})
 
     world = scene.world
     camera = scene.camera
+    aspect_ratio = camera.a_ratio
 
     gray = RGB(0.2, 0.2, 0.2)
     ambient = RGB(0.1, 0.1, 0.1)
     render = nothing
     pcg = PCG()
+
+    if height == 0
+        height = Int(round(width / aspect_ratio))
+        @info "Height not provided, computed using width=$width and aspect_ratio=$aspect_ratio → height=$height"
+    else
+        computed_ratio = width / height
+        if abs(computed_ratio - aspect_ratio) > 1e-2  # tolleranza 1%
+            @warn "Provided width=$width and height=$height do not match camera aspect ratio=$aspect_ratio (got ratio=$(round(computed_ratio, digits=3)))"        
+        end
+    end
+
+    @info """
+    Parsed arguments:
+    - Width: $width
+    - Height: $height
+    - Output PNG: $png_output
+    - Output PFM: $pfm_output
+    - Renderer: $renderer
+    - Antialiasing: $antialiasing
+    - Scene file: $scene_file
+    - Number of rays: $n_rays
+    - Depth: $depth
+    - Russian roulette: $russian
+    """
 
     if renderer == "flat"
         render = Flat(world, gray)
