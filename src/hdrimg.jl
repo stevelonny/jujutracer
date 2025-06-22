@@ -167,7 +167,7 @@ Apply tone mapping to the HDR image.
 
 """
 function tone_mapping(img::hdrimg; a=0.18, lum = nothing, γ = 1.0)
-    copy = img  
+    copy = deepcopy(img)
 
     # Normalize the image
     _normalize_img!(copy; a, lum)
