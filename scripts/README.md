@@ -49,10 +49,13 @@ A basic support for reading `.obj` files and the necessary framework necessary t
 
 `demoPathWTree.jl` is a variation of [`demoPath.jl`](#demo-path), with a tree instead of the central sphere. The tree model is contained in [`tree.obj`](/asset/tree.obj), with his companions [`leaves.obj`](../asset/leaves.obj). The tree model is comprised of 133376 triangles, while the leafes are made of 113218 triangles. Here are some examples made with Point-Light tracer.
 
+<div align="center">
 
 | <img src="../asset/tree_point.png" alt="Tree" width="300"/> | <img src="../asset/tree_point_leaves.png" alt="Tree with Leaves" width="300"/> |
 |:-------------------------------:|:---------------------------------------------------:|
 | **133376 total triangles**<br>_720x1280, AA=2, depth=5_ | **246594 total triangles**<br>_450x800, AA=2, depth=5_ |
+
+</div>
 
 
 ## Animation
